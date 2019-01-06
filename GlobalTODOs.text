@@ -1,0 +1,37 @@
+// -------------
+// Symbol legend:
+// -------------
+
+Task priority:
+"!!!-" = Critical
+"!!-" = Major
+"!-" = Minor
+"- ((" = Probably not needed
+
+Work status:
+"-" = Backlog
+">-" = Analysis
+">>-" = Implementation
+">>>-" = Testing
+
+
+// -------------
+// Programming:
+// -------------
+
+!!!>- Have multiple labels per window
+!!>>- Implement base frame functionalities
+
+
+// -------------
+// Application design:
+// -------------
+
+!- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
+
+
+// -------------
+// Resources:
+// -------------
+
+!- The images folder should probably be moved into resources -> Find out how to use getResource then

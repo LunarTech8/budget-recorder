@@ -6,6 +6,20 @@
 	"configurations": [
 		{
 			"type": "java",
+			"name": "CodeLens (Launch) - MainFrame",
+			"request": "launch",
+			"mainClass": "com.romanbrunner.apps.budgetrecorder.MainFrame",
+			"projectName": "budget-recorder"
+		},
+		{
+			"type": "java",
+			"name": "CodeLens (Launch) - BudgetRecorder",
+			"request": "launch",
+			"mainClass": "com.romanbrunner.apps.budgetrecorder.BudgetRecorder",
+			"projectName": "budget-recorder"
+		},
+		{
+			"type": "java",
 			"name": "Debug (Launch) - Current File",
 			"request": "launch",
 			"mainClass": "${file}"
