@@ -19,8 +19,8 @@ Work status:
 // Programming:
 // -------------
 
-!!!>- Have multiple labels per window
-!!>>- Implement base frame functionalities
+!!- Save/load entry data from/to Xml or Json
+!- Close app when pressing "Esc"
 
 
 // -------------
