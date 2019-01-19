@@ -26,7 +26,8 @@ public class MainFrame
 		{
 			frame.setIconImage(new ImageIcon(imgURL).getImage());
 		}
-		frame.add(new InputPanel());
+		// frame.add(new InputPanel());
+		frame.setContentPane(new InputPanel());
 
 		// Set the frame size and position:
 		frame.pack();
