@@ -2,6 +2,8 @@ package com.romanbrunner.apps.budgetrecorder;
 
 // import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import java.util.List;
+import java.util.LinkedList;
 import javax.swing.JFrame;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
@@ -11,7 +13,19 @@ import com.romanbrunner.apps.budgetrecorder.InputPanel;
 @SpringBootApplication
 public class MainFrame 
 {
-	final static String frameName = "Budget Recorder";
+	// --------------------
+	// Data code
+	// --------------------
+		
+	private final static String frameName = "Budget Recorder";
+	private final static String logoPath = "images/Logo.jpg";
+
+	
+	// --------------------
+	// Functional code
+	// --------------------
+
+	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
 
 	private static void createInputFrame()
 	{
@@ -21,7 +35,7 @@ public class MainFrame
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// Set the frame appearance:
-		var imgURL = MainFrame.class.getResource("images/Logo.jpg");
+		var imgURL = MainFrame.class.getResource(logoPath);
 		if (imgURL != null)
 		{
 			frame.setIconImage(new ImageIcon(imgURL).getImage());
@@ -49,6 +63,18 @@ public class MainFrame
 				}
 			}
 		);
+	}
+
+	public static void addDataEntry(String... dataRows) 
+	{
+		try 
+		{
+			dataEntries.add(new DataEntry(dataRows));
+		} 
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		}
 	}
 
 }

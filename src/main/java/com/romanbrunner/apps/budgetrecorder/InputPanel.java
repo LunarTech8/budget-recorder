@@ -20,39 +20,23 @@ import javax.swing.JComboBox;
 
 
 @SuppressWarnings("serial")
-public class InputPanel extends JPanel
+class InputPanel extends JPanel
 {
-	static final int nameLabelWidth = 100;
-	static final int dataFieldWidth = 200;
-	static final int dataRowHeight = 40;
-	static final int addButtonHeight = 40;
-	static final String[] typeNames = { "Food/Grooming", "Clothing", "Electronics", "Media", "Housing", "Amusement", "Vacation", "Locomotion", "Education" };
+	// --------------------
+	// Data code
+	// --------------------
+		
+	private static final int nameLabelWidth = 100;
+	private static final int dataFieldWidth = 200;
+	private static final int dataRowHeight = 40;
+	private static final int addButtonHeight = 40;
+	private static final String addButtonText = "Add entry";
+	private static final String addButtonTooltip = "Adds the values defined above to the data base";
 
-	private enum dataRow
-	{
-		MONEY, NAME, LOCATION, TYPE, DATE, REPEAT;
-	}
 
-	private String getDataRowName(dataRow r)
-	{
-		switch (r) 
-		{
-			case MONEY:
-				return "Money";
-			case NAME:
-				return "Name";
-			case LOCATION:
-				return "Location";
-			case TYPE:
-				return "Type";
-			case DATE:
-				return "Date";
-			case REPEAT:
-				return "Repeat";
-			default:
-				return null;
-		}
-	}
+	// --------------------
+	// Functional code
+	// --------------------
 
 	public InputPanel()
 	{
@@ -65,11 +49,11 @@ public class InputPanel extends JPanel
 
 		// Create data rows:
 		c.gridy = 0;
-		for (var r : dataRow.values())
+		for (var r : DataEntry.DataRow.values())
 		{
 			// Create name label:
 			c.gridx = 0;
-			var name = getDataRowName(r);
+			var name = r.toString();
 			var label = new JLabel(name + ":", JLabel.CENTER);
 			label.setToolTipText("Define the value for " + name + " in the field to the right.");
 			label.setPreferredSize(new Dimension(nameLabelWidth, dataRowHeight));
@@ -77,7 +61,7 @@ public class InputPanel extends JPanel
 			// Create data field:
 			c.gridx = 1;
 			JComponent dataField;
-			if (r == dataRow.MONEY)
+			if (r == DataEntry.DataRow.MONEY)
 			{
 				var displayFormat = NumberFormat.getCurrencyInstance();
 				displayFormat.setMinimumFractionDigits(2);
@@ -86,11 +70,11 @@ public class InputPanel extends JPanel
 				formatedTextField.setValue(0);
 				dataField = formatedTextField;
 			}
-			else if (r == dataRow.TYPE)
+			else if (r == DataEntry.DataRow.TYPE)
 			{
-				dataField = new JComboBox<>(typeNames);
+				dataField = new JComboBox<>(DataEntry.typeNames);
 			}
-			else if (r == dataRow.DATE)
+			else if (r == DataEntry.DataRow.DATE)
 			{
 				var calendar = Calendar.getInstance();
 				var initDate = calendar.getTime();
@@ -102,7 +86,7 @@ public class InputPanel extends JPanel
 				spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy"));
 				dataField = spinner;
 			}
-			else if (r == dataRow.REPEAT)
+			else if (r == DataEntry.DataRow.REPEAT)
 			{
 				dataField = new JCheckBox("Monthly");
 			}
@@ -117,12 +101,12 @@ public class InputPanel extends JPanel
 			c.gridy++;
 		}
 		// Create add button:
-		var button = new JButton("Add entry");
-		button.setToolTipText("Adds the values defined above to the data base");
+		var button = new JButton(addButtonText);
+		button.setToolTipText(addButtonTooltip);
 		button.setPreferredSize(new Dimension(nameLabelWidth + dataFieldWidth, addButtonHeight));
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = dataRow.values().length;
+		c.gridy = DataEntry.dataRowCount;
 		add(button, c);
 	}
 }

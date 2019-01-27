@@ -19,8 +19,10 @@ Work status:
 // Programming:
 // -------------
 
+!!>>- Store the entered values into a DataEntry when pressing the "Add entry" button
 !!- Save/load entry data from/to Xml or Json
 !- Close app when pressing "Esc"
+!- Maybe change constants (final) to use UPPER_CASE as formating
 
 
 // -------------
