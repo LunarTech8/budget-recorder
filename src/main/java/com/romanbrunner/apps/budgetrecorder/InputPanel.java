@@ -1,9 +1,13 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
 import java.awt.Dimension;
 import java.util.Calendar;
+import java.util.Date;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
@@ -25,7 +29,7 @@ class InputPanel extends JPanel
 	// --------------------
 	// Data code
 	// --------------------
-		
+
 	private static final int nameLabelWidth = 100;
 	private static final int dataFieldWidth = 200;
 	private static final int dataRowHeight = 40;
@@ -37,6 +41,53 @@ class InputPanel extends JPanel
 	// --------------------
 	// Functional code
 	// --------------------
+
+	private JComponent dataFields[] = new JComponent[DataEntry.dataRowCount];
+
+	private String getDataFieldValueAsString(int index)
+	{
+		var dataField = dataFields[index];
+		if (dataField instanceof JFormattedTextField)
+		{
+			return ((JFormattedTextField)dataField).getText().toString();
+		}
+		else if (dataField instanceof JComboBox)
+		{
+			return ((JComboBox)dataField).getSelectedItem().toString();
+		}
+		else if (dataField instanceof JSpinner)
+		{
+			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)((JSpinner)dataField).getModel().getValue());
+		}
+		else if (dataField instanceof JCheckBox)
+		{
+			var cb = (JCheckBox)dataField;
+			var returnString = cb.getText();
+			if (cb.isSelected() == false)
+			{
+				returnString = "Not " + returnString;
+			}
+			return returnString;
+		}
+		else if (dataField instanceof JTextField)
+		{
+			return ((JTextField)dataField).getText();
+		}
+		return "ERROR: Unspecified data field type";
+	}
+
+	private class AddDataEntryAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			var valueStrings = new String[DataEntry.dataRowCount];
+			for (int i = 0; i < DataEntry.dataRowCount; i++)
+			{
+				valueStrings[i] = getDataFieldValueAsString(i);
+			}
+			MainFrame.addDataEntry(valueStrings);
+		}
+	}
 
 	public InputPanel()
 	{
@@ -61,42 +112,41 @@ class InputPanel extends JPanel
 			// Create data field:
 			c.gridx = 1;
 			JComponent dataField;
-			if (r == DataEntry.DataRow.MONEY)
+			switch (r)
 			{
-				var displayFormat = NumberFormat.getCurrencyInstance();
-				displayFormat.setMinimumFractionDigits(2);
-				var displayFormatter = new NumberFormatter(displayFormat);
-				var formatedTextField = new JFormattedTextField(new DefaultFormatterFactory(displayFormatter, displayFormatter, new NumberFormatter(NumberFormat.getNumberInstance())));
-				formatedTextField.setValue(0);
-				dataField = formatedTextField;
-			}
-			else if (r == DataEntry.DataRow.TYPE)
-			{
-				dataField = new JComboBox<>(DataEntry.typeNames);
-			}
-			else if (r == DataEntry.DataRow.DATE)
-			{
-				var calendar = Calendar.getInstance();
-				var initDate = calendar.getTime();
-				calendar.add(Calendar.YEAR, -100);
-				var earliestDate = calendar.getTime();
-				calendar.add(Calendar.YEAR, 1100);
-				var latestDate = calendar.getTime();
-				var spinner = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
-				spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy"));
-				dataField = spinner;
-			}
-			else if (r == DataEntry.DataRow.REPEAT)
-			{
-				dataField = new JCheckBox("Monthly");
-			}
-			else
-			{
-				dataField = new JTextField();
+				case MONEY:
+					var displayFormat = NumberFormat.getCurrencyInstance();
+					displayFormat.setMinimumFractionDigits(2);
+					var displayFormatter = new NumberFormatter(displayFormat);
+					var formatedTextField = new JFormattedTextField(new DefaultFormatterFactory(displayFormatter, displayFormatter, new NumberFormatter(NumberFormat.getNumberInstance())));
+					formatedTextField.setValue(0);
+					dataField = formatedTextField;
+					break;
+				case TYPE:
+					dataField = new JComboBox<>(DataEntry.typeNames);
+					break;
+				case DATE:
+					var calendar = Calendar.getInstance();
+					var initDate = calendar.getTime();
+					calendar.add(Calendar.YEAR, -100);
+					var earliestDate = calendar.getTime();
+					calendar.add(Calendar.YEAR, 1100);
+					var latestDate = calendar.getTime();
+					var spinner = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
+					spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy"));
+					dataField = spinner;
+					break;
+				case REPEAT:
+					dataField = new JCheckBox("Monthly");
+					break;
+				default:
+					dataField = new JTextField();
+					break;
 			}
 			dataField.setToolTipText("Define the value for " + name + " here.");
 			dataField.setPreferredSize(new Dimension(dataFieldWidth, dataRowHeight));
 			add(dataField, c);
+			dataFields[c.gridy] = dataField;
 
 			c.gridy++;
 		}
@@ -104,6 +154,7 @@ class InputPanel extends JPanel
 		var button = new JButton(addButtonText);
 		button.setToolTipText(addButtonTooltip);
 		button.setPreferredSize(new Dimension(nameLabelWidth + dataFieldWidth, addButtonHeight));
+		button.addActionListener(new AddDataEntryAL());
 		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = DataEntry.dataRowCount;

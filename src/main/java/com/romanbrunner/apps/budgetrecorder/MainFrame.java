@@ -11,16 +11,16 @@ import com.romanbrunner.apps.budgetrecorder.InputPanel;
 
 
 @SpringBootApplication
-public class MainFrame 
+public class MainFrame
 {
 	// --------------------
 	// Data code
 	// --------------------
-		
+
 	private final static String frameName = "Budget Recorder";
 	private final static String logoPath = "images/Logo.jpg";
 
-	
+
 	// --------------------
 	// Functional code
 	// --------------------
@@ -29,7 +29,6 @@ public class MainFrame
 
 	private static void createInputFrame()
 	{
-
 		// Create the frame:
 		JFrame frame = new JFrame(frameName);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -51,7 +50,7 @@ public class MainFrame
 		frame.setVisible(true);
 	}
 
-	public static void main(String[] args) 
+	public static void main(String[] args)
 	{
 		// Schedule a job for the event dispatch thread:
 		SwingUtilities.invokeLater(
@@ -65,13 +64,13 @@ public class MainFrame
 		);
 	}
 
-	public static void addDataEntry(String... dataRows) 
+	public static void addDataEntry(String[] dataRows)
 	{
-		try 
+		try
 		{
 			dataEntries.add(new DataEntry(dataRows));
-		} 
-		catch (Exception e) 
+		}
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
