@@ -2,39 +2,160 @@ package com.romanbrunner.apps.budgetrecorder;
 
 // import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 import java.util.List;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.LinkedList;
+
 import javax.swing.JFrame;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
+import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
 @SpringBootApplication
-public class MainFrame
+@JsonSerialize(using = MainFrame.Serializer.class)
+@JsonDeserialize(using = MainFrame.Deserializer.class)
+public class MainFrame  // Singleton class
 {
 	// --------------------
 	// Data code
 	// --------------------
 
-	private final static String frameName = "Budget Recorder";
-	private final static String logoPath = "images/Logo.jpg";
+	private static final String FRAME_NAME = "Budget Recorder";
+	private static final String LOGO_FILE_PATH = "images/Logo.jpg";
+	private static final String DATABASE_NAME = "database";
+	private static final String DATABASE_PATH = "target";
+	private static final String BACKUP_PATH = "target/backups";
+	private static final int VERSION = 1;
 
 
 	// --------------------
 	// Functional code
 	// --------------------
 
+	private static MainFrame instance = null;
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
+
+	/**
+	 * @return the instance
+	 */
+	public static MainFrame getInstance()
+    {
+		if (instance == null)
+		{
+			instance = new MainFrame();
+		}
+        return instance;
+    }
+
+	public static class Serializer extends StdSerializer<MainFrame>
+	{
+		private static final long serialVersionUID = 1L;
+
+		public Serializer()
+		{
+			this(null);
+		}
+		public Serializer(Class<MainFrame> t)
+		{
+			super(t);
+		}
+
+		@Override
+		public void serialize(MainFrame obj, JsonGenerator jsonGenerator, SerializerProvider serializer)
+		{
+			try
+			{
+				jsonGenerator.writeStartObject();
+				// Store current version:
+				jsonGenerator.writeNumberField("version", VERSION);
+				// Store data entries:
+				jsonGenerator.writeArrayFieldStart("dataEntries");
+				for (var dataEntry : dataEntries)
+				{
+					jsonGenerator.writeObject(dataEntry);
+				}
+				jsonGenerator.writeEndArray();
+				jsonGenerator.writeEndObject();
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	public static class Deserializer extends StdDeserializer<MainFrame>
+	{
+		private static final long serialVersionUID = 1L;
+
+		public Deserializer()
+		{
+			this(null);
+		}
+		public Deserializer(Class<?> vc)
+		{
+			super(vc);
+		}
+
+		@Override
+		public MainFrame deserialize(JsonParser parser, DeserializationContext deserializer)
+		{
+			try
+			{
+				final ObjectMapper mapper = new ObjectMapper();
+				final var codec = parser.getCodec();
+				final JsonNode node = codec.readTree(parser);
+
+				// Check json compatibility:
+				var targetVersion = node.get("version").intValue();
+				if (targetVersion != VERSION)
+				{
+					throw new Exception("Target json does not have matching version (" + targetVersion + " instead of " + VERSION + ")");
+				}
+				// Extract and create data entries:
+				var dataEntriesNode = node.get("dataEntries");
+				for (var dataEntryNode : dataEntriesNode)
+				{
+					dataEntries.add(mapper.treeToValue(dataEntryNode, DataEntry.class));
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+			return getInstance();
+		}
+	}
 
 	private static void createInputFrame()
 	{
 		// Create the frame:
-		JFrame frame = new JFrame(frameName);
+		JFrame frame = new JFrame(FRAME_NAME);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// Set the frame appearance:
-		var imgURL = MainFrame.class.getResource(logoPath);
+		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
 		if (imgURL != null)
 		{
 			frame.setIconImage(new ImageIcon(imgURL).getImage());
@@ -52,6 +173,16 @@ public class MainFrame
 
 	public static void main(String[] args)
 	{
+		try
+		{
+			// Load database from stored json:
+			readDatabaseFromJson();
+		}
+		catch (Exception exception)
+		{
+			exception.printStackTrace();
+		}
+
 		// Schedule a job for the event dispatch thread:
 		SwingUtilities.invokeLater(
 			new Runnable()
@@ -64,16 +195,32 @@ public class MainFrame
 		);
 	}
 
-	public static void addDataEntry(String[] dataRows)
+	public static void addDataEntry(String[] dataRows) throws Exception
 	{
-		try
-		{
-			dataEntries.add(new DataEntry(dataRows));
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		dataEntries.add(new DataEntry(dataRows));
+	}
+
+	public static void writeDatabaseToJson() throws Exception
+	{
+		final var databaseFile = new File(DATABASE_PATH + "/" + DATABASE_NAME + ".json");
+		final var backupFile = new File(BACKUP_PATH + "/" + DATABASE_NAME + "_" + DateFormat.getDateInstance(DateFormat.SHORT).format(new Date()) + ".json");
+
+		// Create a backup of the json database file:
+		Files.copy(databaseFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		// Write database to json database file:
+		var mapper = new ObjectMapper();
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		mapper.writeValue(databaseFile, getInstance());
+	}
+
+	public static void readDatabaseFromJson() throws Exception
+	{
+		final var databaseFile = new File(DATABASE_PATH + "/" + DATABASE_NAME + ".json");
+
+		// Load database from json database file:
+		var mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+		mapper.readValue(databaseFile, MainFrame.class);
 	}
 
 }

@@ -19,11 +19,10 @@ Work status:
 // Programming:
 // -------------
 
-!!- Save/load entry data from/to Xml or Json
 !!- Add a panel for displaying the data
 !- Close app when pressing "Esc"
-!- Maybe change constants (final) to use UPPER_CASE as formating
 !- Maybe store dataFields not as JComponent but as their individual type so no instanceof and casting is needed
+!- Maybe use a better/custom json schema
 
 
 // -------------
