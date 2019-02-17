@@ -21,14 +21,15 @@ Work status:
 
 !!- Add a panel for displaying the data
 !- Close app when pressing "Esc"
-!- Maybe store dataFields not as JComponent but as their individual type so no instanceof and casting is needed
 !- Maybe use a better/custom json schema
+!- Maybe add specific tooltips for the different types and subtypes if possible
 
 
 // -------------
 // Application design:
 // -------------
 
+!!- Add a subtype field for InputPanel (eg. Books and Movies for Media etc.)
 !- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
 
 

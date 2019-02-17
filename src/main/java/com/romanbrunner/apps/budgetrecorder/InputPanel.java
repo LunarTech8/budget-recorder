@@ -43,38 +43,128 @@ class InputPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private JComponent dataFields[] = new JComponent[DataEntry.DATA_ROW_COUNT];
+	private DataRow dataRows[] = new DataRow[DataEntry.DATA_ROW_COUNT];
 
-	private String getDataFieldValueAsString(int index)
+	private interface DataRow
 	{
-		var dataField = dataFields[index];
-		if (dataField instanceof JFormattedTextField)
+		JComponent getJComponent();
+		String getValueAsString();
+	}
+
+	private class CurrencyDataRow implements DataRow
+	{
+		private JFormattedTextField dataField;
+
+		public CurrencyDataRow(float initValue, int fractionDigits)
 		{
-			return ((JFormattedTextField)dataField).getText().toString();
+			var displayFormat = NumberFormat.getCurrencyInstance();
+			displayFormat.setMinimumFractionDigits(fractionDigits);
+			var displayFormatter = new NumberFormatter(displayFormat);
+			dataField = new JFormattedTextField(new DefaultFormatterFactory(displayFormatter, displayFormatter, new NumberFormatter(NumberFormat.getNumberInstance())));
+			dataField.setValue(initValue);
 		}
-		else if (dataField instanceof JComboBox)
+
+		public JComponent getJComponent()
 		{
-			return ((JComboBox)dataField).getSelectedItem().toString();
+			return dataField;
 		}
-		else if (dataField instanceof JSpinner)
+
+		public String getValueAsString()
 		{
-			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)((JSpinner)dataField).getModel().getValue());
+			return dataField.getText().toString();
 		}
-		else if (dataField instanceof JCheckBox)
+	}
+
+	private class ComboBoxDataRow implements DataRow
+	{
+		private JComboBox<String> dataField;
+
+		public ComboBoxDataRow(String[] items)
 		{
-			var cb = (JCheckBox)dataField;
-			var returnString = cb.getText();
-			if (cb.isSelected() == false)
+			dataField = new JComboBox<String>(items);
+		}
+
+		public JComponent getJComponent()
+		{
+			return dataField;
+		}
+
+		public String getValueAsString()
+		{
+			return dataField.getSelectedItem().toString();
+		}
+	}
+
+	private class DateDataRow implements DataRow
+	{
+		private JSpinner dataField;
+
+		public DateDataRow(int maxBackYears, int maxUpYears)
+		{
+			var calendar = Calendar.getInstance();
+			var initDate = calendar.getTime();
+			calendar.add(Calendar.YEAR, -maxBackYears);
+			var earliestDate = calendar.getTime();
+			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
+			var latestDate = calendar.getTime();
+			dataField = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
+			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
+		}
+
+		public JComponent getJComponent()
+		{
+			return dataField;
+		}
+
+		public String getValueAsString()
+		{
+			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
+		}
+	}
+
+	private class CheckBoxDataRow implements DataRow
+	{
+		private JCheckBox dataField;
+
+		public CheckBoxDataRow(String text)
+		{
+			dataField = new JCheckBox(text);
+		}
+
+		public JComponent getJComponent()
+		{
+			return dataField;
+		}
+
+		public String getValueAsString()
+		{
+			var returnString = dataField.getText();
+			if (dataField.isSelected() == false)
 			{
 				returnString = "Not " + returnString;
 			}
 			return returnString;
 		}
-		else if (dataField instanceof JTextField)
+	}
+
+	private class TextDataRow implements DataRow
+	{
+		private JTextField dataField;
+
+		public TextDataRow()
 		{
-			return ((JTextField)dataField).getText();
+			dataField = new JTextField();
 		}
-		return "ERROR: Unspecified data field type";
+
+		public JComponent getJComponent()
+		{
+			return dataField;
+		}
+
+		public String getValueAsString()
+		{
+			return dataField.getText();
+		}
 	}
 
 	private class AddDataEntryAL implements ActionListener
@@ -84,10 +174,10 @@ class InputPanel extends JPanel
 			try
 			{
 				// Extract current data row values:
-				var valueStrings = new String[DataEntry.DATA_ROW_COUNT];
-				for (int i = 0; i < DataEntry.DATA_ROW_COUNT; i++)
+				var valueStrings = new String[dataRows.length];
+				for (int i = 0; i < dataRows.length; i++)
 				{
-					valueStrings[i] = getDataFieldValueAsString(i);
+					valueStrings[i] = dataRows[i].getValueAsString();
 				}
 				// Create data entry of the extracted values and add it to the database:
 				MainFrame.addDataEntry(valueStrings);
@@ -123,42 +213,30 @@ class InputPanel extends JPanel
 			add(label, c);
 			// Create data field:
 			c.gridx = 1;
-			JComponent dataField;
+			DataRow dataRow;
 			switch (r)
 			{
 				case MONEY:
-					var displayFormat = NumberFormat.getCurrencyInstance();
-					displayFormat.setMinimumFractionDigits(2);
-					var displayFormatter = new NumberFormatter(displayFormat);
-					var formatedTextField = new JFormattedTextField(new DefaultFormatterFactory(displayFormatter, displayFormatter, new NumberFormatter(NumberFormat.getNumberInstance())));
-					formatedTextField.setValue(0);
-					dataField = formatedTextField;
+					dataRow = new CurrencyDataRow(0, 2);
 					break;
 				case TYPE:
-					dataField = new JComboBox<>(DataEntry.TYPE_NAMES);
+					dataRow = new ComboBoxDataRow(DataEntry.TYPE_NAMES);
 					break;
 				case DATE:
-					var calendar = Calendar.getInstance();
-					var initDate = calendar.getTime();
-					calendar.add(Calendar.YEAR, -100);
-					var earliestDate = calendar.getTime();
-					calendar.add(Calendar.YEAR, 1100);
-					var latestDate = calendar.getTime();
-					var spinner = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
-					spinner.setEditor(new JSpinner.DateEditor(spinner, "dd.MM.yyyy"));
-					dataField = spinner;
+					dataRow = new DateDataRow(100, 1000);
 					break;
 				case REPEAT:
-					dataField = new JCheckBox("Monthly");
+					dataRow = new CheckBoxDataRow("Monthly");
 					break;
 				default:
-					dataField = new JTextField();
+					dataRow = new TextDataRow();
 					break;
 			}
-			dataField.setToolTipText("Define the value for " + name + " here.");
-			dataField.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
-			add(dataField, c);
-			dataFields[c.gridy] = dataField;
+			var component = dataRow.getJComponent();
+			component.setToolTipText("Define the value for " + name + " here.");
+			component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
+			add(component, c);
+			dataRows[c.gridy] = dataRow;
 
 			c.gridy++;
 		}
