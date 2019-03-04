@@ -46,7 +46,9 @@ public class MainFrame  // Singleton class
 	private static final String DATABASE_NAME = "database";
 	private static final String DATABASE_PATH = "target";
 	private static final String BACKUP_PATH = "target/backups";
-	private static final int VERSION = 1;
+	private static final int VERSION_MAJOR = 1;
+	private static final int VERSION_MINOR = 0;
+	private static final int VERSION_PATCH = 0;
 
 
 	// --------------------
@@ -88,7 +90,9 @@ public class MainFrame  // Singleton class
 			{
 				jsonGenerator.writeStartObject();
 				// Store current version:
-				jsonGenerator.writeNumberField("version", VERSION);
+				jsonGenerator.writeNumberField("versionMajor", VERSION_MAJOR);
+				jsonGenerator.writeNumberField("versionMinor", VERSION_MINOR);
+				jsonGenerator.writeNumberField("versionPatch", VERSION_PATCH);
 				// Store data entries:
 				jsonGenerator.writeArrayFieldStart("dataEntries");
 				for (var dataEntry : dataEntries)
@@ -128,10 +132,20 @@ public class MainFrame  // Singleton class
 				final JsonNode node = codec.readTree(parser);
 
 				// Check json compatibility:
-				var targetVersion = node.get("version").intValue();
-				if (targetVersion != VERSION)
+				var versionMajor = node.get("versionMajor").intValue();
+				if (versionMajor != VERSION_MAJOR)
 				{
-					throw new Exception("Target json does not have matching version (" + targetVersion + " instead of " + VERSION + ")");
+					throw new Exception("ERROR: Target database json does not have matching major version (" + versionMajor + " instead of " + VERSION_MAJOR + ")");
+				}
+				var versionMinor = node.get("versionMinor").intValue();
+				if (versionMinor != VERSION_MINOR)
+				{
+					System.out.println("WARNING: Target database json does not have matching minor version (" + versionMinor + " instead of " + VERSION_MINOR + ")");
+				}
+				var versionPatch = node.get("versionPatch").intValue();
+				if (versionPatch != VERSION_PATCH)
+				{
+					System.out.println("WARNING: Target database json does not have matching patch version (" + versionPatch + " instead of " + VERSION_PATCH + ")");
 				}
 				// Extract and create data entries:
 				var dataEntriesNode = node.get("dataEntries");
@@ -142,7 +156,12 @@ public class MainFrame  // Singleton class
 			}
 			catch (Exception exception)
 			{
+				if (exception instanceof NullPointerException)
+				{
+					exception.initCause(new Exception("ERROR: Couldn't find a required json node"));
+				}
 				exception.printStackTrace();
+				System.exit(1);  // Terminate program to avoid data corruption
 			}
 			return getInstance();
 		}
@@ -177,22 +196,22 @@ public class MainFrame  // Singleton class
 		{
 			// Load database from stored json:
 			readDatabaseFromJson();
+
+			// Schedule a job for the event dispatch thread:
+			SwingUtilities.invokeLater(
+				new Runnable()
+				{
+					public void run()
+					{
+						createInputFrame();
+					}
+				}
+			);
 		}
 		catch (Exception exception)
 		{
 			exception.printStackTrace();
 		}
-
-		// Schedule a job for the event dispatch thread:
-		SwingUtilities.invokeLater(
-			new Runnable()
-			{
-				public void run()
-				{
-					createInputFrame();
-				}
-			}
-		);
 	}
 
 	public static void addDataEntry(String[] dataRows) throws Exception

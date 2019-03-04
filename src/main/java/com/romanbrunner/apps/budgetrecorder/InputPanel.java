@@ -37,6 +37,9 @@ class InputPanel extends JPanel
 	private static final int ADD_BUTTON_HEIGHT = 40;
 	private static final String ADD_BUTTON_TEXT = "Add entry";
 	private static final String ADD_BUTTON_TOOLTIP = "Adds the values defined above to the data base";
+	private static final String DATA_ROW_TEXT = "<NAME>:";
+	private static final String DATA_ROW_TOOLTIP = "Define the value for <NAME> in the field to the right.";
+	private static final String DATA_FIELD_TOOLTIP = "Define the value for <NAME> here.";
 
 
 	// --------------------
@@ -83,6 +86,11 @@ class InputPanel extends JPanel
 		{
 			dataField = new JComboBox<String>(items);
 		}
+		public ComboBoxDataRow(String[] items, ActionListener actionListener)
+		{
+			dataField = new JComboBox<String>(items);
+			dataField.addActionListener(actionListener);
+		}
 
 		public JComponent getJComponent()
 		{
@@ -92,6 +100,20 @@ class InputPanel extends JPanel
 		public String getValueAsString()
 		{
 			return dataField.getSelectedItem().toString();
+		}
+
+		public int getSelectedIndex()
+		{
+			return dataField.getSelectedIndex();
+		}
+
+		public void changeItems(String[] newItems)
+		{
+			dataField.removeAllItems();
+			for (var item : newItems)
+			{
+				dataField.addItem(item);
+			}
 		}
 	}
 
@@ -167,7 +189,26 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class AddDataEntryAL implements ActionListener
+	private class TypeDataRowAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Get combo-boxes:
+				ComboBoxDataRow typeComboBox = (ComboBoxDataRow)dataRows[DataEntry.DataRow.TYPE.ordinal()];
+				ComboBoxDataRow subtypeComboBox = (ComboBoxDataRow)dataRows[DataEntry.DataRow.SUBTYPE.ordinal()];
+				// Change items in subtype combo-box with currently selected subset of names as options:
+				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeComboBox.getSelectedIndex()]);
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class AddButtonAL implements ActionListener
 	{
 		public void actionPerformed(ActionEvent event)
 		{
@@ -207,8 +248,8 @@ class InputPanel extends JPanel
 			// Create name label:
 			c.gridx = 0;
 			var name = r.toString();
-			var label = new JLabel(name + ":", JLabel.CENTER);
-			label.setToolTipText("Define the value for " + name + " in the field to the right.");
+			var label = new JLabel(DATA_ROW_TEXT.replace("<NAME>", name), JLabel.CENTER);
+			label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
 			label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
 			add(label, c);
 			// Create data field:
@@ -220,7 +261,10 @@ class InputPanel extends JPanel
 					dataRow = new CurrencyDataRow(0, 2);
 					break;
 				case TYPE:
-					dataRow = new ComboBoxDataRow(DataEntry.TYPE_NAMES);
+					dataRow = new ComboBoxDataRow(DataEntry.TYPE_NAMES, new TypeDataRowAL());
+					break;
+				case SUBTYPE:
+					dataRow = new ComboBoxDataRow(DataEntry.SUBTYPE_NAMES[0]);
 					break;
 				case DATE:
 					dataRow = new DateDataRow(100, 1000);
@@ -233,7 +277,7 @@ class InputPanel extends JPanel
 					break;
 			}
 			var component = dataRow.getJComponent();
-			component.setToolTipText("Define the value for " + name + " here.");
+			component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
 			component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
 			add(component, c);
 			dataRows[c.gridy] = dataRow;
@@ -244,7 +288,7 @@ class InputPanel extends JPanel
 		var button = new JButton(ADD_BUTTON_TEXT);
 		button.setToolTipText(ADD_BUTTON_TOOLTIP);
 		button.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
-		button.addActionListener(new AddDataEntryAL());
+		button.addActionListener(new AddButtonAL());
 		c.gridwidth = 2;
 		c.gridx = 0;
 		c.gridy = DataEntry.DATA_ROW_COUNT;

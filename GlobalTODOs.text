@@ -29,7 +29,6 @@ Work status:
 // Application design:
 // -------------
 
-!!- Add a subtype field for InputPanel (eg. Books and Movies for Media etc.)
 !- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
 
 

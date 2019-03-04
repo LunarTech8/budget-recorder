@@ -21,12 +21,23 @@ class DataEntry
 	// Data code
 	// --------------------
 
-	public static final String[] TYPE_NAMES = { "Food/Grooming", "Clothing", "Electronics", "Media", "Housing", "Amusement", "Vacation", "Locomotion", "Education" };
+	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Electronics", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
+	public static final String[][] SUBTYPE_NAMES =
+	{
+		{ "Supermarket", "Bakery", "Restaurant", "Bar", "Snack stand", "Barber", "Medical", "Fitness" },
+		{ "Book", "Movie", "Video game", "Board game", "Education" },
+		{ "Desktop", "Mobile", "Entertainment", "Cleaning", "Generic" },
+		{ "Work", "Sport", "Leisure", "Generic" },
+		{ "Rent", "Incidental costs", "Electricity", "Insurance", "Internet" },
+		{ "Event", "Vacation" },
+		{ "Commute", "Train", "Bus", "Plane", "Car" },
+		{ "Profession", "Job", "Gift" },
+	};
 	public static final int DATA_ROW_COUNT = DataRow.values().length;
 
 	public enum DataRow
 	{
-		MONEY("Money"), NAME("Name"), LOCATION("Location"), TYPE("Type"), DATE("Date"), REPEAT("Repeat");
+		MONEY("Money"), NAME("Name"), LOCATION("Location"), TYPE("Type"), SUBTYPE("Subtype"), DATE("Date"), REPEAT("Repeat");
 
 		private final String val;
 
@@ -125,7 +136,7 @@ class DataEntry
 	{
 		if (dataRows.length != DATA_ROW_COUNT)
 		{
-			throw new Exception("Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_COUNT + ")");
+			throw new Exception("ERROR: Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_COUNT + ")");
 		}
 		this.dataRows = dataRows;
 	}
