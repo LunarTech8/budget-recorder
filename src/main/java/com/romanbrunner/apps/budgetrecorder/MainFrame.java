@@ -43,9 +43,7 @@ public class MainFrame  // Singleton class
 
 	private static final String FRAME_NAME = "Budget Recorder";
 	private static final String LOGO_FILE_PATH = "images/Logo.jpg";
-	private static final String DATABASE_NAME = "database";
-	private static final String DATABASE_PATH = "target";
-	private static final String BACKUP_PATH = "target/backups";
+	private static final String CONFIG_PATH = "src/main/resources";
 	private static final int VERSION_MAJOR = 1;
 	private static final int VERSION_MINOR = 0;
 	private static final int VERSION_PATCH = 0;
@@ -57,6 +55,9 @@ public class MainFrame  // Singleton class
 
 	private static MainFrame instance = null;
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
+	private static String databaseName;
+	private static String databasePath;
+	private static String backupPath;
 
 	/**
 	 * @return the instance
@@ -89,6 +90,7 @@ public class MainFrame  // Singleton class
 			try
 			{
 				jsonGenerator.writeStartObject();
+				jsonGenerator.writeStringField("jsonType", "database");
 				// Store current version:
 				jsonGenerator.writeNumberField("versionMajor", VERSION_MAJOR);
 				jsonGenerator.writeNumberField("versionMinor", VERSION_MINOR);
@@ -131,27 +133,42 @@ public class MainFrame  // Singleton class
 				final var codec = parser.getCodec();
 				final JsonNode node = codec.readTree(parser);
 
-				// Check json compatibility:
-				var versionMajor = node.get("versionMajor").intValue();
-				if (versionMajor != VERSION_MAJOR)
+				// Deserialize depending on the json-type:
+				var jsonType = node.get("jsonType").textValue();
+				if (jsonType.compareTo("config") == 0)
 				{
-					throw new Exception("ERROR: Target database json does not have matching major version (" + versionMajor + " instead of " + VERSION_MAJOR + ")");
+					databaseName = node.get("databaseName").textValue();
+					databasePath = node.get("databasePath").textValue();
+					backupPath = node.get("backupPath").textValue();
 				}
-				var versionMinor = node.get("versionMinor").intValue();
-				if (versionMinor != VERSION_MINOR)
+				else if (jsonType.compareTo("database") == 0)
 				{
-					System.out.println("WARNING: Target database json does not have matching minor version (" + versionMinor + " instead of " + VERSION_MINOR + ")");
+					// Check json compatibility:
+					var versionMajor = node.get("versionMajor").intValue();
+					if (versionMajor != VERSION_MAJOR)
+					{
+						throw new Exception("ERROR: Target database json does not have matching major version (" + versionMajor + " instead of " + VERSION_MAJOR + ")");
+					}
+					var versionMinor = node.get("versionMinor").intValue();
+					if (versionMinor != VERSION_MINOR)
+					{
+						System.out.println("WARNING: Target database json does not have matching minor version (" + versionMinor + " instead of " + VERSION_MINOR + ")");
+					}
+					var versionPatch = node.get("versionPatch").intValue();
+					if (versionPatch != VERSION_PATCH)
+					{
+						System.out.println("WARNING: Target database json does not have matching patch version (" + versionPatch + " instead of " + VERSION_PATCH + ")");
+					}
+					// Extract and create data entries:
+					var dataEntriesNode = node.get("dataEntries");
+					for (var dataEntryNode : dataEntriesNode)
+					{
+						dataEntries.add(mapper.treeToValue(dataEntryNode, DataEntry.class));
+					}
 				}
-				var versionPatch = node.get("versionPatch").intValue();
-				if (versionPatch != VERSION_PATCH)
+				else
 				{
-					System.out.println("WARNING: Target database json does not have matching patch version (" + versionPatch + " instead of " + VERSION_PATCH + ")");
-				}
-				// Extract and create data entries:
-				var dataEntriesNode = node.get("dataEntries");
-				for (var dataEntryNode : dataEntriesNode)
-				{
-					dataEntries.add(mapper.treeToValue(dataEntryNode, DataEntry.class));
+					throw new Exception("ERROR: Invalid json type (" + jsonType + ")");
 				}
 			}
 			catch (Exception exception)
@@ -190,13 +207,34 @@ public class MainFrame  // Singleton class
 		frame.setVisible(true);
 	}
 
+	private static void readConfigFromJson() throws Exception
+	{
+		final var configFile = new File(CONFIG_PATH + "/config.json");
+
+		// Load settings from json config file:
+		var mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+		mapper.readValue(configFile, MainFrame.class);
+	}
+
+	private static void readDatabaseFromJson() throws Exception
+	{
+		final var databaseFile = new File(databasePath + "/" + databaseName + ".json");
+
+		// Load database from json database file:
+		var mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+		mapper.readValue(databaseFile, MainFrame.class);
+	}
+
 	public static void main(String[] args)
 	{
 		try
 		{
+			// Load settings from stored config json:
+			readConfigFromJson();
 			// Load database from stored json:
 			readDatabaseFromJson();
-
 			// Schedule a job for the event dispatch thread:
 			SwingUtilities.invokeLater(
 				new Runnable()
@@ -221,8 +259,8 @@ public class MainFrame  // Singleton class
 
 	public static void writeDatabaseToJson() throws Exception
 	{
-		final var databaseFile = new File(DATABASE_PATH + "/" + DATABASE_NAME + ".json");
-		final var backupFile = new File(BACKUP_PATH + "/" + DATABASE_NAME + "_" + DateFormat.getDateInstance(DateFormat.SHORT).format(new Date()) + ".json");
+		final var databaseFile = new File(databasePath + "/" + databaseName + ".json");
+		final var backupFile = new File(backupPath + "/" + databaseName + "_" + DateFormat.getDateInstance(DateFormat.SHORT).format(new Date()) + ".json");
 
 		// Create a backup of the json database file:
 		Files.copy(databaseFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -230,16 +268,6 @@ public class MainFrame  // Singleton class
 		var mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		mapper.writeValue(databaseFile, getInstance());
-	}
-
-	public static void readDatabaseFromJson() throws Exception
-	{
-		final var databaseFile = new File(DATABASE_PATH + "/" + DATABASE_NAME + ".json");
-
-		// Load database from json database file:
-		var mapper = new ObjectMapper();
-		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-		mapper.readValue(databaseFile, MainFrame.class);
 	}
 
 }
