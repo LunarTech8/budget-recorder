@@ -36,4 +36,5 @@ Work status:
 // Resources:
 // -------------
 
-!- The images folder should probably be moved into resources -> Find out how to use getResource then
+!!>- Make getResource and getResourceAsStream find files under src/main/resources
+!!>- Maybe use config.properties instead of config.json for settings

@@ -1,9 +1,10 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 // import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+// import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
+import java.util.Properties;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -32,7 +33,7 @@ import com.romanbrunner.apps.budgetrecorder.InputPanel;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
-@SpringBootApplication
+// @SpringBootApplication
 @JsonSerialize(using = MainFrame.Serializer.class)
 @JsonDeserialize(using = MainFrame.Deserializer.class)
 public class MainFrame  // Singleton class
@@ -210,6 +211,20 @@ public class MainFrame  // Singleton class
 	private static void readConfigFromJson() throws Exception
 	{
 		final var configFile = new File(CONFIG_PATH + "/config.json");
+
+		// DEBUG
+		// getResourceAsStream/getResource only finds files in folder of MainFrame.java
+		var inputStream = MainFrame.class.getResourceAsStream("config.properties");
+		if (inputStream != null)
+		{
+			var prop = new Properties();
+			prop.load(inputStream);
+			System.out.println(prop.getProperty("jsonType"));
+		}
+		else
+		{
+			System.out.println("DEBUG: File not found");
+		}
 
 		// Load settings from json config file:
 		var mapper = new ObjectMapper();
