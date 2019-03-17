@@ -40,7 +40,7 @@
 
 	<!-- Build Settings -->
 	<build>
-		<resources>
+		<!-- <resources>
 			<resource>
 				<targetPath>META-INF/resources</targetPath>
 				<filtering>false</filtering>
@@ -52,7 +52,7 @@
 					<exclude>**/*.properties</exclude>
 				</excludes>
 			</resource>
-		</resources>
+		</resources> -->
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
