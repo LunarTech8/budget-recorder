@@ -1,7 +1,7 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 // import org.springframework.boot.SpringApplication;
-// import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.List;
 import java.util.Properties;
@@ -33,7 +33,7 @@ import com.romanbrunner.apps.budgetrecorder.InputPanel;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
-// @SpringBootApplication
+@SpringBootApplication
 @JsonSerialize(using = MainFrame.Serializer.class)
 @JsonDeserialize(using = MainFrame.Deserializer.class)
 public class MainFrame  // Singleton class
