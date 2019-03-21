@@ -3,14 +3,15 @@ package com.romanbrunner.apps.budgetrecorder;
 // import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.util.List;
-import java.util.Properties;
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 import javax.swing.JFrame;
 import javax.swing.ImageIcon;
@@ -43,8 +44,9 @@ public class MainFrame  // Singleton class
 	// --------------------
 
 	private static final String FRAME_NAME = "Budget Recorder";
-	private static final String LOGO_FILE_PATH = "images/Logo.jpg";
-	private static final String CONFIG_PATH = "src/main/resources";
+	private static final String LOGO_FILE_PATH = "/images/Logo.jpg";
+	// private static final String CONFIG_PATH = "/config.json";
+	private static final String CONFIG_PATH = "/config.properties";
 	private static final int VERSION_MAJOR = 1;
 	private static final int VERSION_MINOR = 0;
 	private static final int VERSION_PATCH = 0;
@@ -208,28 +210,34 @@ public class MainFrame  // Singleton class
 		frame.setVisible(true);
 	}
 
+	// private static void readConfigFromJson() throws Exception
+	// {
+	// 	final var configFile = new File(CONFIG_PATH);
+
+	// 	// Load settings from json config file:
+	// 	var mapper = new ObjectMapper();
+	// 	mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
+	// 	mapper.readValue(configFile, MainFrame.class);
+	// }
+
 	private static void readConfigFromJson() throws Exception
 	{
-		final var configFile = new File(CONFIG_PATH + "/config.json");
-
-		// DEBUG
-		// getResourceAsStream/getResource only finds files in folder of MainFrame.java
-		var inputStream = MainFrame.class.getResourceAsStream("config.properties");
+		var inputStream = MainFrame.class.getResourceAsStream(CONFIG_PATH);
 		if (inputStream != null)
 		{
 			var prop = new Properties();
 			prop.load(inputStream);
-			System.out.println(prop.getProperty("jsonType"));
+			databaseName = prop.getProperty("databaseName");
+			databasePath = prop.getProperty("databasePath");
+			backupPath = prop.getProperty("backupPath");
+			System.out.println(databaseName);  // DEBUG
+			System.out.println(databasePath);  // DEBUG
+			System.out.println(backupPath);  // DEBUG
 		}
 		else
 		{
-			System.out.println("DEBUG: File not found");
+			throw new Exception("ERROR: Config not found");
 		}
-
-		// Load settings from json config file:
-		var mapper = new ObjectMapper();
-		mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-		mapper.readValue(configFile, MainFrame.class);
 	}
 
 	private static void readDatabaseFromJson() throws Exception
@@ -244,6 +252,10 @@ public class MainFrame  // Singleton class
 
 	public static void main(String[] args)
 	{
+		// DEBUG:
+		// ResourceImportTest.test1();
+		// ResourceImportTest.test2();
+
 		try
 		{
 			// Load settings from stored config json:

@@ -36,5 +36,5 @@ Work status:
 // Resources:
 // -------------
 
-!!>- Make getResource and getResourceAsStream find files under src/main/resources
-!!>- Maybe use config.properties instead of config.json for settings
+!!>>>- Make getResource and getResourceAsStream find files under src/main/resources
+!!>>>- Maybe use config.properties instead of config.json for settings
