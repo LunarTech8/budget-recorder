@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
 import java.util.Date;
@@ -45,7 +44,6 @@ public class MainFrame  // Singleton class
 
 	private static final String FRAME_NAME = "Budget Recorder";
 	private static final String LOGO_FILE_PATH = "/images/Logo.jpg";
-	// private static final String CONFIG_PATH = "/config.json";
 	private static final String CONFIG_PATH = "/config.properties";
 	private static final int VERSION_MAJOR = 1;
 	private static final int VERSION_MINOR = 0;
@@ -138,13 +136,7 @@ public class MainFrame  // Singleton class
 
 				// Deserialize depending on the json-type:
 				var jsonType = node.get("jsonType").textValue();
-				if (jsonType.compareTo("config") == 0)
-				{
-					databaseName = node.get("databaseName").textValue();
-					databasePath = node.get("databasePath").textValue();
-					backupPath = node.get("backupPath").textValue();
-				}
-				else if (jsonType.compareTo("database") == 0)
+				if (jsonType.compareTo("database") == 0)
 				{
 					// Check json compatibility:
 					var versionMajor = node.get("versionMajor").intValue();
@@ -187,7 +179,7 @@ public class MainFrame  // Singleton class
 		}
 	}
 
-	private static void createInputFrame()
+	private static void createInputFrame() throws Exception
 	{
 		// Create the frame:
 		JFrame frame = new JFrame(FRAME_NAME);
@@ -199,7 +191,10 @@ public class MainFrame  // Singleton class
 		{
 			frame.setIconImage(new ImageIcon(imgURL).getImage());
 		}
-		// frame.add(new InputPanel());
+		else
+		{
+			throw new Exception("ERROR: Logo file not found");
+		}
 		frame.setContentPane(new InputPanel());
 
 		// Set the frame size and position:
@@ -210,17 +205,7 @@ public class MainFrame  // Singleton class
 		frame.setVisible(true);
 	}
 
-	// private static void readConfigFromJson() throws Exception
-	// {
-	// 	final var configFile = new File(CONFIG_PATH);
-
-	// 	// Load settings from json config file:
-	// 	var mapper = new ObjectMapper();
-	// 	mapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, false);
-	// 	mapper.readValue(configFile, MainFrame.class);
-	// }
-
-	private static void readConfigFromJson() throws Exception
+	private static void readConfigFile() throws Exception
 	{
 		var inputStream = MainFrame.class.getResourceAsStream(CONFIG_PATH);
 		if (inputStream != null)
@@ -230,9 +215,6 @@ public class MainFrame  // Singleton class
 			databaseName = prop.getProperty("databaseName");
 			databasePath = prop.getProperty("databasePath");
 			backupPath = prop.getProperty("backupPath");
-			System.out.println(databaseName);  // DEBUG
-			System.out.println(databasePath);  // DEBUG
-			System.out.println(backupPath);  // DEBUG
 		}
 		else
 		{
@@ -240,7 +222,7 @@ public class MainFrame  // Singleton class
 		}
 	}
 
-	private static void readDatabaseFromJson() throws Exception
+	private static void readDatabaseFile() throws Exception
 	{
 		final var databaseFile = new File(databasePath + "/" + databaseName + ".json");
 
@@ -252,26 +234,28 @@ public class MainFrame  // Singleton class
 
 	public static void main(String[] args)
 	{
-		// DEBUG:
-		// ResourceImportTest.test1();
-		// ResourceImportTest.test2();
-
 		try
 		{
-			// Load settings from stored config json:
-			readConfigFromJson();
-			// Load database from stored json:
-			readDatabaseFromJson();
+			// Load settings from config file:
+			readConfigFile();
+			// Load database from json file:
+			readDatabaseFile();
 			// Schedule a job for the event dispatch thread:
-			SwingUtilities.invokeLater(
-				new Runnable()
+			var runnable = new Runnable()
+			{
+				public void run()
 				{
-					public void run()
+					try
 					{
 						createInputFrame();
 					}
+					catch (Exception exception)
+					{
+						exception.printStackTrace();
+					}
 				}
-			);
+			};
+			SwingUtilities.invokeLater(runnable);
 		}
 		catch (Exception exception)
 		{
@@ -284,7 +268,7 @@ public class MainFrame  // Singleton class
 		dataEntries.add(new DataEntry(dataRows));
 	}
 
-	public static void writeDatabaseToJson() throws Exception
+	public static void writeDatabaseFile() throws Exception
 	{
 		final var databaseFile = new File(databasePath + "/" + databaseName + ".json");
 		final var backupFile = new File(backupPath + "/" + databaseName + "_" + DateFormat.getDateInstance(DateFormat.SHORT).format(new Date()) + ".json");

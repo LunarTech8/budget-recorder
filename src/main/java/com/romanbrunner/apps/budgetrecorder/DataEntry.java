@@ -24,13 +24,21 @@ class DataEntry
 	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Electronics", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
 	public static final String[][] SUBTYPE_NAMES =
 	{
+		// Food/Grooming:
 		{ "Supermarket", "Bakery", "Restaurant", "Bar", "Snack stand", "Barber", "Medical", "Fitness" },
+		// Media:
 		{ "Book", "Movie", "Video game", "Board game", "Education" },
+		// Electronics:
 		{ "Desktop", "Mobile", "Entertainment", "Cleaning", "Generic" },
+		// Clothing:
 		{ "Work", "Sport", "Leisure", "Generic" },
+		// Housing:
 		{ "Rent", "Incidental costs", "Electricity", "Insurance", "Internet" },
+		// Amusement:
 		{ "Event", "Vacation" },
+		// Locomotion:
 		{ "Commute", "Train", "Bus", "Plane", "Car" },
+		// Income:
 		{ "Profession", "Job", "Gift" },
 	};
 	public static final int DATA_ROW_COUNT = DataRow.values().length;

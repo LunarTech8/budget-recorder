@@ -223,7 +223,7 @@ class InputPanel extends JPanel
 				// Create data entry of the extracted values and add it to the database:
 				MainFrame.addDataEntry(valueStrings);
 				// Write database to json:
-				MainFrame.writeDatabaseToJson();
+				MainFrame.writeDatabaseFile();
 			}
 			catch (Exception exception)
 			{
