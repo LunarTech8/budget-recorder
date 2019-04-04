@@ -39,25 +39,37 @@ class DataEntry
 		// Locomotion:
 		{ "Commute", "Train", "Bus", "Plane", "Car" },
 		// Income:
-		{ "Profession", "Job", "Gift" },
+		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
-	public static final int DATA_ROW_COUNT = DataRow.values().length;
+	public static final int DATA_ROW_COUNT = DataRowType.values().length;
 
-	public enum DataRow
+	public enum DataRowType
 	{
-		MONEY("Money"), NAME("Name"), LOCATION("Location"), TYPE("Type"), SUBTYPE("Subtype"), DATE("Date"), REPEAT("Repeat");
+		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6);
 
-		private final String val;
+		private final String name;
+		private final int index;
 
-		private DataRow(String val)
+		private DataRowType(String name, int index)
 		{
-			this.val = val;
+			if (index < 0 || index >= DATA_ROW_COUNT)
+			{
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + DATA_ROW_COUNT + ")");
+			}
+
+			this.name = name;
+			this.index = index;
 		}
 
 		@Override
 		public String toString()
 		{
-			return val;
+			return name;
+		}
+
+		public int toInt()
+		{
+			return index;
 		}
 	}
 
@@ -88,9 +100,9 @@ class DataEntry
 				jsonGenerator.writeStartObject();
 				// Store data rows:
 				int i = 0;
-				for (var dataRow : DataRow.values())
+				for (var dataRowType : DataRowType.values())
 				{
-					jsonGenerator.writeStringField(dataRow.toString(), obj.dataRows[i++]);
+					jsonGenerator.writeStringField(dataRowType.toString(), obj.dataRows[i++]);
 				}
 				jsonGenerator.writeEndObject();
 			}
@@ -125,9 +137,9 @@ class DataEntry
 				// Extract data row values:
 				String[] dataRows = new String[DATA_ROW_COUNT];
 				int i = 0;
-				for (var dataRow : DataRow.values())
+				for (var dataRowType : DataRowType.values())
 				{
-					dataRows[i++] = node.get(dataRow.toString()).textValue();
+					dataRows[i++] = node.get(dataRowType.toString()).textValue();
 				}
 				// Convert extracted values into new data entry:
 				return new DataEntry(dataRows);
@@ -147,5 +159,10 @@ class DataEntry
 			throw new Exception("ERROR: Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_COUNT + ")");
 		}
 		this.dataRows = dataRows;
+	}
+
+	public String getDataRow(DataRowType dataRowType)
+	{
+		return dataRows[dataRowType.toInt()];
 	}
 }

@@ -46,19 +46,19 @@ class InputPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private DataRow dataRows[] = new DataRow[DataEntry.DATA_ROW_COUNT];
+	private DataField dataFields[] = new DataField[DataEntry.DATA_ROW_COUNT];
 
-	private interface DataRow
+	private interface DataField
 	{
 		JComponent getJComponent();
 		String getValueAsString();
 	}
 
-	private class CurrencyDataRow implements DataRow
+	private class CurrencyDataField implements DataField
 	{
 		private JFormattedTextField dataField;
 
-		public CurrencyDataRow(float initValue, int fractionDigits)
+		public CurrencyDataField(float initValue, int fractionDigits)
 		{
 			var displayFormat = NumberFormat.getCurrencyInstance();
 			displayFormat.setMinimumFractionDigits(fractionDigits);
@@ -78,15 +78,15 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class ComboBoxDataRow implements DataRow
+	private class ComboBoxDataField implements DataField
 	{
 		private JComboBox<String> dataField;
 
-		public ComboBoxDataRow(String[] items)
+		public ComboBoxDataField(String[] items)
 		{
 			dataField = new JComboBox<String>(items);
 		}
-		public ComboBoxDataRow(String[] items, ActionListener actionListener)
+		public ComboBoxDataField(String[] items, ActionListener actionListener)
 		{
 			dataField = new JComboBox<String>(items);
 			dataField.addActionListener(actionListener);
@@ -117,11 +117,11 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class DateDataRow implements DataRow
+	private class DateDataField implements DataField
 	{
 		private JSpinner dataField;
 
-		public DateDataRow(int maxBackYears, int maxUpYears)
+		public DateDataField(int maxBackYears, int maxUpYears)
 		{
 			var calendar = Calendar.getInstance();
 			var initDate = calendar.getTime();
@@ -144,11 +144,11 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class CheckBoxDataRow implements DataRow
+	private class CheckBoxDataField implements DataField
 	{
 		private JCheckBox dataField;
 
-		public CheckBoxDataRow(String text)
+		public CheckBoxDataField(String text)
 		{
 			dataField = new JCheckBox(text);
 		}
@@ -169,11 +169,11 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class TextDataRow implements DataRow
+	private class TextDataField implements DataField
 	{
 		private JTextField dataField;
 
-		public TextDataRow()
+		public TextDataField()
 		{
 			dataField = new JTextField();
 		}
@@ -189,15 +189,15 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class TypeDataRowAL implements ActionListener
+	private class TypeDataFieldAL implements ActionListener
 	{
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
 				// Get combo-boxes:
-				ComboBoxDataRow typeComboBox = (ComboBoxDataRow)dataRows[DataEntry.DataRow.TYPE.ordinal()];
-				ComboBoxDataRow subtypeComboBox = (ComboBoxDataRow)dataRows[DataEntry.DataRow.SUBTYPE.ordinal()];
+				ComboBoxDataField typeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()];
+				ComboBoxDataField subtypeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()];
 				// Change items in subtype combo-box with currently selected subset of names as options:
 				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeComboBox.getSelectedIndex()]);
 			}
@@ -215,10 +215,10 @@ class InputPanel extends JPanel
 			try
 			{
 				// Extract current data row values:
-				var valueStrings = new String[dataRows.length];
-				for (int i = 0; i < dataRows.length; i++)
+				var valueStrings = new String[dataFields.length];
+				for (int i = 0; i < dataFields.length; i++)
 				{
-					valueStrings[i] = dataRows[i].getValueAsString();
+					valueStrings[i] = dataFields[i].getValueAsString();
 				}
 				// Create data entry of the extracted values and add it to the database:
 				MainFrame.addDataEntry(valueStrings);
@@ -241,9 +241,9 @@ class InputPanel extends JPanel
 		c.weightx = 0.5;
 		c.weighty = 0.5;
 
-		// Create data rows:
+		// Create data row components:
 		c.gridy = 0;
-		for (var r : DataEntry.DataRow.values())
+		for (var r : DataEntry.DataRowType.values())
 		{
 			// Create name label:
 			c.gridx = 0;
@@ -252,35 +252,35 @@ class InputPanel extends JPanel
 			label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
 			label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
 			add(label, c);
-			// Create data field:
+			// Create data field component:
 			c.gridx = 1;
-			DataRow dataRow;
+			DataField dataField;
 			switch (r)
 			{
 				case MONEY:
-					dataRow = new CurrencyDataRow(0, 2);
+					dataField = new CurrencyDataField(0, 2);
 					break;
 				case TYPE:
-					dataRow = new ComboBoxDataRow(DataEntry.TYPE_NAMES, new TypeDataRowAL());
+					dataField = new ComboBoxDataField(DataEntry.TYPE_NAMES, new TypeDataFieldAL());
 					break;
 				case SUBTYPE:
-					dataRow = new ComboBoxDataRow(DataEntry.SUBTYPE_NAMES[0]);
+					dataField = new ComboBoxDataField(DataEntry.SUBTYPE_NAMES[0]);
 					break;
 				case DATE:
-					dataRow = new DateDataRow(100, 1000);
+					dataField = new DateDataField(100, 1000);
 					break;
 				case REPEAT:
-					dataRow = new CheckBoxDataRow("Monthly");
+					dataField = new CheckBoxDataField("Monthly");
 					break;
 				default:
-					dataRow = new TextDataRow();
+					dataField = new TextDataField();
 					break;
 			}
-			var component = dataRow.getJComponent();
+			var component = dataField.getJComponent();
 			component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
 			component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
 			add(component, c);
-			dataRows[c.gridy] = dataRow;
+			dataFields[c.gridy] = dataField;
 
 			c.gridy++;
 		}

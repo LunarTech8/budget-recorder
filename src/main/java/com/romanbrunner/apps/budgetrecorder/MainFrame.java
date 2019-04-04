@@ -268,6 +268,11 @@ public class MainFrame  // Singleton class
 		dataEntries.add(new DataEntry(dataRows));
 	}
 
+	public static List<DataEntry> getDataEntries() throws Exception
+	{
+		return new LinkedList<>(dataEntries);
+	}
+
 	public static void writeDatabaseFile() throws Exception
 	{
 		final var databaseFile = new File(databasePath + "/" + databaseName + ".json");
