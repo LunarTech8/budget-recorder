@@ -41,7 +41,7 @@ class DataEntry
 		// Income:
 		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
-	public static final int DATA_ROW_COUNT = DataRowType.values().length;
+	public static final int DATA_ROW_TYPE_COUNT = DataRowType.values().length;
 
 	public enum DataRowType
 	{
@@ -50,11 +50,13 @@ class DataEntry
 		private final String name;
 		private final int index;
 
+
 		private DataRowType(String name, int index)
 		{
-			if (index < 0 || index >= DATA_ROW_COUNT)
+			dataRowTypeCount += 1;
+			if (index < 0 || index >= dataRowTypeCount)
 			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + DATA_ROW_COUNT + ")");
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + dataRowTypeCount + ")");
 			}
 
 			this.name = name;
@@ -77,6 +79,7 @@ class DataEntry
 	// Functional code
 	// --------------------
 
+	private static int dataRowTypeCount = 0;  // This is only needed/used for the DataRowType construction check
 	private String[] dataRows;
 
 	public static class Serializer extends StdSerializer<DataEntry>
@@ -135,7 +138,7 @@ class DataEntry
 				final JsonNode node = codec.readTree(parser);
 
 				// Extract data row values:
-				String[] dataRows = new String[DATA_ROW_COUNT];
+				String[] dataRows = new String[DATA_ROW_TYPE_COUNT];
 				int i = 0;
 				for (var dataRowType : DataRowType.values())
 				{
@@ -154,9 +157,9 @@ class DataEntry
 
 	public DataEntry(String[] dataRows) throws Exception
 	{
-		if (dataRows.length != DATA_ROW_COUNT)
+		if (dataRows.length != DATA_ROW_TYPE_COUNT)
 		{
-			throw new Exception("ERROR: Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_COUNT + ")");
+			throw new Exception("ERROR: Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_TYPE_COUNT + ")");
 		}
 		this.dataRows = dataRows;
 	}

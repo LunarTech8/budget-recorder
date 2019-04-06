@@ -46,7 +46,7 @@ class InputPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private DataField dataFields[] = new DataField[DataEntry.DATA_ROW_COUNT];
+	private DataField dataFields[] = new DataField[DataEntry.DATA_ROW_TYPE_COUNT];
 
 	private interface DataField
 	{
@@ -291,7 +291,7 @@ class InputPanel extends JPanel
 		button.addActionListener(new AddButtonAL());
 		c.gridwidth = 2;
 		c.gridx = 0;
-		c.gridy = DataEntry.DATA_ROW_COUNT;
+		c.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
 		add(button, c);
 	}
 }

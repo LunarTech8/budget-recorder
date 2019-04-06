@@ -205,6 +205,32 @@ public class MainFrame  // Singleton class
 		frame.setVisible(true);
 	}
 
+	private static void createDataFrame() throws Exception
+	{
+		// Create the frame:
+		JFrame frame = new JFrame(FRAME_NAME);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Set the frame appearance:
+		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
+		if (imgURL != null)
+		{
+			frame.setIconImage(new ImageIcon(imgURL).getImage());
+		}
+		else
+		{
+			throw new Exception("ERROR: Logo file not found");
+		}
+		frame.setContentPane(new DataPanel());
+
+		// Set the frame size and position:
+		frame.pack();
+		frame.setLocationRelativeTo(null);  // Set frame position to center of screen
+
+		// Display the frame:
+		frame.setVisible(true);
+	}
+
 	private static void readConfigFile() throws Exception
 	{
 		var inputStream = MainFrame.class.getResourceAsStream(CONFIG_PATH);
@@ -248,6 +274,7 @@ public class MainFrame  // Singleton class
 					try
 					{
 						createInputFrame();
+						createDataFrame();
 					}
 					catch (Exception exception)
 					{
