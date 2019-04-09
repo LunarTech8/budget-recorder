@@ -235,25 +235,25 @@ class InputPanel extends JPanel
 	public InputPanel()
 	{
 		super(new GridBagLayout());
-		GridBagConstraints c = new GridBagConstraints();
-		// Define default constrains:
-		c.fill = GridBagConstraints.BOTH;
-		c.weightx = 0.5;
-		c.weighty = 0.5;
+		GridBagConstraints constraints = new GridBagConstraints();
+		// Define default constraints:
+		constraints.fill = GridBagConstraints.BOTH;
+		constraints.weightx = 0.5;
+		constraints.weighty = 0.5;
 
 		// Create data row components:
-		c.gridy = 0;
+		constraints.gridy = 0;
 		for (var r : DataEntry.DataRowType.values())
 		{
 			// Create name label:
-			c.gridx = 0;
+			constraints.gridx = 0;
 			var name = r.toString();
 			var label = new JLabel(DATA_ROW_TEXT.replace("<NAME>", name), JLabel.CENTER);
 			label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
 			label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
-			add(label, c);
+			add(label, constraints);
 			// Create data field component:
-			c.gridx = 1;
+			constraints.gridx = 1;
 			DataField dataField;
 			switch (r)
 			{
@@ -279,19 +279,19 @@ class InputPanel extends JPanel
 			var component = dataField.getJComponent();
 			component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
 			component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
-			add(component, c);
-			dataFields[c.gridy] = dataField;
+			add(component, constraints);
+			dataFields[constraints.gridy] = dataField;
 
-			c.gridy++;
+			constraints.gridy++;
 		}
 		// Create add button:
 		var button = new JButton(ADD_BUTTON_TEXT);
 		button.setToolTipText(ADD_BUTTON_TOOLTIP);
 		button.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
 		button.addActionListener(new AddButtonAL());
-		c.gridwidth = 2;
-		c.gridx = 0;
-		c.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
-		add(button, c);
+		constraints.gridwidth = 2;
+		constraints.gridx = 0;
+		constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
+		add(button, constraints);
 	}
 }

@@ -33,7 +33,9 @@ Work status:
 // -------------
 
 !!>>- Data window: Make the header row stick
-	- Separation of header and data row causes alot of resizing/alignment problems, find something better
+	- Add paddings
+	- Make money row bind to the right
+	- Add frames
 !!- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
 !!- Add some visual clue after a new data entry has be added
 !- Data window: Show data entries from top to bottom, allow more/less info by adding/changing/removing more columns with selectable data type
