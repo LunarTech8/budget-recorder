@@ -3,6 +3,7 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.GridBagConstraints;
 import java.awt.Dimension;
 import java.util.Calendar;
@@ -18,7 +19,9 @@ import javax.swing.text.NumberFormatter;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.JFormattedTextField;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -243,11 +246,11 @@ class InputPanel extends JPanel
 
 		// Create data row components:
 		constraints.gridy = 0;
-		for (var r : DataEntry.DataRowType.values())
+		for (var dataRowType : DataEntry.DataRowType.values())
 		{
 			// Create name label:
 			constraints.gridx = 0;
-			var name = r.toString();
+			var name = dataRowType.toString();
 			var label = new JLabel(DATA_ROW_TEXT.replace("<NAME>", name), JLabel.CENTER);
 			label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
 			label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
@@ -255,7 +258,7 @@ class InputPanel extends JPanel
 			// Create data field component:
 			constraints.gridx = 1;
 			DataField dataField;
-			switch (r)
+			switch (dataRowType)
 			{
 				case MONEY:
 					dataField = new CurrencyDataField(0, 2);
@@ -294,4 +297,19 @@ class InputPanel extends JPanel
 		constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
 		add(button, constraints);
 	}
+
+	public void EscapableFrame()
+    {
+        // https://stackoverflow.com/questions/8455688/why-doesnt-the-frame-close-when-i-press-the-escape-key
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
+        KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel"); //$NON-NLS-1$
+		getRootPane().getActionMap().put("Cancel", new AbstractAction()
+			{
+				public void actionPerformed(ActionEvent e)
+				{
+					System.exit(0);
+				}
+			}
+	  	);
+   }
 }

@@ -3,11 +3,15 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 
 
@@ -22,9 +26,10 @@ class DataPanel extends JPanel
 	private static final int DATA_FIELD_HEIGHT = 40;
 	private static final int HEADER_HEIGHT = 50;
 	private static final int DATA_PANEL_HIGHT = 400;
+	private static final int BORDER_INNER_PADDING_SIZE = 10;
+	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
-	private static final String DATA_FIELD_TOOLTIP = "Data field value for <NAME>.";
 
 
 	// --------------------
@@ -42,6 +47,12 @@ class DataPanel extends JPanel
 			constraints.weightx = 0.5;
 			constraints.weighty = 0.5;
 
+			// Define borders:
+			var innerPaddingBorder = new EmptyBorder(BORDER_INNER_PADDING_SIZE, BORDER_INNER_PADDING_SIZE, BORDER_INNER_PADDING_SIZE, BORDER_INNER_PADDING_SIZE);
+			var outerPaddingBorder = new EmptyBorder(BORDER_OUTER_PADDING_SIZE, BORDER_OUTER_PADDING_SIZE, BORDER_OUTER_PADDING_SIZE, BORDER_OUTER_PADDING_SIZE);
+			var dataBorder = BorderFactory.createCompoundBorder(outerPaddingBorder, BorderFactory.createCompoundBorder(new EtchedBorder(EtchedBorder.LOWERED), innerPaddingBorder));
+			var headerBorder = BorderFactory.createCompoundBorder(outerPaddingBorder, BorderFactory.createCompoundBorder(new LineBorder(Color.black), innerPaddingBorder));
+
 			// Create header panel:
 			var headerPanel = new JPanel(new GridBagLayout());
 			constraints.gridx = 0;
@@ -53,6 +64,7 @@ class DataPanel extends JPanel
 				var header = new JLabel(HEADER_TEXT.replace("<NAME>", name), JLabel.LEFT);
 				header.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
 				header.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
+				header.setBorder(headerBorder);
 				headerPanel.add(header, constraints);
 
 				constraints.gridx++;
@@ -68,10 +80,22 @@ class DataPanel extends JPanel
 				constraints.gridx = 0;
 				for (var dataRowType : DataEntry.DataRowType.values())
 				{
+					int alignment;
+					switch (dataRowType)
+					{
+						case MONEY:
+							alignment = JLabel.RIGHT;
+							break;
+						default:
+							alignment = JLabel.LEFT;
+							break;
+					}
 					var name = dataRowType.toString();
-					var label = new JLabel(dataEntry.getDataRow(dataRowType), JLabel.LEFT);
-					label.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
+					var text = dataEntry.getDataRow(dataRowType);
+					var label = new JLabel(text, alignment);
+					label.setToolTipText(name + ": " + text);
 					label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
+					label.setBorder(dataBorder);
 					dataPanel.add(label, constraints);
 
 					constraints.gridx++;

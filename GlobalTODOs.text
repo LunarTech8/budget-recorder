@@ -23,7 +23,7 @@ Work status:
 	- Problem only with spring/maven project
 	- Disabling extenstions doesn't seem to help
 	- Try "code --disable-gpu" in console (https://github.com/Microsoft/vscode/issues/57287)
-!!- Close app when pressing "Esc"
+!!>- Close app when pressing "Esc"
 !- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 
@@ -32,10 +32,6 @@ Work status:
 // Application design:
 // -------------
 
-!!>>- Data window: Make the header row stick
-	- Add paddings
-	- Make money row bind to the right
-	- Add frames
 !!- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
 !!- Add some visual clue after a new data entry has be added
 !- Data window: Show data entries from top to bottom, allow more/less info by adding/changing/removing more columns with selectable data type
