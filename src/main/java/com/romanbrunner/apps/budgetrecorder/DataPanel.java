@@ -1,6 +1,8 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -8,10 +10,12 @@ import java.awt.Dimension;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 
 
@@ -36,6 +40,23 @@ class DataPanel extends JPanel
 	// Functional code
 	// --------------------
 
+	private class HeaderButtonAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				JButton button = (JButton)event.getSource();
+				String command = button.getActionCommand();
+				System.out.println(command);  // DEBUG
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
 	public DataPanel()
 	{
 		super(new BorderLayout());
@@ -57,15 +78,19 @@ class DataPanel extends JPanel
 			var headerPanel = new JPanel(new GridBagLayout());
 			constraints.gridx = 0;
 			constraints.gridy = 0;
-			// Create header labels:
+			// Create header buttons:
 			for (var dataRowType : DataEntry.DataRowType.values())
 			{
 				var name = dataRowType.toString();
-				var header = new JLabel(HEADER_TEXT.replace("<NAME>", name), JLabel.LEFT);
-				header.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
-				header.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
-				header.setBorder(headerBorder);
-				headerPanel.add(header, constraints);
+				var button = new JButton(HEADER_TEXT.replace("<NAME>", name));
+				button.setFocusPainted(false);
+				button.setHorizontalAlignment(SwingConstants.LEFT);
+				button.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
+				button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
+				button.setBorder(headerBorder);
+				button.setActionCommand(name);
+				button.addActionListener(new HeaderButtonAL());
+				headerPanel.add(button, constraints);
 
 				constraints.gridx++;
 			}

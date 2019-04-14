@@ -3,6 +3,8 @@ package com.romanbrunner.apps.budgetrecorder;
 // import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -13,7 +15,10 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
+import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -33,6 +38,7 @@ import com.romanbrunner.apps.budgetrecorder.InputPanel;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
+@SuppressWarnings("serial")
 @SpringBootApplication
 @JsonSerialize(using = MainFrame.Serializer.class)
 @JsonDeserialize(using = MainFrame.Deserializer.class)
@@ -201,6 +207,17 @@ public class MainFrame  // Singleton class
 		frame.pack();
 		frame.setLocationRelativeTo(null);  // Set frame position to center of screen
 
+		// Make frame escapable:
+		var cancelAction = new AbstractAction()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				System.exit(0);
+			}
+		};
+		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
+		frame.getRootPane().getActionMap().put("Cancel", cancelAction);
+
 		// Display the frame:
 		frame.setVisible(true);
 	}
@@ -226,6 +243,17 @@ public class MainFrame  // Singleton class
 		// Set the frame size and position:
 		frame.pack();
 		frame.setLocationRelativeTo(null);  // Set frame position to center of screen
+
+		// Make frame escapable:
+		var cancelAction = new AbstractAction()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				System.exit(0);
+			}
+		};
+		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
+		frame.getRootPane().getActionMap().put("Cancel", cancelAction);
 
 		// Display the frame:
 		frame.setVisible(true);

@@ -22,8 +22,9 @@ Work status:
 !!!>>>- Get rid of display artifacts after scrolling in VS Code editor
 	- Problem only with spring/maven project
 	- Disabling extenstions doesn't seem to help
-	- Try "code --disable-gpu" in console (https://github.com/Microsoft/vscode/issues/57287)
-!!>- Close app when pressing "Esc"
+	- Try "code --disable-gpu" in console (https://github.com/Microsoft/vscode/issues/57287) -> Doesn't seem to help
+	- Seems to go away after a while
+!!>- Use only one frame with two panels (data and input)
 !- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 
@@ -32,10 +33,13 @@ Work status:
 // Application design:
 // -------------
 
-!!- Use the main frame for showing the data and a dialog window (pop-up) for input / adding new budget entries
+!!>>- Make columns in data panel sortable by clicking on them (using "[^]" or "[v]" on the selected column)
+	- How should the data panel be refreshed? Recreate the whole panel with new sorting?
+	- Should probably be handled inside the DataPanel class
 !!- Add some visual clue after a new data entry has be added
+!!- Add an "until" option for monthly entries and an alternative "indefinite" option
 !- Data window: Show data entries from top to bottom, allow more/less info by adding/changing/removing more columns with selectable data type
-!- Add an "until" option for monthly entries
+!- Data window: Make data labels to buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
 !- Maybe use "Mixed" as default value for name and location
 
 
