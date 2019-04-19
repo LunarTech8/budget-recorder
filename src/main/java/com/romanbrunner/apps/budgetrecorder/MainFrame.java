@@ -48,7 +48,8 @@ public class MainFrame  // Singleton class
 	// Data code
 	// --------------------
 
-	private static final String FRAME_NAME = "Budget Recorder";
+	private static final String INPUT_FRAME_NAME = "Budget Recorder (Input)";
+	private static final String DATA_FRAME_NAME = "Budget Recorder (Data)";
 	private static final String LOGO_FILE_PATH = "/images/Logo.jpg";
 	private static final String CONFIG_PATH = "/config.properties";
 	private static final int VERSION_MAJOR = 1;
@@ -62,6 +63,8 @@ public class MainFrame  // Singleton class
 
 	private static MainFrame instance = null;
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
+	private static JFrame inputFrame;
+	private static JFrame dataFrame;
 	private static String databaseName;
 	private static String databasePath;
 	private static String backupPath;
@@ -188,24 +191,24 @@ public class MainFrame  // Singleton class
 	private static void createInputFrame() throws Exception
 	{
 		// Create the frame:
-		JFrame frame = new JFrame(FRAME_NAME);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		inputFrame = new JFrame(INPUT_FRAME_NAME);
+		inputFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// Set the frame appearance:
 		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
 		if (imgURL != null)
 		{
-			frame.setIconImage(new ImageIcon(imgURL).getImage());
+			inputFrame.setIconImage(new ImageIcon(imgURL).getImage());
 		}
 		else
 		{
 			throw new Exception("ERROR: Logo file not found");
 		}
-		frame.setContentPane(new InputPanel());
+		inputFrame.setContentPane(new InputPanel());
 
 		// Set the frame size and position:
-		frame.pack();
-		frame.setLocationRelativeTo(null);  // Set frame position to center of screen
+		inputFrame.pack();
+		inputFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
 
 		// Make frame escapable:
 		var cancelAction = new AbstractAction()
@@ -215,34 +218,34 @@ public class MainFrame  // Singleton class
 				System.exit(0);
 			}
 		};
-		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-		frame.getRootPane().getActionMap().put("Cancel", cancelAction);
+		inputFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
+		inputFrame.getRootPane().getActionMap().put("Cancel", cancelAction);
 
 		// Display the frame:
-		frame.setVisible(true);
+		inputFrame.setVisible(true);
 	}
 
 	private static void createDataFrame() throws Exception
 	{
 		// Create the frame:
-		JFrame frame = new JFrame(FRAME_NAME);
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		dataFrame = new JFrame(DATA_FRAME_NAME);
+		dataFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		// Set the frame appearance:
 		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
 		if (imgURL != null)
 		{
-			frame.setIconImage(new ImageIcon(imgURL).getImage());
+			dataFrame.setIconImage(new ImageIcon(imgURL).getImage());
 		}
 		else
 		{
 			throw new Exception("ERROR: Logo file not found");
 		}
-		frame.setContentPane(new DataPanel());
+		dataFrame.setContentPane(new DataPanel());
 
 		// Set the frame size and position:
-		frame.pack();
-		frame.setLocationRelativeTo(null);  // Set frame position to center of screen
+		dataFrame.pack();
+		dataFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
 
 		// Make frame escapable:
 		var cancelAction = new AbstractAction()
@@ -252,11 +255,11 @@ public class MainFrame  // Singleton class
 				System.exit(0);
 			}
 		};
-		frame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-		frame.getRootPane().getActionMap().put("Cancel", cancelAction);
+		dataFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
+		dataFrame.getRootPane().getActionMap().put("Cancel", cancelAction);
 
 		// Display the frame:
-		frame.setVisible(true);
+		dataFrame.setVisible(true);
 	}
 
 	private static void readConfigFile() throws Exception

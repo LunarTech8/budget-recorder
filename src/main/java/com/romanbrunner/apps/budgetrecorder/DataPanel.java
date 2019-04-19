@@ -14,6 +14,9 @@ import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
+
+import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -40,15 +43,46 @@ class DataPanel extends JPanel
 	// Functional code
 	// --------------------
 
+	private DataRowType filterRow;
+	private int filterMode;
+
 	private class HeaderButtonAL implements ActionListener
 	{
+		private DataPanel basePanel;
+		private DataRowType filterRow;
+
+		public HeaderButtonAL(DataPanel basePanel, DataRowType filterRow)
+		{
+			this.basePanel = basePanel;
+			this.filterRow = filterRow;
+		}
+
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
-				JButton button = (JButton)event.getSource();
-				String command = button.getActionCommand();
-				System.out.println(command);  // DEBUG
+				// Adjust filter:
+				if (basePanel.filterRow == filterRow)
+				{
+					if (basePanel.filterMode == 1)
+					{
+						basePanel.filterMode = 2;
+					}
+					else if (basePanel.filterMode == 2)
+					{
+						basePanel.filterMode = 1;
+					}
+				}
+				else
+				{
+					basePanel.filterRow = filterRow;
+					basePanel.filterMode = 1;
+				}
+
+				// Refresh panel:
+				basePanel.recreate();
+				basePanel.revalidate();
+				basePanel.repaint();
 			}
 			catch (Exception exception)
 			{
@@ -57,11 +91,25 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel()
+	public DataPanel(DataRowType filterRow, int filterMode)
 	{
 		super(new BorderLayout());
+		this.filterRow = filterRow;
+		this.filterMode = filterMode;
+		recreate();
+	}
+	public DataPanel()
+	{
+		this(DataEntry.DataRowType.DATE, 1);
+	}
+
+	private void recreate()
+	{
 		try
 		{
+			// Remove old content:
+			this.removeAll();
+
 			GridBagConstraints constraints = new GridBagConstraints();
 			// Define default constraints:
 			constraints.fill = GridBagConstraints.BOTH;
@@ -82,14 +130,25 @@ class DataPanel extends JPanel
 			for (var dataRowType : DataEntry.DataRowType.values())
 			{
 				var name = dataRowType.toString();
-				var button = new JButton(HEADER_TEXT.replace("<NAME>", name));
+				var text = HEADER_TEXT.replace("<NAME>", name);
+				if (dataRowType == filterRow)
+				{
+					if (filterMode == 1)
+					{
+						text = "[^] " + text;
+					}
+					else if (filterMode == 2)
+					{
+						text = "[v] " + text;
+					}
+				}
+				var button = new JButton(text);
 				button.setFocusPainted(false);
 				button.setHorizontalAlignment(SwingConstants.LEFT);
 				button.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
 				button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
 				button.setBorder(headerBorder);
-				button.setActionCommand(name);
-				button.addActionListener(new HeaderButtonAL());
+				button.addActionListener(new HeaderButtonAL(this, dataRowType));
 				headerPanel.add(button, constraints);
 
 				constraints.gridx++;

@@ -24,7 +24,6 @@ Work status:
 	- Disabling extenstions doesn't seem to help
 	- Try "code --disable-gpu" in console (https://github.com/Microsoft/vscode/issues/57287) -> Doesn't seem to help
 	- Seems to go away after a while
-!!>- Use only one frame with two panels (data and input)
 !- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 
@@ -34,8 +33,7 @@ Work status:
 // -------------
 
 !!>>- Make columns in data panel sortable by clicking on them (using "[^]" or "[v]" on the selected column)
-	- How should the data panel be refreshed? Recreate the whole panel with new sorting?
-	- Should probably be handled inside the DataPanel class
+	- Sort the data entries according to the selected filter
 !!- Add some visual clue after a new data entry has be added
 !!- Add an "until" option for monthly entries and an alternative "indefinite" option
 !- Data window: Show data entries from top to bottom, allow more/less info by adding/changing/removing more columns with selectable data type
