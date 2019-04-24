@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
+import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
@@ -326,9 +328,11 @@ public class MainFrame  // Singleton class
 		dataEntries.add(new DataEntry(dataRows));
 	}
 
-	public static List<DataEntry> getDataEntries() throws Exception
+	public static List<DataEntry> getDataEntries(DataRowType filterRow, int filterMode) throws Exception
 	{
-		return new LinkedList<>(dataEntries);
+		var sortedList = new LinkedList<>(dataEntries);
+        Collections.sort(sortedList, new DataEntry.SortByFilter(filterRow, filterMode));
+		return sortedList;
 	}
 
 	public static void writeDatabaseFile() throws Exception

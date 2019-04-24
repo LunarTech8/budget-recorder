@@ -159,7 +159,7 @@ class DataPanel extends JPanel
 			constraints.gridx = 0;
 			constraints.gridy = 0;
 			// Create data field labels:
-			for (var dataEntry : MainFrame.getDataEntries())
+			for (var dataEntry : MainFrame.getDataEntries(filterRow, filterMode))
 			{
 				constraints.gridx = 0;
 				for (var dataRowType : DataEntry.DataRowType.values())

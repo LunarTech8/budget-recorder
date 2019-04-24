@@ -1,6 +1,7 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.lang.Exception;
+import java.util.Comparator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -151,6 +152,39 @@ class DataEntry
 			{
 				exception.printStackTrace();
 				return null;
+			}
+		}
+	}
+
+	public static class SortByFilter implements Comparator<DataEntry>
+	{
+		private DataRowType filterRow;
+		private int filterMode;
+
+		public SortByFilter(DataRowType filterRow, int filterMode)
+		{
+			this.filterRow = filterRow;
+			this.filterMode = filterMode;
+		}
+
+		public int compare(DataEntry entryA, DataEntry entryB)
+		{
+			switch (filterRow)
+			{
+				case MONEY:
+					var stringA = entryA.getDataRow(filterRow);
+					var stringB = entryB.getDataRow(filterRow);
+					return Math.round(Float.parseFloat(stringA.substring(0, stringA.length() - 2)) - Float.parseFloat(stringB.substring(0, stringB.length() - 2)));
+				// case TYPE:
+				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
+				// case SUBTYPE:
+				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
+				// case DATE:
+				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
+				// case REPEAT:
+				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
+				default:
+					return entryA.getDataRow(filterRow).compareTo(entryB.getDataRow(filterRow));
 			}
 		}
 	}

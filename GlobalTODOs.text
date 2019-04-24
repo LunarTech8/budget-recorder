@@ -33,7 +33,7 @@ Work status:
 // -------------
 
 !!>>- Make columns in data panel sortable by clicking on them (using "[^]" or "[v]" on the selected column)
-	- Sort the data entries according to the selected filter
+	->> Sort the data entries according to the selected filter
 !!- Add some visual clue after a new data entry has be added
 !!- Add an "until" option for monthly entries and an alternative "indefinite" option
 !- Data window: Show data entries from top to bottom, allow more/less info by adding/changing/removing more columns with selectable data type
