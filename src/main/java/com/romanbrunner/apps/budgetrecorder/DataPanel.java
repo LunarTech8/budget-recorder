@@ -16,6 +16,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
+import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowSorting;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -43,40 +44,40 @@ class DataPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private DataRowType filterRow;
-	private int filterMode;
+	private DataRowSorting sorting;
 
 	private class HeaderButtonAL implements ActionListener
 	{
 		private DataPanel basePanel;
-		private DataRowType filterRow;
+		private DataRowType dataRowType;
 
-		public HeaderButtonAL(DataPanel basePanel, DataRowType filterRow)
+		public HeaderButtonAL(DataPanel basePanel, DataRowType dataRowType)
 		{
 			this.basePanel = basePanel;
-			this.filterRow = filterRow;
+			this.dataRowType = dataRowType;
 		}
 
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
-				// Adjust filter:
-				if (basePanel.filterRow == filterRow)
+				// Adjust sorting:
+				if (basePanel.sorting.row == dataRowType)
 				{
-					if (basePanel.filterMode == 1)
+					switch (basePanel.sorting.mode)
 					{
-						basePanel.filterMode = 2;
-					}
-					else if (basePanel.filterMode == 2)
-					{
-						basePanel.filterMode = 1;
+						case UPWARD:
+							basePanel.sorting.mode = DataRowSorting.Mode.DOWNWARD;
+							break;
+						case DOWNWARD:
+							basePanel.sorting.mode = DataRowSorting.Mode.UPWARD;
+							break;
 					}
 				}
 				else
 				{
-					basePanel.filterRow = filterRow;
-					basePanel.filterMode = 1;
+					basePanel.sorting.row = dataRowType;
+					basePanel.sorting.mode = DataRowSorting.Mode.UPWARD;
 				}
 
 				// Refresh panel:
@@ -91,16 +92,15 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataRowType filterRow, int filterMode)
+	public DataPanel(DataRowSorting sorting)
 	{
 		super(new BorderLayout());
-		this.filterRow = filterRow;
-		this.filterMode = filterMode;
+		this.sorting = sorting;
 		recreate();
 	}
 	public DataPanel()
 	{
-		this(DataEntry.DataRowType.DATE, 1);
+		this(new DataRowSorting(DataEntry.DataRowType.DATE, DataRowSorting.Mode.UPWARD));
 	}
 
 	private void recreate()
@@ -131,15 +131,16 @@ class DataPanel extends JPanel
 			{
 				var name = dataRowType.toString();
 				var text = HEADER_TEXT.replace("<NAME>", name);
-				if (dataRowType == filterRow)
+				if (dataRowType == sorting.row)
 				{
-					if (filterMode == 1)
+					switch (sorting.mode)
 					{
-						text = "[^] " + text;
-					}
-					else if (filterMode == 2)
-					{
-						text = "[v] " + text;
+						case UPWARD:
+							text = "[^] " + text;
+							break;
+						case DOWNWARD:
+							text = "[v] " + text;
+							break;
 					}
 				}
 				var button = new JButton(text);
@@ -159,7 +160,7 @@ class DataPanel extends JPanel
 			constraints.gridx = 0;
 			constraints.gridy = 0;
 			// Create data field labels:
-			for (var dataEntry : MainFrame.getDataEntries(filterRow, filterMode))
+			for (var dataEntry : MainFrame.getDataEntries(sorting))
 			{
 				constraints.gridx = 0;
 				for (var dataRowType : DataEntry.DataRowType.values())

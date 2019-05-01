@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
-import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
+import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowSorting;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
@@ -328,10 +328,10 @@ public class MainFrame  // Singleton class
 		dataEntries.add(new DataEntry(dataRows));
 	}
 
-	public static List<DataEntry> getDataEntries(DataRowType filterRow, int filterMode) throws Exception
+	public static List<DataEntry> getDataEntries(DataRowSorting sorting) throws Exception
 	{
 		var sortedList = new LinkedList<>(dataEntries);
-        Collections.sort(sortedList, new DataEntry.SortByFilter(filterRow, filterMode));
+        Collections.sort(sortedList, new DataEntry.DataComparator(sorting));
 		return sortedList;
 	}
 

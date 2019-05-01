@@ -22,15 +22,15 @@ class DataEntry
 	// Data code
 	// --------------------
 
-	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Electronics", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
+	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Hardeware", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
 	public static final String[][] SUBTYPE_NAMES =
 	{
 		// Food/Grooming:
 		{ "Supermarket", "Bakery", "Restaurant", "Bar", "Snack stand", "Barber", "Medical", "Fitness" },
 		// Media:
 		{ "Book", "Movie", "Video game", "Board game", "Education" },
-		// Electronics:
-		{ "Desktop", "Mobile", "Entertainment", "Cleaning", "Generic" },
+		// Hardware:
+		{ "Electronics", "Cleaning", "Tool", "Gardening", "Vehicle", "Generic" },
 		// Clothing:
 		{ "Work", "Sport", "Leisure", "Generic" },
 		// Housing:
@@ -156,25 +156,42 @@ class DataEntry
 		}
 	}
 
-	public static class SortByFilter implements Comparator<DataEntry>
+	public static class DataRowSorting
 	{
-		private DataRowType filterRow;
-		private int filterMode;
+		public DataRowType row;
+		public Mode mode;
 
-		public SortByFilter(DataRowType filterRow, int filterMode)
+		public enum Mode
 		{
-			this.filterRow = filterRow;
-			this.filterMode = filterMode;
+			UPWARD, DOWNWARD
+		}
+
+		public DataRowSorting(DataRowType row, Mode mode)
+		{
+			this.row = row;
+			this.mode = mode;
+		}
+	}
+
+	public static class DataComparator implements Comparator<DataEntry>
+	{
+		private DataRowSorting sorting;
+
+		public DataComparator(DataRowSorting sorting)
+		{
+			this.sorting = sorting;
 		}
 
 		public int compare(DataEntry entryA, DataEntry entryB)
 		{
-			switch (filterRow)
+			switch (sorting.row)
 			{
 				case MONEY:
-					var stringA = entryA.getDataRow(filterRow);
-					var stringB = entryB.getDataRow(filterRow);
+					var stringA = entryA.getDataRow(sorting.row);
+					var stringB = entryB.getDataRow(sorting.row);
 					return Math.round(Float.parseFloat(stringA.substring(0, stringA.length() - 2)) - Float.parseFloat(stringB.substring(0, stringB.length() - 2)));
+					// DEBUG: doesn't work yet because numbers use comma instead of point
+					// DEBUG: will become obsolet/fixed with different types
 				// case TYPE:
 				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
 				// case SUBTYPE:
@@ -184,8 +201,15 @@ class DataEntry
 				// case REPEAT:
 				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
 				default:
-					return entryA.getDataRow(filterRow).compareTo(entryB.getDataRow(filterRow));
+					switch (sorting.mode)
+					{
+						case UPWARD:
+							return entryA.getDataRow(sorting.row).compareTo(entryB.getDataRow(sorting.row));
+						case DOWNWARD:
+							return entryB.getDataRow(sorting.row).compareTo(entryA.getDataRow(sorting.row));
+					}
 			}
+			return 0;
 		}
 	}
 
