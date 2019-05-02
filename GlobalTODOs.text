@@ -19,7 +19,7 @@ Work status:
 // Programming:
 // -------------
 
-!!>- Optimize data entry types (for json and intern)
+!!>>- Optimize data entry types (for json and intern)
 	- type and subtype as int
 	- monthly as boolean
 	- date as array of int

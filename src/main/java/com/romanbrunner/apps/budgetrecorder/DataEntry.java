@@ -1,7 +1,8 @@
 package com.romanbrunner.apps.budgetrecorder;
 
-import java.lang.Exception;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -80,8 +81,15 @@ class DataEntry
 	// Functional code
 	// --------------------
 
+	private static final int DATE_ARRAY_SIZE = 3;
 	private static int dataRowTypeCount = 0;  // This is only needed/used for the DataRowType construction check
-	private String[] dataRows;
+	private float money;
+	private String name;
+	private String location;
+	private int type;
+	private int subtype;
+	private int[] date;
+	private boolean repeat;
 
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
@@ -102,12 +110,20 @@ class DataEntry
 			try
 			{
 				jsonGenerator.writeStartObject();
+
 				// Store data rows:
+				var dataRowType = DataRowType.values();
 				int i = 0;
-				for (var dataRowType : DataRowType.values())
-				{
-					jsonGenerator.writeStringField(dataRowType.toString(), obj.dataRows[i++]);
-				}
+				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.money);
+				jsonGenerator.writeStringField(dataRowType[i++].toString(), obj.name);
+				jsonGenerator.writeStringField(dataRowType[i++].toString(), obj.location);
+				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.type);
+				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.subtype);
+				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
+				jsonGenerator.writeArray(obj.date, 0, DATE_ARRAY_SIZE);
+				jsonGenerator.writeEndArray();
+				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.repeat);
+
 				jsonGenerator.writeEndObject();
 			}
 			catch (Exception exception)
@@ -130,6 +146,24 @@ class DataEntry
 			super(vc);
 		}
 
+		private int[] arrayNodeToIntArray(JsonNode node, int arraySize) throws Exception
+		{
+			var iterator = node.elements();
+			var intArray = new int[arraySize];
+			int i = 0;
+			while (iterator.hasNext())
+			{
+				intArray[i++] = iterator.next().intValue();
+			}
+
+			if (i != arraySize)
+			{
+				throw new Exception("ERROR: Given array size (" + arraySize + ") does not fit to given node (" + i + ")");
+			}
+
+			return intArray;
+		}
+
 		@Override
 		public DataEntry deserialize(JsonParser parser, DeserializationContext deserializer)
 		{
@@ -139,14 +173,18 @@ class DataEntry
 				final JsonNode node = codec.readTree(parser);
 
 				// Extract data row values:
-				String[] dataRows = new String[DATA_ROW_TYPE_COUNT];
+				var dataRowType = DataRowType.values();
 				int i = 0;
-				for (var dataRowType : DataRowType.values())
-				{
-					dataRows[i++] = node.get(dataRowType.toString()).textValue();
-				}
+				float money = node.get(dataRowType[i++].toString()).floatValue();
+				String name = node.get(dataRowType[i++].toString()).textValue();
+				String location = node.get(dataRowType[i++].toString()).textValue();
+				int type = node.get(dataRowType[i++].toString()).intValue();
+				int subtype = node.get(dataRowType[i++].toString()).intValue();
+				int[] date = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
+				boolean repeat = node.get(dataRowType[i++].toString()).booleanValue();
+
 				// Convert extracted values into new data entry:
-				return new DataEntry(dataRows);
+				return new DataEntry(money, name, location, type, subtype, date, repeat);
 			}
 			catch (Exception exception)
 			{
@@ -213,13 +251,20 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(String[] dataRows) throws Exception
+	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, boolean repeat) throws Exception
 	{
-		if (dataRows.length != DATA_ROW_TYPE_COUNT)
+		if (date.length != DATE_ARRAY_SIZE)
 		{
-			throw new Exception("ERROR: Invalid number of data rows (" + dataRows.length + " instead of " + DATA_ROW_TYPE_COUNT + ")");
+			throw new Exception("ERROR: Invalid date format (" + date.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
 		}
-		this.dataRows = dataRows;
+
+		this.money = money;
+		this.name = name;
+		this.location = location;
+		this.type = type;
+		this.subtype = subtype;
+		this.date = date;
+		this.repeat = repeat;
 	}
 
 	public String getDataRow(DataRowType dataRowType)
