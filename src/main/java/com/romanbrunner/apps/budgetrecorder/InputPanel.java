@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Dimension;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.stream.Stream;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 
@@ -218,10 +219,20 @@ class InputPanel extends JPanel
 				var valueStrings = new String[dataFields.length];
 				for (int i = 0; i < dataFields.length; i++)
 				{
+					// TODO: maybe instead of converting to String use Object type (and cast that)
 					valueStrings[i] = dataFields[i].getValueAsString();
 				}
 				// Create data entry of the extracted values and add it to the database:
-				MainFrame.addDataEntry(valueStrings);
+				int j = 1;
+				MainFrame.addDataEntry(new DataEntry(
+					Float.parseFloat(valueStrings[j++]),
+					valueStrings[j++],
+					valueStrings[j++],
+					Integer.parseInt(valueStrings[j++]),
+					Integer.parseInt(valueStrings[j++]),
+					Stream.of(valueStrings[j++].split("[.]")).mapToInt(Integer::parseInt).toArray(),
+					Boolean.parseBoolean(valueStrings[j++])
+					));
 				// Write database to json:
 				MainFrame.writeDatabaseFile();
 			}

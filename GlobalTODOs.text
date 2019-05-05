@@ -19,11 +19,6 @@ Work status:
 // Programming:
 // -------------
 
-!!>>- Optimize data entry types (for json and intern)
-	- type and subtype as int
-	- monthly as boolean
-	- date as array of int
-	- money as float
 !- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 

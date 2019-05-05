@@ -323,9 +323,9 @@ public class MainFrame  // Singleton class
 		}
 	}
 
-	public static void addDataEntry(String[] dataRows) throws Exception
+	public static void addDataEntry(DataEntry e) throws Exception
 	{
-		dataEntries.add(new DataEntry(dataRows));
+		dataEntries.add(e);
 	}
 
 	public static List<DataEntry> getDataEntries(DataRowSorting sorting) throws Exception

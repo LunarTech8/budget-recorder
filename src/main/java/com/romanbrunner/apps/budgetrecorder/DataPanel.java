@@ -176,7 +176,7 @@ class DataPanel extends JPanel
 							break;
 					}
 					var name = dataRowType.toString();
-					var text = dataEntry.getDataRow(dataRowType);
+					var text = dataEntry.getDataRowValueAsString(dataRowType);
 					var label = new JLabel(text, alignment);
 					label.setToolTipText(name + ": " + text);
 					label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));

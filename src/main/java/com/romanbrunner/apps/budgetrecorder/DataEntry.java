@@ -1,8 +1,8 @@
 package com.romanbrunner.apps.budgetrecorder;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -51,7 +51,7 @@ class DataEntry
 
 		private final String name;
 		private final int index;
-
+		private int dataRowTypeCount = 0;  // This is only needed/used for the construction check
 
 		private DataRowType(String name, int index)
 		{
@@ -82,7 +82,6 @@ class DataEntry
 	// --------------------
 
 	private static final int DATE_ARRAY_SIZE = 3;
-	private static int dataRowTypeCount = 0;  // This is only needed/used for the DataRowType construction check
 	private float money;
 	private String name;
 	private String location;
@@ -194,7 +193,7 @@ class DataEntry
 		}
 	}
 
-	public static class DataRowSorting
+	public static class DataRowSorting  // Struct type
 	{
 		public DataRowType row;
 		public Mode mode;
@@ -222,30 +221,52 @@ class DataEntry
 
 		public int compare(DataEntry entryA, DataEntry entryB)
 		{
-			switch (sorting.row)
+			try
 			{
-				case MONEY:
-					var stringA = entryA.getDataRow(sorting.row);
-					var stringB = entryB.getDataRow(sorting.row);
-					return Math.round(Float.parseFloat(stringA.substring(0, stringA.length() - 2)) - Float.parseFloat(stringB.substring(0, stringB.length() - 2)));
-					// DEBUG: doesn't work yet because numbers use comma instead of point
-					// DEBUG: will become obsolet/fixed with different types
-				// case TYPE:
-				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
-				// case SUBTYPE:
-				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
-				// case DATE:
-				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
-				// case REPEAT:
-				// 	return Character.getNumericValue(entryA.getDataRow(filterRow).charAt(0)) - Character.getNumericValue(entryB.getDataRow(filterRow).charAt(0));
-				default:
-					switch (sorting.mode)
-					{
-						case UPWARD:
-							return entryA.getDataRow(sorting.row).compareTo(entryB.getDataRow(sorting.row));
-						case DOWNWARD:
-							return entryB.getDataRow(sorting.row).compareTo(entryA.getDataRow(sorting.row));
-					}
+				switch (sorting.mode)
+				{
+					case UPWARD:
+						break;
+					case DOWNWARD:
+						var entryTemp = entryA;
+						entryA = entryB;
+						entryB = entryTemp;
+						break;
+				}
+				switch (sorting.row)
+				{
+					case MONEY:
+						return Math.round(entryA.money - entryB.money);
+					case NAME:
+						return entryA.name.compareTo(entryB.name);
+					case LOCATION:
+						return entryA.location.compareTo(entryB.location);
+					case TYPE:
+						return entryA.type - entryB.type;
+					case SUBTYPE:
+						return entryA.subtype - entryB.subtype;
+					case DATE:
+						return (entryA.date[0] - entryB.date[0]) + (entryA.date[1] - entryB.date[1]) * 100 + (entryA.date[2] - entryB.date[2]) * 10000;
+					case REPEAT:
+						if (entryA.repeat == entryB.repeat)
+						{
+							return 0;
+						}
+						else if (entryA.repeat == true)
+						{
+							return 1;
+						}
+						else
+						{
+							return -1;
+						}
+					default:
+						return entryA.getDataRowValueAsString(sorting.row).compareTo(entryB.getDataRowValueAsString(sorting.row));
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
 			}
 			return 0;
 		}
@@ -267,8 +288,26 @@ class DataEntry
 		this.repeat = repeat;
 	}
 
-	public String getDataRow(DataRowType dataRowType)
+	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
 	{
-		return dataRows[dataRowType.toInt()];
+		switch (dataRowType)
+		{
+			case MONEY:
+				return Float.toString(money);
+			case NAME:
+				return name;
+			case LOCATION:
+				return location;
+			case TYPE:
+				return Integer.toString(type);
+			case SUBTYPE:
+				return Integer.toString(subtype);
+			case DATE:
+				return Arrays.stream(date).mapToObj(String::valueOf).collect(Collectors.joining("."));
+			case REPEAT:
+				return Boolean.toString(repeat);
+			default:
+				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
+		}
 	}
 }
