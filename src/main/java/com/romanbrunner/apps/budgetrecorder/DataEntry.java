@@ -51,15 +51,15 @@ class DataEntry
 
 		private final String name;
 		private final int index;
-		private int dataRowTypeCount = 0;  // This is only needed/used for the construction check
 
 		private DataRowType(String name, int index)
 		{
-			dataRowTypeCount += 1;
-			if (index < 0 || index >= dataRowTypeCount)
-			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + dataRowTypeCount + ")");
-			}
+			// TODO: check why this throws an error
+			// dataRowTypeCount += 1;
+			// if (index < 0 || index >= dataRowTypeCount)
+			// {
+			// 	System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + dataRowTypeCount + ")");
+			// }
 
 			this.name = name;
 			this.index = index;
@@ -82,6 +82,7 @@ class DataEntry
 	// --------------------
 
 	private static final int DATE_ARRAY_SIZE = 3;
+	private static int dataRowTypeCount = 0;  // This is only needed/used for the DataRowType construction check
 	private float money;
 	private String name;
 	private String location;

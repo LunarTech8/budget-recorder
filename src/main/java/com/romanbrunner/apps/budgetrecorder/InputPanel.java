@@ -52,6 +52,7 @@ class InputPanel extends JPanel
 	private interface DataField
 	{
 		JComponent getJComponent();
+		Object getValue();
 		String getValueAsString();
 	}
 
@@ -71,6 +72,11 @@ class InputPanel extends JPanel
 		public JComponent getJComponent()
 		{
 			return dataField;
+		}
+
+		public Object getValue()
+		{
+			return dataField.getValue();
 		}
 
 		public String getValueAsString()
@@ -96,6 +102,11 @@ class InputPanel extends JPanel
 		public JComponent getJComponent()
 		{
 			return dataField;
+		}
+
+		public Object getValue()
+		{
+			return dataField.getSelectedIndex();
 		}
 
 		public String getValueAsString()
@@ -139,6 +150,12 @@ class InputPanel extends JPanel
 			return dataField;
 		}
 
+		public Object getValue()
+		{
+			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
+			// TODO: find better format
+		}
+
 		public String getValueAsString()
 		{
 			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
@@ -157,6 +174,11 @@ class InputPanel extends JPanel
 		public JComponent getJComponent()
 		{
 			return dataField;
+		}
+
+		public Object getValue()
+		{
+			return dataField.isSelected();
 		}
 
 		public String getValueAsString()
@@ -182,6 +204,11 @@ class InputPanel extends JPanel
 		public JComponent getJComponent()
 		{
 			return dataField;
+		}
+
+		public Object getValue()
+		{
+			return dataField.getText();
 		}
 
 		public String getValueAsString()
@@ -215,23 +242,16 @@ class InputPanel extends JPanel
 		{
 			try
 			{
-				// Extract current data row values:
-				var valueStrings = new String[dataFields.length];
-				for (int i = 0; i < dataFields.length; i++)
-				{
-					// TODO: maybe instead of converting to String use Object type (and cast that)
-					valueStrings[i] = dataFields[i].getValueAsString();
-				}
 				// Create data entry of the extracted values and add it to the database:
-				int j = 1;
+				int i = 0;
 				MainFrame.addDataEntry(new DataEntry(
-					Float.parseFloat(valueStrings[j++]),
-					valueStrings[j++],
-					valueStrings[j++],
-					Integer.parseInt(valueStrings[j++]),
-					Integer.parseInt(valueStrings[j++]),
-					Stream.of(valueStrings[j++].split("[.]")).mapToInt(Integer::parseInt).toArray(),
-					Boolean.parseBoolean(valueStrings[j++])
+					(float)dataFields[i++].getValue(),
+					(String)dataFields[i++].getValue(),
+					(String)dataFields[i++].getValue(),
+					(int)dataFields[i++].getValue(),
+					(int)dataFields[i++].getValue(),
+					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
+					(boolean)dataFields[i++].getValue()
 					));
 				// Write database to json:
 				MainFrame.writeDatabaseFile();
