@@ -240,7 +240,7 @@ class DataEntry
 				switch (sorting.row)
 				{
 					case MONEY:
-						return Math.round(entryA.money - entryB.money);
+						return Math.round((entryA.money - entryB.money) * 100F);
 					case NAME:
 						return entryA.name.compareTo(entryB.name);
 					case LOCATION:
@@ -314,4 +314,49 @@ class DataEntry
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
 	}
+
+	public String getDataRowValueAsText(DataRowType dataRowType) throws Exception
+	{
+		switch (dataRowType)
+		{
+			case MONEY:
+				return String.format("%.2f", money) + " €";
+			case NAME:
+				return name;
+			case LOCATION:
+				return location;
+			case TYPE:
+				return TYPE_NAMES[type];
+			case SUBTYPE:
+				return SUBTYPE_NAMES[type][subtype];
+			case DATE:
+				String dateText = "";
+				int i = 0;
+				if (date[i] <= 9)
+				{
+					dateText = dateText + "0";
+				}
+				dateText = dateText + Integer.toString(date[i]) + ".";
+				i++;
+				if (date[i] <= 9)
+				{
+					dateText = dateText + "0";
+				}
+				dateText = dateText + Integer.toString(date[i]) + ".";
+				i++;
+				return dateText + Integer.toString(date[i]);
+			case REPEAT:
+				if (repeat)
+				{
+					return "Monthly";
+				}
+				else
+				{
+					return "Once";
+				}
+			default:
+				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
+		}
+	}
+
 }

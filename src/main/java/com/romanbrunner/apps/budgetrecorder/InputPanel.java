@@ -53,7 +53,7 @@ class InputPanel extends JPanel
 	{
 		JComponent getJComponent();
 		Object getValue();
-		String getValueAsString();
+		String getValueAsText();
 	}
 
 	private class CurrencyDataField implements DataField
@@ -80,7 +80,7 @@ class InputPanel extends JPanel
 			return number.floatValue();
 		}
 
-		public String getValueAsString()
+		public String getValueAsText()
 		{
 			return dataField.getText().toString();
 		}
@@ -110,7 +110,7 @@ class InputPanel extends JPanel
 			return dataField.getSelectedIndex();
 		}
 
-		public String getValueAsString()
+		public String getValueAsText()
 		{
 			return dataField.getSelectedItem().toString();
 		}
@@ -156,7 +156,7 @@ class InputPanel extends JPanel
 			return DateFormat.getDateInstance(DateFormat.MEDIUM).format((Date)dataField.getModel().getValue());
 		}
 
-		public String getValueAsString()
+		public String getValueAsText()
 		{
 			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
 		}
@@ -181,7 +181,7 @@ class InputPanel extends JPanel
 			return dataField.isSelected();
 		}
 
-		public String getValueAsString()
+		public String getValueAsText()
 		{
 			var returnString = dataField.getText();
 			if (dataField.isSelected() == false)
@@ -211,7 +211,7 @@ class InputPanel extends JPanel
 			return dataField.getText();
 		}
 
-		public String getValueAsString()
+		public String getValueAsText()
 		{
 			return dataField.getText();
 		}
@@ -242,7 +242,7 @@ class InputPanel extends JPanel
 		{
 			try
 			{
-				// Create data entry of the extracted values and add it to the database:
+				// Extract entered values, create data entry and add it to the database:
 				int i = 0;
 				MainFrame.addDataEntry(new DataEntry(
 					(float)dataFields[i++].getValue(),
@@ -255,6 +255,8 @@ class InputPanel extends JPanel
 					));
 				// Write database to json:
 				MainFrame.writeDatabaseFile();
+				// Refresh data panel:
+				MainFrame.refreshDataPanel();
 			}
 			catch (Exception exception)
 			{
@@ -325,4 +327,5 @@ class InputPanel extends JPanel
 		constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
 		add(button, constraints);
 	}
+
 }

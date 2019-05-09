@@ -38,6 +38,7 @@ class DataPanel extends JPanel
 	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
+	private static final DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataRowSorting(DataEntry.DataRowType.DATE, DataRowSorting.Mode.DOWNWARD);
 
 
 	// --------------------
@@ -79,11 +80,8 @@ class DataPanel extends JPanel
 					basePanel.sorting.row = dataRowType;
 					basePanel.sorting.mode = DataRowSorting.Mode.UPWARD;
 				}
-
 				// Refresh panel:
-				basePanel.recreate();
-				basePanel.revalidate();
-				basePanel.repaint();
+				basePanel.refresh();
 			}
 			catch (Exception exception)
 			{
@@ -100,7 +98,7 @@ class DataPanel extends JPanel
 	}
 	public DataPanel()
 	{
-		this(new DataRowSorting(DataEntry.DataRowType.DATE, DataRowSorting.Mode.UPWARD));
+		this(DEFAULT_DATA_ROW_SORTING);
 	}
 
 	private void recreate()
@@ -176,7 +174,7 @@ class DataPanel extends JPanel
 							break;
 					}
 					var name = dataRowType.toString();
-					var text = dataEntry.getDataRowValueAsString(dataRowType);
+					var text = dataEntry.getDataRowValueAsText(dataRowType);
 					var label = new JLabel(text, alignment);
 					label.setToolTipText(name + ": " + text);
 					label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
@@ -200,5 +198,12 @@ class DataPanel extends JPanel
 		{
 			exception.printStackTrace();
 		}
+	}
+
+	public void refresh()
+	{
+		recreate();
+		revalidate();
+		repaint();
 	}
 }

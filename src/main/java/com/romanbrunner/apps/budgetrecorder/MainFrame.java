@@ -65,6 +65,7 @@ public class MainFrame  // Singleton class
 
 	private static MainFrame instance = null;
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
+	private static DataPanel dataPanel;
 	private static JFrame inputFrame;
 	private static JFrame dataFrame;
 	private static String databaseName;
@@ -243,7 +244,8 @@ public class MainFrame  // Singleton class
 		{
 			throw new Exception("ERROR: Logo file not found");
 		}
-		dataFrame.setContentPane(new DataPanel());
+		dataPanel = new DataPanel();
+		dataFrame.setContentPane(dataPanel);
 
 		// Set the frame size and position:
 		dataFrame.pack();
@@ -346,6 +348,11 @@ public class MainFrame  // Singleton class
 		var mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		mapper.writeValue(databaseFile, getInstance());
+	}
+
+	public static void refreshDataPanel()
+	{
+		dataPanel.refresh();
 	}
 
 }
