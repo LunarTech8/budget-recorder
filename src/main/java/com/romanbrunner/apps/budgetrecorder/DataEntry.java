@@ -120,7 +120,10 @@ class DataEntry
 				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.type);
 				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.subtype);
 				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-				jsonGenerator.writeArray(obj.date, 0, DATE_ARRAY_SIZE);
+				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				{
+					jsonGenerator.writeNumber(obj.date[j]);
+				}
 				jsonGenerator.writeEndArray();
 				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.repeat);
 

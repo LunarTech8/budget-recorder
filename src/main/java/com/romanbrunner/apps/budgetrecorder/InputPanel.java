@@ -76,7 +76,8 @@ class InputPanel extends JPanel
 
 		public Object getValue()
 		{
-			return dataField.getValue();
+			Number number = (Number)dataField.getValue();
+			return number.floatValue();
 		}
 
 		public String getValueAsString()
@@ -152,8 +153,7 @@ class InputPanel extends JPanel
 
 		public Object getValue()
 		{
-			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
-			// TODO: find better format
+			return DateFormat.getDateInstance(DateFormat.MEDIUM).format((Date)dataField.getModel().getValue());
 		}
 
 		public String getValueAsString()
