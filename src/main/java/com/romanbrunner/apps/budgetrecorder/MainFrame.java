@@ -71,6 +71,7 @@ public class MainFrame  // Singleton class
 	private static String databaseName;
 	private static String databasePath;
 	private static String backupPath;
+	private static boolean testModeActive;
 
 	/**
 	 * @return the instance
@@ -274,8 +275,17 @@ public class MainFrame  // Singleton class
 			var prop = new Properties();
 			prop.load(inputStream);
 			databaseName = prop.getProperty("databaseName");
-			databasePath = prop.getProperty("databasePath");
-			backupPath = prop.getProperty("backupPath");
+			testModeActive = prop.getProperty("testModeActive").equals("true");
+			if (testModeActive)
+			{
+				databasePath = prop.getProperty("testDatabasePath");
+				backupPath = prop.getProperty("testBackupPath");
+			}
+			else
+			{
+				databasePath = prop.getProperty("databasePath");
+				backupPath = prop.getProperty("backupPath");
+			}
 		}
 		else
 		{
@@ -308,8 +318,9 @@ public class MainFrame  // Singleton class
 				{
 					try
 					{
-						createInputFrame();
+						// Create frames:
 						createDataFrame();
+						createInputFrame();
 					}
 					catch (Exception exception)
 					{

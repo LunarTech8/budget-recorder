@@ -47,7 +47,7 @@ class DataEntry
 
 	public enum DataRowType
 	{
-		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6);
+		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6), UNTIL("Until", 7), DURATION("Duration", 8);
 
 		private final String name;
 		private final int index;
@@ -90,6 +90,8 @@ class DataEntry
 	private int subtype;
 	private int[] date;
 	private boolean repeat;
+	private int[] until;
+	private boolean duration;
 
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
@@ -126,6 +128,13 @@ class DataEntry
 				}
 				jsonGenerator.writeEndArray();
 				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.repeat);
+				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
+				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				{
+					jsonGenerator.writeNumber(obj.until[j]);
+				}
+				jsonGenerator.writeEndArray();
+				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.duration);
 
 				jsonGenerator.writeEndObject();
 			}
@@ -185,9 +194,11 @@ class DataEntry
 				int subtype = node.get(dataRowType[i++].toString()).intValue();
 				int[] date = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
 				boolean repeat = node.get(dataRowType[i++].toString()).booleanValue();
+				int[] until = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
+				boolean duration = node.get(dataRowType[i++].toString()).booleanValue();
 
 				// Convert extracted values into new data entry:
-				return new DataEntry(money, name, location, type, subtype, date, repeat);
+				return new DataEntry(money, name, location, type, subtype, date, repeat, until, duration);
 			}
 			catch (Exception exception)
 			{
@@ -264,6 +275,21 @@ class DataEntry
 						{
 							return -1;
 						}
+					case UNTIL:
+						return (entryA.until[0] - entryB.until[0]) + (entryA.until[1] - entryB.until[1]) * 100 + (entryA.until[2] - entryB.until[2]) * 10000;
+					case DURATION:
+						if (entryA.duration == entryB.duration)
+						{
+							return 0;
+						}
+						else if (entryA.duration == true)
+						{
+							return 1;
+						}
+						else
+						{
+							return -1;
+						}
 					default:
 						return entryA.getDataRowValueAsString(sorting.row).compareTo(entryB.getDataRowValueAsString(sorting.row));
 				}
@@ -276,11 +302,15 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, boolean repeat) throws Exception
+	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, boolean repeat, int[] until, boolean duration) throws Exception
 	{
 		if (date.length != DATE_ARRAY_SIZE)
 		{
 			throw new Exception("ERROR: Invalid date format (" + date.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
+		}
+		else if (until.length != DATE_ARRAY_SIZE)
+		{
+			throw new Exception("ERROR: Invalid until format (" + until.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
 		}
 
 		this.money = money;
@@ -290,6 +320,8 @@ class DataEntry
 		this.subtype = subtype;
 		this.date = date;
 		this.repeat = repeat;
+		this.until = until;
+		this.duration = duration;
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
@@ -310,6 +342,10 @@ class DataEntry
 				return Arrays.stream(date).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			case REPEAT:
 				return Boolean.toString(repeat);
+			case UNTIL:
+				return Arrays.stream(until).mapToObj(String::valueOf).collect(Collectors.joining("."));
+			case DURATION:
+				return Boolean.toString(duration);
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
@@ -330,6 +366,7 @@ class DataEntry
 			case SUBTYPE:
 				return SUBTYPE_NAMES[type][subtype];
 			case DATE:
+			{
 				String dateText = "";
 				int i = 0;
 				if (date[i] <= 9)
@@ -345,7 +382,9 @@ class DataEntry
 				dateText = dateText + Integer.toString(date[i]) + ".";
 				i++;
 				return dateText + Integer.toString(date[i]);
+			}
 			case REPEAT:
+			{
 				if (repeat)
 				{
 					return "Monthly";
@@ -354,6 +393,36 @@ class DataEntry
 				{
 					return "Once";
 				}
+			}
+			case UNTIL:
+			{
+				String untilText = "";
+				int i = 0;
+				if (until[i] <= 9)
+				{
+					untilText = untilText + "0";
+				}
+				untilText = untilText + Integer.toString(until[i]) + ".";
+				i++;
+				if (until[i] <= 9)
+				{
+					untilText = untilText + "0";
+				}
+				untilText = untilText + Integer.toString(until[i]) + ".";
+				i++;
+				return untilText + Integer.toString(until[i]);
+			}
+			case DURATION:
+			{
+				if (duration)
+				{
+					return "Infinitely";
+				}
+				else
+				{
+					return "Limited";
+				}
+			}
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}

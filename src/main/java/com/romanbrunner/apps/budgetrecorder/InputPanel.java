@@ -251,6 +251,8 @@ class InputPanel extends JPanel
 					(int)dataFields[i++].getValue(),
 					(int)dataFields[i++].getValue(),
 					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
+					(boolean)dataFields[i++].getValue(),
+					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
 					(boolean)dataFields[i++].getValue()
 					));
 				// Write database to json:
@@ -300,10 +302,14 @@ class InputPanel extends JPanel
 					dataField = new ComboBoxDataField(DataEntry.SUBTYPE_NAMES[0]);
 					break;
 				case DATE:
+				case UNTIL:
 					dataField = new DateDataField(100, 1000);
 					break;
 				case REPEAT:
 					dataField = new CheckBoxDataField("Monthly");
+					break;
+				case DURATION:
+					dataField = new CheckBoxDataField("Infinitely");
 					break;
 				default:
 					dataField = new TextDataField();
