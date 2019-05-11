@@ -251,7 +251,7 @@ class InputPanel extends JPanel
 					(int)dataFields[i++].getValue(),
 					(int)dataFields[i++].getValue(),
 					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
-					(boolean)dataFields[i++].getValue(),
+					(int)dataFields[i++].getValue(),
 					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
 					(boolean)dataFields[i++].getValue()
 					));
@@ -306,7 +306,7 @@ class InputPanel extends JPanel
 					dataField = new DateDataField(100, 1000);
 					break;
 				case REPEAT:
-					dataField = new CheckBoxDataField("Monthly");
+					dataField = new ComboBoxDataField(DataEntry.REPEAT_NAMES);
 					break;
 				case DURATION:
 					dataField = new CheckBoxDataField("Infinitely");

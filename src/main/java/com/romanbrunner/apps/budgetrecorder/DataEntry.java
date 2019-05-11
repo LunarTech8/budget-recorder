@@ -43,6 +43,7 @@ class DataEntry
 		// Income:
 		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
+	public static final String[] REPEAT_NAMES = { "Never", "Daily", "Weekly", "Monthly", "Yearly" };
 	public static final int DATA_ROW_TYPE_COUNT = DataRowType.values().length;
 
 	public enum DataRowType
@@ -52,14 +53,18 @@ class DataEntry
 		private final String name;
 		private final int index;
 
+		private static class InitChecker
+		{
+			private static int counter = 0;
+		}
+
 		private DataRowType(String name, int index)
 		{
-			// TODO: check why this throws an error
-			// dataRowTypeCount += 1;
-			// if (index < 0 || index >= dataRowTypeCount)
-			// {
-			// 	System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + dataRowTypeCount + ")");
-			// }
+			InitChecker.counter += 1;
+			if (index < 0 || index >= InitChecker.counter)
+			{
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + InitChecker.counter + ")");
+			}
 
 			this.name = name;
 			this.index = index;
@@ -82,14 +87,13 @@ class DataEntry
 	// --------------------
 
 	private static final int DATE_ARRAY_SIZE = 3;
-	private static int dataRowTypeCount = 0;  // This is only needed/used for the DataRowType construction check
 	private float money;
 	private String name;
 	private String location;
 	private int type;
 	private int subtype;
 	private int[] date;
-	private boolean repeat;
+	private int repeat;
 	private int[] until;
 	private boolean duration;
 
@@ -127,7 +131,7 @@ class DataEntry
 					jsonGenerator.writeNumber(obj.date[j]);
 				}
 				jsonGenerator.writeEndArray();
-				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.repeat);
+				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.repeat);
 				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
 				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
 				{
@@ -193,7 +197,7 @@ class DataEntry
 				int type = node.get(dataRowType[i++].toString()).intValue();
 				int subtype = node.get(dataRowType[i++].toString()).intValue();
 				int[] date = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
-				boolean repeat = node.get(dataRowType[i++].toString()).booleanValue();
+				int repeat = node.get(dataRowType[i++].toString()).intValue();
 				int[] until = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
 				boolean duration = node.get(dataRowType[i++].toString()).booleanValue();
 
@@ -263,18 +267,7 @@ class DataEntry
 					case DATE:
 						return (entryA.date[0] - entryB.date[0]) + (entryA.date[1] - entryB.date[1]) * 100 + (entryA.date[2] - entryB.date[2]) * 10000;
 					case REPEAT:
-						if (entryA.repeat == entryB.repeat)
-						{
-							return 0;
-						}
-						else if (entryA.repeat == true)
-						{
-							return 1;
-						}
-						else
-						{
-							return -1;
-						}
+						return entryA.repeat - entryB.repeat;
 					case UNTIL:
 						return (entryA.until[0] - entryB.until[0]) + (entryA.until[1] - entryB.until[1]) * 100 + (entryA.until[2] - entryB.until[2]) * 10000;
 					case DURATION:
@@ -302,7 +295,7 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, boolean repeat, int[] until, boolean duration) throws Exception
+	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, int repeat, int[] until, boolean duration) throws Exception
 	{
 		if (date.length != DATE_ARRAY_SIZE)
 		{
@@ -341,7 +334,7 @@ class DataEntry
 			case DATE:
 				return Arrays.stream(date).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			case REPEAT:
-				return Boolean.toString(repeat);
+				return Integer.toString(repeat);
 			case UNTIL:
 				return Arrays.stream(until).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			case DURATION:
@@ -385,14 +378,7 @@ class DataEntry
 			}
 			case REPEAT:
 			{
-				if (repeat)
-				{
-					return "Monthly";
-				}
-				else
-				{
-					return "Once";
-				}
+				return REPEAT_NAMES[repeat];
 			}
 			case UNTIL:
 			{
