@@ -4,6 +4,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.util.Calendar;
 import java.util.Date;
@@ -36,6 +37,7 @@ class InputPanel extends JPanel
 	private static final int DATA_FIELD_WIDTH = 200;
 	private static final int DATA_ROW_HEIGHT = 40;
 	private static final int ADD_BUTTON_HEIGHT = 40;
+	private static final int ADD_CONFIRMATION_TIME = 250;  // Miliseconds
 	private static final String ADD_BUTTON_TEXT = "Add entry";
 	private static final String ADD_BUTTON_TOOLTIP = "Adds the values defined above to the data base";
 	private static final String DATA_ROW_TEXT = "<NAME>:";
@@ -259,6 +261,29 @@ class InputPanel extends JPanel
 				MainFrame.writeDatabaseFile();
 				// Refresh data panel:
 				MainFrame.refreshDataPanel();
+				// Give visual confimation:
+				for (var component : getComponents())
+				{
+					if (component instanceof JLabel)
+					{
+						component.setForeground(Color.GREEN);
+					}
+				}
+				var task = new java.util.TimerTask()
+				{
+					@Override
+					public void run()
+					{
+						for (var component : getComponents())
+						{
+							if (component instanceof JLabel)
+							{
+								component.setForeground(Color.BLACK);
+							}
+						}
+					}
+				};
+				new java.util.Timer().schedule(task, ADD_CONFIRMATION_TIME);
 			}
 			catch (Exception exception)
 			{
