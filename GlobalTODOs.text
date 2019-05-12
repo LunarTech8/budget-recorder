@@ -29,7 +29,6 @@ Work status:
 // -------------
 
 !!- Release version 1.1.0
-!!- Add some visual clue after a new data entry has be added
 !- Hide "until" and "duration" field if "repeat" field is on "Never"
 !- Hide "until" field if "duration" field is on "Indefinitely"
 !- Data window: Allow more/less info by adding/changing/removing more columns with selectable data type
