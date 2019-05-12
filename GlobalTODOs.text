@@ -28,7 +28,6 @@ Work status:
 // Application design:
 // -------------
 
-!!- Release version 1.1.0
 !- Hide "until" and "duration" field if "repeat" field is on "Never"
 !- Hide "until" field if "duration" field is on "Indefinitely"
 !- Data window: Allow more/less info by adding/changing/removing more columns with selectable data type
