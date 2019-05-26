@@ -48,7 +48,7 @@ class DataEntry
 
 	public enum DataRowType
 	{
-		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6), UNTIL("Until", 7), DURATION("Duration", 8);
+		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6), DURATION("Duration", 7), UNTIL("Until", 8);
 
 		private final String name;
 		private final int index;
@@ -94,8 +94,8 @@ class DataEntry
 	private int subtype;
 	private int[] date;
 	private int repeat;
-	private int[] until;
 	private boolean duration;
+	private int[] until;
 
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
@@ -132,14 +132,19 @@ class DataEntry
 				}
 				jsonGenerator.writeEndArray();
 				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.repeat);
-				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				if (obj.repeat != 0)  // 0 = "Never"
 				{
-					jsonGenerator.writeNumber(obj.until[j]);
+					jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.duration);
+					if (obj.duration != true)  // true = "Infinitely"
+					{
+						jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
+						for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+						{
+							jsonGenerator.writeNumber(obj.until[j]);
+						}
+						jsonGenerator.writeEndArray();
+					}
 				}
-				jsonGenerator.writeEndArray();
-				jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.duration);
-
 				jsonGenerator.writeEndObject();
 			}
 			catch (Exception exception)
@@ -191,6 +196,7 @@ class DataEntry
 				// Extract data row values:
 				var dataRowType = DataRowType.values();
 				int i = 0;
+				JsonNode iNode;
 				float money = node.get(dataRowType[i++].toString()).floatValue();
 				String name = node.get(dataRowType[i++].toString()).textValue();
 				String location = node.get(dataRowType[i++].toString()).textValue();
@@ -198,11 +204,21 @@ class DataEntry
 				int subtype = node.get(dataRowType[i++].toString()).intValue();
 				int[] date = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
 				int repeat = node.get(dataRowType[i++].toString()).intValue();
-				int[] until = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
-				boolean duration = node.get(dataRowType[i++].toString()).booleanValue();
+				boolean duration = true;  // Default value
+				iNode = node.get(dataRowType[i++].toString());
+				if (iNode != null)
+				{
+					duration = iNode.booleanValue();
+				}
+				int[] until = new int[]{1, 1, 0};  // Default value
+				iNode = node.get(dataRowType[i++].toString());
+				if (iNode != null)
+				{
+					until = arrayNodeToIntArray(iNode, DATE_ARRAY_SIZE);
+				}
 
 				// Convert extracted values into new data entry:
-				return new DataEntry(money, name, location, type, subtype, date, repeat, until, duration);
+				return new DataEntry(money, name, location, type, subtype, date, repeat, duration, until);
 			}
 			catch (Exception exception)
 			{
@@ -268,8 +284,6 @@ class DataEntry
 						return (entryA.date[0] - entryB.date[0]) + (entryA.date[1] - entryB.date[1]) * 100 + (entryA.date[2] - entryB.date[2]) * 10000;
 					case REPEAT:
 						return entryA.repeat - entryB.repeat;
-					case UNTIL:
-						return (entryA.until[0] - entryB.until[0]) + (entryA.until[1] - entryB.until[1]) * 100 + (entryA.until[2] - entryB.until[2]) * 10000;
 					case DURATION:
 						if (entryA.duration == entryB.duration)
 						{
@@ -283,6 +297,8 @@ class DataEntry
 						{
 							return -1;
 						}
+					case UNTIL:
+						return (entryA.until[0] - entryB.until[0]) + (entryA.until[1] - entryB.until[1]) * 100 + (entryA.until[2] - entryB.until[2]) * 10000;
 					default:
 						return entryA.getDataRowValueAsString(sorting.row).compareTo(entryB.getDataRowValueAsString(sorting.row));
 				}
@@ -295,7 +311,7 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, int repeat, int[] until, boolean duration) throws Exception
+	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, int repeat, boolean duration, int[] until) throws Exception
 	{
 		if (date.length != DATE_ARRAY_SIZE)
 		{
@@ -313,8 +329,8 @@ class DataEntry
 		this.subtype = subtype;
 		this.date = date;
 		this.repeat = repeat;
-		this.until = until;
 		this.duration = duration;
+		this.until = until;
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
@@ -335,10 +351,10 @@ class DataEntry
 				return Arrays.stream(date).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			case REPEAT:
 				return Integer.toString(repeat);
-			case UNTIL:
-				return Arrays.stream(until).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			case DURATION:
 				return Boolean.toString(duration);
+			case UNTIL:
+				return Arrays.stream(until).mapToObj(String::valueOf).collect(Collectors.joining("."));
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
@@ -380,33 +396,47 @@ class DataEntry
 			{
 				return REPEAT_NAMES[repeat];
 			}
-			case UNTIL:
-			{
-				String untilText = "";
-				int i = 0;
-				if (until[i] <= 9)
-				{
-					untilText = untilText + "0";
-				}
-				untilText = untilText + Integer.toString(until[i]) + ".";
-				i++;
-				if (until[i] <= 9)
-				{
-					untilText = untilText + "0";
-				}
-				untilText = untilText + Integer.toString(until[i]) + ".";
-				i++;
-				return untilText + Integer.toString(until[i]);
-			}
 			case DURATION:
 			{
-				if (duration)
+				if (repeat == 0)  // 0 = "Never"
 				{
-					return "Infinitely";
+					return "-";
 				}
 				else
 				{
-					return "Limited";
+					if (duration)
+					{
+						return "Infinitely";
+					}
+					else
+					{
+						return "Limited";
+					}
+				}
+			}
+			case UNTIL:
+			{
+				if (repeat == 0 || duration)  // 0 = "Never" / true = "Infinitely"
+				{
+					return "-";
+				}
+				else
+				{
+					String untilText = "";
+					int i = 0;
+					if (until[i] <= 9)
+					{
+						untilText = untilText + "0";
+					}
+					untilText = untilText + Integer.toString(until[i]) + ".";
+					i++;
+					if (until[i] <= 9)
+					{
+						untilText = untilText + "0";
+					}
+					untilText = untilText + Integer.toString(until[i]) + ".";
+					i++;
+					return untilText + Integer.toString(until[i]);
 				}
 			}
 			default:

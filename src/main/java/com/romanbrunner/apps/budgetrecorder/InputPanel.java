@@ -51,19 +51,38 @@ class InputPanel extends JPanel
 
 	private DataField dataFields[] = new DataField[DataEntry.DATA_ROW_TYPE_COUNT];
 
-	private interface DataField
+	private abstract class DataField
 	{
-		JComponent getJComponent();
-		Object getValue();
-		String getValueAsText();
+		private JLabel label;
+
+		public DataField(JLabel label)
+		{
+			this.label = label;
+		}
+
+		public JLabel getJLabel()
+		{
+			return label;
+		}
+
+		public void setVisible(boolean aFlag)
+		{
+			getJComponent().setVisible(aFlag);
+			label.setVisible(aFlag);
+		}
+
+		public abstract JComponent getJComponent();
+		public abstract Object getValue();
+		public abstract String getValueAsText();
 	}
 
-	private class CurrencyDataField implements DataField
+	private class CurrencyDataField extends DataField
 	{
 		private JFormattedTextField dataField;
 
-		public CurrencyDataField(float initValue, int fractionDigits)
+		public CurrencyDataField(JLabel label, float initValue, int fractionDigits)
 		{
+			super(label);
 			var displayFormat = NumberFormat.getCurrencyInstance();
 			displayFormat.setMinimumFractionDigits(fractionDigits);
 			var displayFormatter = new NumberFormatter(displayFormat);
@@ -88,16 +107,18 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class ComboBoxDataField implements DataField
+	private class ComboBoxDataField extends DataField
 	{
 		private JComboBox<String> dataField;
 
-		public ComboBoxDataField(String[] items)
+		public ComboBoxDataField(JLabel label, String[] items)
 		{
+			super(label);
 			dataField = new JComboBox<String>(items);
 		}
-		public ComboBoxDataField(String[] items, ActionListener actionListener)
+		public ComboBoxDataField(JLabel label, String[] items, ActionListener actionListener)
 		{
+			super(label);
 			dataField = new JComboBox<String>(items);
 			dataField.addActionListener(actionListener);
 		}
@@ -132,12 +153,13 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class DateDataField implements DataField
+	private class DateDataField extends DataField
 	{
 		private JSpinner dataField;
 
-		public DateDataField(int maxBackYears, int maxUpYears)
+		public DateDataField(JLabel label, int maxBackYears, int maxUpYears)
 		{
+			super(label);
 			var calendar = Calendar.getInstance();
 			var initDate = calendar.getTime();
 			calendar.add(Calendar.YEAR, -maxBackYears);
@@ -164,13 +186,15 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class CheckBoxDataField implements DataField
+	private class CheckBoxDataField extends DataField
 	{
 		private JCheckBox dataField;
 
-		public CheckBoxDataField(String text)
+		public CheckBoxDataField(JLabel label, String text, ActionListener actionListener)
 		{
+			super(label);
 			dataField = new JCheckBox(text);
+			dataField.addActionListener(actionListener);
 		}
 
 		public JComponent getJComponent()
@@ -194,12 +218,13 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class TextDataField implements DataField
+	private class TextDataField extends DataField
 	{
 		private JTextField dataField;
 
-		public TextDataField()
+		public TextDataField(JLabel label)
 		{
+			super(label);
 			dataField = new JTextField();
 		}
 
@@ -225,11 +250,58 @@ class InputPanel extends JPanel
 		{
 			try
 			{
-				// Get combo-boxes:
-				ComboBoxDataField typeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()];
-				ComboBoxDataField subtypeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()];
 				// Change items in subtype combo-box with currently selected subset of names as options:
+				var typeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()];
+				var subtypeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()];
 				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeComboBox.getSelectedIndex()]);
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class RepeatDataFieldAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Evaluate repeat data field:
+				var repeatDataField = dataFields[DataEntry.DataRowType.REPEAT.toInt()];
+				boolean isVisible = ((int)repeatDataField.getValue() != 0);  // 0 = "Never"
+				// Adjust visibility for duration data field:
+				var durationDataField = dataFields[DataEntry.DataRowType.DURATION.toInt()];
+				durationDataField.getJComponent().setVisible(isVisible);
+				durationDataField.getJLabel().setVisible(isVisible);
+				// Evaluate duration data field:
+				isVisible = (isVisible && (boolean)durationDataField.getValue() != true);  // true = "Infinitely"
+				// Adjust visibility for until data field:
+				var untilDataField = dataFields[DataEntry.DataRowType.UNTIL.toInt()];
+				untilDataField.getJComponent().setVisible(isVisible);
+				untilDataField.getJLabel().setVisible(isVisible);
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class DurationDataFieldAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Evaluate duration data field:
+				var durationDataField = dataFields[DataEntry.DataRowType.DURATION.toInt()];
+				boolean isVisible = ((boolean)durationDataField.getValue() != true);  // true = "Infinitely"
+				// Adjust visibility for until data field:
+				var untilDataField = dataFields[DataEntry.DataRowType.UNTIL.toInt()];
+				untilDataField.getJComponent().setVisible(isVisible);
+				untilDataField.getJLabel().setVisible(isVisible);
 			}
 			catch (Exception exception)
 			{
@@ -254,8 +326,8 @@ class InputPanel extends JPanel
 					(int)dataFields[i++].getValue(),
 					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
 					(int)dataFields[i++].getValue(),
-					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
-					(boolean)dataFields[i++].getValue()
+					(boolean)dataFields[i++].getValue(),
+					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()
 					));
 				// Write database to json:
 				MainFrame.writeDatabaseFile();
@@ -318,26 +390,30 @@ class InputPanel extends JPanel
 			switch (dataRowType)
 			{
 				case MONEY:
-					dataField = new CurrencyDataField(0, 2);
+					dataField = new CurrencyDataField(label, 0, 2);
 					break;
 				case TYPE:
-					dataField = new ComboBoxDataField(DataEntry.TYPE_NAMES, new TypeDataFieldAL());
+					dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, new TypeDataFieldAL());
 					break;
 				case SUBTYPE:
-					dataField = new ComboBoxDataField(DataEntry.SUBTYPE_NAMES[0]);
+					dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[0]);
 					break;
 				case DATE:
-				case UNTIL:
-					dataField = new DateDataField(100, 1000);
+					dataField = new DateDataField(label, 100, 1000);
 					break;
 				case REPEAT:
-					dataField = new ComboBoxDataField(DataEntry.REPEAT_NAMES);
+					dataField = new ComboBoxDataField(label, DataEntry.REPEAT_NAMES, new RepeatDataFieldAL());
 					break;
 				case DURATION:
-					dataField = new CheckBoxDataField("Infinitely");
+					dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());
+					dataField.setVisible(false);
+					break;
+				case UNTIL:
+					dataField = new DateDataField(label, 100, 1000);
+					dataField.setVisible(false);
 					break;
 				default:
-					dataField = new TextDataField();
+					dataField = new TextDataField(label);
 					break;
 			}
 			var component = dataField.getJComponent();
