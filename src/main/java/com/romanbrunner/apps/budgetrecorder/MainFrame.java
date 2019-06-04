@@ -9,6 +9,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
 import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowSorting;
+import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
@@ -346,6 +348,21 @@ public class MainFrame  // Singleton class
 		var sortedList = new LinkedList<>(dataEntries);
         Collections.sort(sortedList, new DataEntry.DataComparator(sorting));
 		return sortedList;
+	}
+
+	public static ArrayList<String> getDataRowValuesAsStrings(DataRowType dataRowType) throws Exception
+	{
+		var keywords = new LinkedList<String>();
+		for (var dataEntry : dataEntries)
+		{
+			var newKeyword = dataEntry.getDataRowValueAsString(dataRowType);
+			if (keywords.contains(newKeyword) == false)
+			{
+				keywords.add(newKeyword);
+			}
+		}
+		System.out.println(keywords);
+		return new ArrayList<>(keywords);
 	}
 
 	public static void writeDatabaseFile() throws Exception

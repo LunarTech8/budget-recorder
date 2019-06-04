@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -20,6 +21,7 @@ import javax.swing.text.NumberFormatter;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.JFormattedTextField;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -220,12 +222,25 @@ class InputPanel extends JPanel
 
 	private class TextDataField extends DataField
 	{
+		private static final String COMMIT_ACTION = "commit";
+		private static final String COMMIT_KEY = "ENTER";
 		private JTextField dataField;
 
 		public TextDataField(JLabel label)
 		{
 			super(label);
 			dataField = new JTextField();
+		}
+		public TextDataField(JLabel label, ArrayList<String>keywords)
+		{
+			super(label);
+			dataField = new JTextField();
+			// Add autocompletion:
+			Autocomplete autoComplete = new Autocomplete(dataField, keywords);
+			dataField.getDocument().addDocumentListener(autoComplete);
+			// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
+			dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
+			dataField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
 		}
 
 		public JComponent getJComponent()
@@ -367,72 +382,84 @@ class InputPanel extends JPanel
 	public InputPanel()
 	{
 		super(new GridBagLayout());
-		GridBagConstraints constraints = new GridBagConstraints();
-		// Define default constraints:
-		constraints.fill = GridBagConstraints.BOTH;
-		constraints.weightx = 0.5;
-		constraints.weighty = 0.5;
 
-		// Create data row components:
-		constraints.gridy = 0;
-		for (var dataRowType : DataEntry.DataRowType.values())
+		try
 		{
-			// Create name label:
-			constraints.gridx = 0;
-			var name = dataRowType.toString();
-			var label = new JLabel(DATA_ROW_TEXT.replace("<NAME>", name), JLabel.CENTER);
-			label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
-			label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
-			add(label, constraints);
-			// Create data field component:
-			constraints.gridx = 1;
-			DataField dataField;
-			switch (dataRowType)
-			{
-				case MONEY:
-					dataField = new CurrencyDataField(label, 0, 2);
-					break;
-				case TYPE:
-					dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, new TypeDataFieldAL());
-					break;
-				case SUBTYPE:
-					dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[0]);
-					break;
-				case DATE:
-					dataField = new DateDataField(label, 100, 1000);
-					break;
-				case REPEAT:
-					dataField = new ComboBoxDataField(label, DataEntry.REPEAT_NAMES, new RepeatDataFieldAL());
-					break;
-				case DURATION:
-					dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());
-					dataField.setVisible(false);
-					break;
-				case UNTIL:
-					dataField = new DateDataField(label, 100, 1000);
-					dataField.setVisible(false);
-					break;
-				default:
-					dataField = new TextDataField(label);
-					break;
-			}
-			var component = dataField.getJComponent();
-			component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
-			component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
-			add(component, constraints);
-			dataFields[constraints.gridy] = dataField;
+			GridBagConstraints constraints = new GridBagConstraints();
+			// Define default constraints:
+			constraints.fill = GridBagConstraints.BOTH;
+			constraints.weightx = 0.5;
+			constraints.weighty = 0.5;
 
-			constraints.gridy++;
+			// Create data row components:
+			constraints.gridy = 0;
+			for (var dataRowType : DataEntry.DataRowType.values())
+			{
+				// Create name label:
+				constraints.gridx = 0;
+				var name = dataRowType.toString();
+				var label = new JLabel(DATA_ROW_TEXT.replace("<NAME>", name), JLabel.CENTER);
+				label.setToolTipText(DATA_ROW_TOOLTIP.replace("<NAME>", name));
+				label.setPreferredSize(new Dimension(NAME_LABEL_WIDTH, DATA_ROW_HEIGHT));
+				add(label, constraints);
+				// Create data field component:
+				constraints.gridx = 1;
+				DataField dataField;
+				switch (dataRowType)
+				{
+					case MONEY:
+						dataField = new CurrencyDataField(label, 0, 2);
+						break;
+					case NAME:
+					case LOCATION:
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType));
+						break;
+					case TYPE:
+						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, new TypeDataFieldAL());
+						break;
+					case SUBTYPE:
+						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[0]);
+						break;
+					case DATE:
+						dataField = new DateDataField(label, 100, 1000);
+						break;
+					case REPEAT:
+						dataField = new ComboBoxDataField(label, DataEntry.REPEAT_NAMES, new RepeatDataFieldAL());
+						break;
+					case DURATION:
+						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());
+						dataField.setVisible(false);
+						break;
+					case UNTIL:
+						dataField = new DateDataField(label, 100, 1000);
+						dataField.setVisible(false);
+						break;
+					default:
+						dataField = new TextDataField(label);
+						break;
+				}
+				var component = dataField.getJComponent();
+				component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
+				component.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_ROW_HEIGHT));
+				add(component, constraints);
+				dataFields[constraints.gridy] = dataField;
+
+				constraints.gridy++;
+			}
+			// Create add button:
+			var button = new JButton(ADD_BUTTON_TEXT);
+			button.setToolTipText(ADD_BUTTON_TOOLTIP);
+			button.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
+			button.addActionListener(new AddButtonAL());
+			constraints.gridwidth = 2;
+			constraints.gridx = 0;
+			constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
+			add(button, constraints);
 		}
-		// Create add button:
-		var button = new JButton(ADD_BUTTON_TEXT);
-		button.setToolTipText(ADD_BUTTON_TOOLTIP);
-		button.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
-		button.addActionListener(new AddButtonAL());
-		constraints.gridwidth = 2;
-		constraints.gridx = 0;
-		constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
-		add(button, constraints);
+		catch (Exception exception)
+		{
+			exception.printStackTrace();
+		}
 	}
 
 }
