@@ -225,18 +225,19 @@ class InputPanel extends JPanel
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";
 		private JTextField dataField;
+		private Autocomplete autoComplete;
 
 		public TextDataField(JLabel label)
 		{
 			super(label);
 			dataField = new JTextField();
 		}
-		public TextDataField(JLabel label, ArrayList<String>keywords)
+		public TextDataField(JLabel label, ArrayList<String> keywords)
 		{
 			super(label);
 			dataField = new JTextField();
 			// Add autocompletion:
-			Autocomplete autoComplete = new Autocomplete(dataField, keywords);
+			autoComplete = new Autocomplete(dataField, keywords);
 			dataField.getDocument().addDocumentListener(autoComplete);
 			// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
 			dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
@@ -256,6 +257,11 @@ class InputPanel extends JPanel
 		public String getValueAsText()
 		{
 			return dataField.getText();
+		}
+
+		public void updateAutocomplete(ArrayList<String> keywords)
+		{
+			autoComplete.setKeywords(keywords);
 		}
 	}
 
@@ -371,6 +377,9 @@ class InputPanel extends JPanel
 					}
 				};
 				new java.util.Timer().schedule(task, ADD_CONFIRMATION_TIME);
+				// Update autocompletions:
+				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.NAME));
+				// ((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.LOCATION));
 			}
 			catch (Exception exception)
 			{

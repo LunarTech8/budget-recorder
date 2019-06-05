@@ -28,7 +28,6 @@ Work status:
 // Application design:
 // -------------
 
-!!>- New entries should also be usable for autocompletion (keywords right now are only set at InputPanel creation)
 !!- Data window: Add a settings row to top with a drop-down menu to change to complete/daily/weekly/monthly/yearly view
 !- Data window: Allow more/less info by adding/changing/removing more columns with selectable data type
 !- Data window: Make data labels to buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction

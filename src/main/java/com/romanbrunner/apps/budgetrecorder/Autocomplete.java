@@ -23,9 +23,18 @@ public class Autocomplete implements DocumentListener
 		INSERT,	COMPLETION;
 	};
 
-	private final List<String> keywords;
+	private List<String> keywords;
 	private JTextField textField;
 	private Mode mode = Mode.INSERT;
+
+	/**
+	 * Sets keywords to the given list of strings.
+	 */
+	public void setKeywords(List<String> keywords)
+    {
+		this.keywords = keywords;
+		Collections.sort(keywords);
+    }
 
 	public Autocomplete(JTextField textField, List<String> keywords)
 	{
@@ -70,7 +79,7 @@ public class Autocomplete implements DocumentListener
 		}
 
 		// Too few chars:
-		if (pos - w < 2)
+		if (pos - w < 1)
 		{
 			return;
 		}
