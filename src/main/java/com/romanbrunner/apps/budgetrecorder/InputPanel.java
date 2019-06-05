@@ -379,7 +379,7 @@ class InputPanel extends JPanel
 				new java.util.Timer().schedule(task, ADD_CONFIRMATION_TIME);
 				// Update autocompletions:
 				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.NAME));
-				// ((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.LOCATION));
+				((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.LOCATION));
 			}
 			catch (Exception exception)
 			{

@@ -84,7 +84,7 @@ public class Autocomplete implements DocumentListener
 			return;
 		}
 
-		String prefix = content.substring(w + 1).toLowerCase();
+		String prefix = content.substring(w + 1);
 		int n = Collections.binarySearch(keywords, prefix);
 		if (n < 0 && -n <= keywords.size())
 		{
