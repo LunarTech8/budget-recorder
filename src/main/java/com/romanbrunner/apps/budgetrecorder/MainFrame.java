@@ -248,6 +248,7 @@ public class MainFrame  // Singleton class
 			throw new Exception("ERROR: Logo file not found");
 		}
 		dataPanel = new DataPanel();
+		dataFrame.setJMenuBar(dataPanel.createMenuBar());
 		dataFrame.setContentPane(dataPanel);
 
 		// Set the frame size and position:
@@ -379,7 +380,7 @@ public class MainFrame  // Singleton class
 
 	public static void refreshDataPanel()
 	{
-		dataPanel.refresh();
+		dataPanel.refreshPanel();
 	}
 
 }

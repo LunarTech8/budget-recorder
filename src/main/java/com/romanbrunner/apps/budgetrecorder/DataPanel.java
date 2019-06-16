@@ -3,12 +3,14 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.JPanel;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -19,8 +21,12 @@ import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
 import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowSorting;
 
 import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 
 
 @SuppressWarnings("serial")
@@ -39,6 +45,8 @@ class DataPanel extends JPanel
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
 	private static final DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataRowSorting(DataEntry.DataRowType.DATE, DataRowSorting.Mode.DOWNWARD);
+	private static final String[] SETTINGS_VIEW_NAMES = { "Complete", "Daily", "Weekly", "Monthly", "Yearly" };
+	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
 
 
 	// --------------------
@@ -81,7 +89,7 @@ class DataPanel extends JPanel
 					basePanel.sorting.mode = DataRowSorting.Mode.UPWARD;
 				}
 				// Refresh panel:
-				basePanel.refresh();
+				basePanel.refreshPanel();
 			}
 			catch (Exception exception)
 			{
@@ -94,14 +102,14 @@ class DataPanel extends JPanel
 	{
 		super(new BorderLayout());
 		this.sorting = sorting;
-		recreate();
+		recreatePanel();
 	}
 	public DataPanel()
 	{
 		this(DEFAULT_DATA_ROW_SORTING);
 	}
 
-	private void recreate()
+	private void recreatePanel()
 	{
 		try
 		{
@@ -200,10 +208,58 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public void refresh()
+	public void refreshPanel()
 	{
-		recreate();
+		recreatePanel();
 		revalidate();
 		repaint();
+	}
+
+	public JMenuBar createMenuBar()
+	{
+		// Create menu bar:
+		var menuBar = new JMenuBar();
+
+		// Add settings menu:
+        var menu = new JMenu("Settings");
+        menu.setMnemonic(KeyEvent.VK_S);
+        menu.getAccessibleContext().setAccessibleDescription("General settings menu");
+		menuBar.add(menu);
+		// Create test item A:
+		var menuItem = new JMenuItem("Test item A", KeyEvent.VK_A);
+        menuItem.getAccessibleContext().setAccessibleDescription("Test item / placeholder for later use");
+		menu.add(menuItem);
+		// Add test submenu:
+        menu.addSeparator();
+        var submenu = new JMenu("Test submenu");
+        submenu.setMnemonic(KeyEvent.VK_T);
+        menu.add(submenu);
+		// Create test item B:
+		menuItem = new JMenuItem("Test item B", KeyEvent.VK_B);
+		submenu.add(menuItem);
+		// Create test item C:
+		menuItem = new JMenuItem("Test item C", KeyEvent.VK_C);
+		submenu.add(menuItem);
+
+		// Add view menu:
+        menu = new JMenu("View");
+        menu.setMnemonic(KeyEvent.VK_V);
+        menu.getAccessibleContext().setAccessibleDescription("View selection menu");
+		menuBar.add(menu);
+		// Create options:
+		var group = new ButtonGroup();
+		for (int i = 0; i < SETTINGS_VIEW_NAMES.length; i++)
+		{
+			menuItem = new JRadioButtonMenuItem(SETTINGS_VIEW_NAMES[i]);
+			if (i == 0)
+			{
+				menuItem.setSelected(true);
+			}
+			menuItem.setMnemonic(SETTINGS_VIEW_MNEMONICS[i]);
+			group.add(menuItem);
+			menu.add(menuItem);
+		}
+
+		return menuBar;
 	}
 }
