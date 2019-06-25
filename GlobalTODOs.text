@@ -29,7 +29,7 @@ Work status:
 // Application design:
 // -------------
 
-!!- Data panel: Display data based on view menu selection
+!!>>- Data panel: Display data based on view menu selection
 !- Data panel: Allow more/less info by adding/changing/removing more columns with selectable data type
 !- Data panel: Make data labels to buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
 !- Maybe use "Mixed" as default value for name and location
