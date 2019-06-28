@@ -213,8 +213,9 @@ class DataPanel extends JPanel
 		add(scroller, BorderLayout.CENTER);
 	}
 
-	private void createMonthlyPanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
+	private void createBundledPanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
 	{
+		// TODO: create DataEntries to DataBundle transformation and use that here
 		// Create header panel:
 		var headerPanel = new JPanel(new GridBagLayout());
 		constraints.gridx = 0;
@@ -314,9 +315,9 @@ class DataPanel extends JPanel
 			{
 				createCompletePanel(constraints, dataBorder, headerBorder);
 			}
-			else if (view == 3)
+			else if (view < SETTINGS_VIEW_NAMES.length)
 			{
-				createMonthlyPanel(constraints, dataBorder, headerBorder);
+				createBundledPanel(constraints, dataBorder, headerBorder);
 			}
 			else
 			{
