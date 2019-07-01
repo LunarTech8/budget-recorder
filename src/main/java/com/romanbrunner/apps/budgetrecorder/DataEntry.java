@@ -333,6 +333,17 @@ class DataEntry
 		this.until = until;
 	}
 
+	public DataBundle addToDataBundle(DataBundle dataBundle, int timeframe) throws Exception
+	{
+		if (dataBundle == null || dataBundle.isInTimeframe(date) == false)
+		{
+			var endDate = date + timeframe;  // TODO
+			dataBundle = new DataBundle(date, endDate);
+		}
+		dataBundle.addEntry(money);
+		return dataBundle;
+	}
+
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
 	{
 		switch (dataRowType)

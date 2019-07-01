@@ -4,6 +4,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.ArrayList;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -45,7 +46,7 @@ class DataPanel extends JPanel
 	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
-	private static final DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataRowSorting(DataEntry.DataRowType.DATE, DataRowSorting.Mode.DOWNWARD);
+	private static final DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final int DEFAULT_VIEW = 0;
 	private static final String[] SETTINGS_VIEW_NAMES = { "Complete", "Daily", "Weekly", "Monthly", "Yearly" };
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
@@ -55,14 +56,15 @@ class DataPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private DataRowSorting sorting;
+	private DataEntry.DataRowSorting sortingComplete;
+	private DataBundle.DataRowSorting sortingBundled;
 	private int view;
 
-	private class HeaderButtonAL implements ActionListener
+	private class HeaderButtonCompleteAL implements ActionListener
 	{
-		private DataRowType dataRowType;
+		private DataEntry.DataRowType dataRowType;
 
-		public HeaderButtonAL(DataRowType dataRowType)
+		public HeaderButtonCompleteAL(DataEntry.DataRowType dataRowType)
 		{
 			this.dataRowType = dataRowType;
 		}
@@ -72,22 +74,63 @@ class DataPanel extends JPanel
 			try
 			{
 				// Adjust sorting:
-				if (sorting.row == dataRowType)
+				if (sortingComplete.row == dataRowType)
 				{
-					switch (sorting.mode)
+					switch (sortingComplete.mode)
 					{
 						case UPWARD:
-							sorting.mode = DataRowSorting.Mode.DOWNWARD;
+							sortingComplete.mode = DataEntry.DataRowSorting.Mode.DOWNWARD;
 							break;
 						case DOWNWARD:
-							sorting.mode = DataRowSorting.Mode.UPWARD;
+							sortingComplete.mode = DataEntry.DataRowSorting.Mode.UPWARD;
 							break;
 					}
 				}
 				else
 				{
-					sorting.row = dataRowType;
-					sorting.mode = DataRowSorting.Mode.UPWARD;
+					sortingComplete.row = dataRowType;
+					sortingComplete.mode = DataEntry.DataRowSorting.Mode.UPWARD;
+				}
+				// Refresh panel:
+				refreshPanel();
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class HeaderButtonBundledAL implements ActionListener
+	{
+		private DataBundle.DataRowType dataRowType;
+
+		public HeaderButtonBundledAL(DataBundle.DataRowType dataRowType)
+		{
+			this.dataRowType = dataRowType;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Adjust sorting:
+				if (sortingBundled.row == dataRowType)
+				{
+					switch (sortingBundled.mode)
+					{
+						case UPWARD:
+						sortingBundled.mode = DataBundle.DataRowSorting.Mode.DOWNWARD;
+							break;
+						case DOWNWARD:
+						sortingBundled.mode = DataBundle.DataRowSorting.Mode.UPWARD;
+							break;
+					}
+				}
+				else
+				{
+					sortingBundled.row = dataRowType;
+					sortingBundled.mode = DataBundle.DataRowSorting.Mode.UPWARD;
 				}
 				// Refresh panel:
 				refreshPanel();
@@ -127,7 +170,7 @@ class DataPanel extends JPanel
 	public DataPanel(DataRowSorting sorting, int view)
 	{
 		super(new BorderLayout());
-		this.sorting = sorting;
+		this.sortingComplete = sorting;
 		this.view = view;
 		recreatePanel();
 	}
@@ -147,9 +190,9 @@ class DataPanel extends JPanel
 		{
 			var name = dataRowType.toString();
 			var text = HEADER_TEXT.replace("<NAME>", name);
-			if (dataRowType == sorting.row)
+			if (dataRowType == sortingComplete.row)
 			{
-				switch (sorting.mode)
+				switch (sortingComplete.mode)
 				{
 					case UPWARD:
 						text = "[^] " + text;
@@ -165,7 +208,7 @@ class DataPanel extends JPanel
 			button.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
 			button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
 			button.setBorder(headerBorder);
-			button.addActionListener(new HeaderButtonAL(dataRowType));
+			button.addActionListener(new HeaderButtonCompleteAL(dataRowType));
 			headerPanel.add(button, constraints);
 
 			constraints.gridx++;
@@ -176,7 +219,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
-		for (var dataEntry : MainFrame.getDataEntries(sorting))
+		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
 		{
 			constraints.gridx = 0;
 			for (var dataRowType : DataEntry.DataRowType.values())
@@ -215,19 +258,18 @@ class DataPanel extends JPanel
 
 	private void createBundledPanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
 	{
-		// TODO: create DataEntries to DataBundle transformation and use that here
 		// Create header panel:
 		var headerPanel = new JPanel(new GridBagLayout());
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create header buttons:
-		for (var dataRowType : DataEntry.DataRowType.values())
+		for (var dataRowType : DataBundle.DataRowType.values())
 		{
 			var name = dataRowType.toString();
 			var text = HEADER_TEXT.replace("<NAME>", name);
-			if (dataRowType == sorting.row)
+			if (dataRowType == sortingBundled.row)
 			{
-				switch (sorting.mode)
+				switch (sortingBundled.mode)
 				{
 					case UPWARD:
 						text = "[^] " + text;
@@ -243,7 +285,7 @@ class DataPanel extends JPanel
 			button.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
 			button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, HEADER_HEIGHT));
 			button.setBorder(headerBorder);
-			button.addActionListener(new HeaderButtonAL(dataRowType));
+			button.addActionListener(new HeaderButtonBundledAL(dataRowType));
 			headerPanel.add(button, constraints);
 
 			constraints.gridx++;
@@ -254,10 +296,22 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
-		for (var dataEntry : MainFrame.getDataEntries(sorting))
+		ArrayList<DataBundle> dataBundles = new ArrayList<DataBundle>();
+		DataBundle lastDataBundle = null;
+		int timeframe = viewToTimeframe(view);  // TODO
+		for (var dataEntry : MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD)))
+		{
+			DataBundle currentDataBundle = dataEntry.addToDataBundle(lastDataBundle, timeframe);
+			if (currentDataBundle != lastDataBundle)
+			{
+				lastDataBundle = currentDataBundle;
+				dataBundles.add(currentDataBundle);
+			}
+		}
+		for (var dataEntry : dataBundles)
 		{
 			constraints.gridx = 0;
-			for (var dataRowType : DataEntry.DataRowType.values())
+			for (var dataRowType : DataBundle.DataRowType.values())
 			{
 				int alignment;
 				switch (dataRowType)

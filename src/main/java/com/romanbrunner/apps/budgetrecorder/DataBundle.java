@@ -252,6 +252,33 @@ class DataBundle
 		this.start = start;
 		this.end = end;
 	}
+	public DataBundle(int[] start, int[] end) throws Exception
+	{
+		if (start.length != DATE_ARRAY_SIZE)
+		{
+			throw new Exception("ERROR: Invalid start format (" + start.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
+		}
+		else if (end.length != DATE_ARRAY_SIZE)
+		{
+			throw new Exception("ERROR: Invalid end format (" + end.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
+		}
+
+		money = 0f;
+		entries = 0;
+		this.start = start;
+		this.end = end;
+	}
+
+	public boolean isInTimeframe(int[] date)
+	{
+		return (date >= start && date <= end);  // TODO
+	}
+
+	public void addEntry(float money)
+	{
+		this.money += money;
+		entries += 1;
+	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
 	{
