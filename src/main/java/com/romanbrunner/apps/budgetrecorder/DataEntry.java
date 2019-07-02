@@ -1,7 +1,9 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
+import java.util.GregorianCalendar;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -333,12 +335,32 @@ class DataEntry
 		this.until = until;
 	}
 
-	public DataBundle addToDataBundle(DataBundle dataBundle, int timeframe) throws Exception
+	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception
 	{
-		if (dataBundle == null || dataBundle.isInTimeframe(date) == false)
+		Calendar calendarStart = new GregorianCalendar(date[2], date[1], date[0]);
+		if (dataBundle == null || dataBundle.isInTimeframe(calendarStart) == false)
 		{
-			var endDate = date + timeframe;  // TODO
-			dataBundle = new DataBundle(date, endDate);
+			Calendar calendarEnd = (GregorianCalendar)calendarStart.clone();
+			switch (view)
+			{
+				case 0:  // Complete
+				case 1:  // Daily
+					calendarEnd.add(Calendar.DAY_OF_MONTH, 1);
+					break;
+				case 2:  // Weekly
+					calendarEnd.add(Calendar.WEEK_OF_MONTH, 1);
+					break;
+				case 3:  // Monthly
+					calendarEnd.add(Calendar.MONTH, 1);
+					break;
+				case 4:  // Yearly
+					calendarEnd.add(Calendar.YEAR, 1);
+					break;
+				default:
+					throw new Exception("ERROR: Invalid view selection");
+			}
+			int[] end = {calendarEnd.get(Calendar.DAY_OF_MONTH), calendarEnd.get(Calendar.MONTH), calendarEnd.get(Calendar.YEAR)};
+			dataBundle = new DataBundle(date, end);
 		}
 		dataBundle.addEntry(money);
 		return dataBundle;

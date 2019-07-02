@@ -1,6 +1,7 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
@@ -269,9 +270,9 @@ class DataBundle
 		this.end = end;
 	}
 
-	public boolean isInTimeframe(int[] date)
+	public boolean isInTimeframe(Calendar calendar)
 	{
-		return (date >= start && date <= end);  // TODO
+		return (calendar >= start && calendar <= end);  // TODO
 	}
 
 	public void addEntry(float money)

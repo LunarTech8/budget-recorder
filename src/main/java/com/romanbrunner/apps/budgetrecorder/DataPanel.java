@@ -19,9 +19,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
-import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowType;
-import com.romanbrunner.apps.budgetrecorder.DataEntry.DataRowSorting;
-
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -46,7 +43,7 @@ class DataPanel extends JPanel
 	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
-	private static final DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
+	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final int DEFAULT_VIEW = 0;
 	private static final String[] SETTINGS_VIEW_NAMES = { "Complete", "Daily", "Weekly", "Monthly", "Yearly" };
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
@@ -167,7 +164,7 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataRowSorting sorting, int view)
+	public DataPanel(DataEntry.DataRowSorting sorting, int view)
 	{
 		super(new BorderLayout());
 		this.sortingComplete = sorting;
@@ -298,10 +295,9 @@ class DataPanel extends JPanel
 		// Create data field labels:
 		ArrayList<DataBundle> dataBundles = new ArrayList<DataBundle>();
 		DataBundle lastDataBundle = null;
-		int timeframe = viewToTimeframe(view);  // TODO
 		for (var dataEntry : MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD)))
 		{
-			DataBundle currentDataBundle = dataEntry.addToDataBundle(lastDataBundle, timeframe);
+			DataBundle currentDataBundle = dataEntry.addToDataBundle(lastDataBundle, view);
 			if (currentDataBundle != lastDataBundle)
 			{
 				lastDataBundle = currentDataBundle;
