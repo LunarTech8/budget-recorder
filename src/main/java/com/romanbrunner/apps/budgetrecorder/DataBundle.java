@@ -3,6 +3,7 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.GregorianCalendar;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -272,7 +273,12 @@ class DataBundle
 
 	public boolean isInTimeframe(Calendar calendar)
 	{
-		return (calendar >= start && calendar <= end);  // TODO
+		return (calendar.compareTo(new GregorianCalendar(start[2], start[1], start[0])) >= 0 && calendar.compareTo(new GregorianCalendar(end[2], end[1], end[0])) <= 0);
+	}
+
+	public Calendar getCalendarEnd()
+	{
+		return new GregorianCalendar(end[2], end[1], end[0]);
 	}
 
 	public void addEntry(float money)

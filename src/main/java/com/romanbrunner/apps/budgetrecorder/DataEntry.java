@@ -335,17 +335,44 @@ class DataEntry
 		this.until = until;
 	}
 
-	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception
+	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception  // TODO: tidy up and restructure
 	{
+		// Evaluate start date:
+		boolean newBundleRequired = false;
 		Calendar calendarStart = new GregorianCalendar(date[2], date[1], date[0]);
-		if (dataBundle == null || dataBundle.isInTimeframe(calendarStart) == false)
+		if (dataBundle == null)
+		{
+			newBundleRequired = true;
+			switch (view)  // TODO: maybe move this into the data section
+			{
+				case 1:  // Daily
+					break;
+				case 2:  // Weekly
+					calendarStart.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test, doesn't seem to work as intended
+					break;
+				case 3:  // Monthly
+					calendarStart.set(Calendar.DAY_OF_MONTH, 1);  // TODO: test
+					break;
+				case 4:  // Yearly
+					calendarStart.set(Calendar.DAY_OF_YEAR, 1);  // TODO: test
+					break;
+				default:
+					throw new Exception("ERROR: Invalid view selection");
+			}
+		}
+		else if (dataBundle.isInTimeframe(calendarStart) == false)
+		{
+			newBundleRequired = true;
+			calendarStart = dataBundle.getCalendarEnd();
+			calendarStart.add(Calendar.DAY_OF_MONTH, 1);
+		}
+		// Evaluate end date:
+		if (newBundleRequired)
 		{
 			Calendar calendarEnd = (GregorianCalendar)calendarStart.clone();
-			switch (view)
+			switch (view)  // TODO: maybe move this into the data section
 			{
-				case 0:  // Complete
 				case 1:  // Daily
-					calendarEnd.add(Calendar.DAY_OF_MONTH, 1);
 					break;
 				case 2:  // Weekly
 					calendarEnd.add(Calendar.WEEK_OF_MONTH, 1);
@@ -359,9 +386,11 @@ class DataEntry
 				default:
 					throw new Exception("ERROR: Invalid view selection");
 			}
+			// Create new data bundle:
 			int[] end = {calendarEnd.get(Calendar.DAY_OF_MONTH), calendarEnd.get(Calendar.MONTH), calendarEnd.get(Calendar.YEAR)};
 			dataBundle = new DataBundle(date, end);
 		}
+		// Add entry to data bundle:
 		dataBundle.addEntry(money);
 		return dataBundle;
 	}

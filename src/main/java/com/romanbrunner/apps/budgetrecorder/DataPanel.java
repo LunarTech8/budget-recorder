@@ -4,7 +4,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -43,7 +43,8 @@ class DataPanel extends JPanel
 	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
-	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
+	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
+	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
 	private static final int DEFAULT_VIEW = 0;
 	private static final String[] SETTINGS_VIEW_NAMES = { "Complete", "Daily", "Weekly", "Monthly", "Yearly" };
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
@@ -164,16 +165,17 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataEntry.DataRowSorting sorting, int view)
+	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, int view)
 	{
 		super(new BorderLayout());
-		this.sortingComplete = sorting;
+		this.sortingComplete = sortingComplete;
+		this.sortingBundled = sortingBundled;
 		this.view = view;
 		recreatePanel();
 	}
 	public DataPanel()
 	{
-		this(DEFAULT_DATA_ROW_SORTING, DEFAULT_VIEW);
+		this(DEFAULT_DATA_ROW_SORTING_COMPLETE, DEFAULT_DATA_ROW_SORTING_BUNDLED, DEFAULT_VIEW);
 	}
 
 	private void createCompletePanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
@@ -293,7 +295,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
-		ArrayList<DataBundle> dataBundles = new ArrayList<DataBundle>();
+		LinkedList<DataBundle> dataBundles = new LinkedList<DataBundle>();
 		DataBundle lastDataBundle = null;
 		for (var dataEntry : MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD)))
 		{
@@ -304,6 +306,7 @@ class DataPanel extends JPanel
 				dataBundles.add(currentDataBundle);
 			}
 		}
+		// TODO: sort dataBundles after sortingBundled
 		for (var dataEntry : dataBundles)
 		{
 			constraints.gridx = 0;
@@ -337,7 +340,7 @@ class DataPanel extends JPanel
 		var scroller = new JScrollPane();
 		scroller.setViewportView(dataPanel);
 		scroller.setColumnHeaderView(headerPanel);
-		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataEntry.DATA_ROW_TYPE_COUNT + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
+		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataBundle.DATA_ROW_TYPE_COUNT + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
 		add(scroller, BorderLayout.CENTER);
 	}
 
