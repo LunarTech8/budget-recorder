@@ -271,20 +271,24 @@ class DataBundle
 		this.end = end;
 	}
 
-	public boolean isInTimeframe(Calendar calendar)
-	{
-		return (calendar.compareTo(new GregorianCalendar(start[2], start[1], start[0])) >= 0 && calendar.compareTo(new GregorianCalendar(end[2], end[1], end[0])) <= 0);
-	}
-
-	public Calendar getCalendarEnd()
-	{
-		return new GregorianCalendar(end[2], end[1], end[0]);
-	}
-
-	public void addEntry(float money)
+	public DataBundle addEntry(float money)
 	{
 		this.money += money;
 		entries += 1;
+		return this;
+	}
+
+	public boolean isInTimeframe(int[] date)
+	{
+		Calendar calendar = new GregorianCalendar(date[2], date[1], date[0]);
+		return (calendar.compareTo(new GregorianCalendar(start[2], start[1], start[0])) >= 0 && calendar.compareTo(new GregorianCalendar(end[2], end[1], end[0])) <= 0);
+	}
+
+	public Calendar getNextCalendarStart()
+	{
+		Calendar calendar = new GregorianCalendar(end[2], end[1], end[0]);
+		calendar.add(Calendar.DAY_OF_MONTH, 1);
+		return calendar;
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception

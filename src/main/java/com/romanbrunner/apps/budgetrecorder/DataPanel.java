@@ -295,9 +295,11 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
-		LinkedList<DataBundle> dataBundles = new LinkedList<DataBundle>();
-		DataBundle lastDataBundle = null;
-		for (var dataEntry : MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD)))
+		var dataBundles = new LinkedList<DataBundle>();
+		var dataEntries = MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD));
+		DataBundle lastDataBundle = dataEntries.pop().newDataBundle(view);
+		dataBundles.add(lastDataBundle);
+		for (var dataEntry : dataEntries)
 		{
 			DataBundle currentDataBundle = dataEntry.addToDataBundle(lastDataBundle, view);
 			if (currentDataBundle != lastDataBundle)

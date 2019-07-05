@@ -84,6 +84,50 @@ class DataEntry
 		}
 	}
 
+	public static Calendar getCalendarStart(int[] date, int view) throws Exception
+	{
+		Calendar calendar = new GregorianCalendar(date[2], date[1], date[0]);
+		switch (view)
+		{
+			case 1:  // Daily
+				break;
+			case 2:  // Weekly
+				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test, doesn't seem to work as intended
+				break;
+			case 3:  // Monthly
+				calendar.set(Calendar.DAY_OF_MONTH, 1);  // TODO: test
+				break;
+			case 4:  // Yearly
+				calendar.set(Calendar.DAY_OF_YEAR, 1);  // TODO: test
+				break;
+			default:
+				throw new Exception("ERROR: Invalid view selection");
+		}
+		return calendar;
+	}
+
+	public static int[] getEndDate(Calendar calendarStart, int view) throws Exception
+	{
+		switch (view)
+		{
+			case 1:  // Daily
+				break;
+			case 2:  // Weekly
+				calendarStart.add(Calendar.WEEK_OF_MONTH, 1);
+				break;
+			case 3:  // Monthly
+					calendarStart.add(Calendar.MONTH, 1);
+				break;
+			case 4:  // Yearly
+				calendarStart.add(Calendar.YEAR, 1);
+				break;
+			default:
+				throw new Exception("ERROR: Invalid view selection");
+		}
+		int[] end = {calendarStart.get(Calendar.DAY_OF_MONTH), calendarStart.get(Calendar.MONTH), calendarStart.get(Calendar.YEAR)};
+		return end;
+	}
+
 	// --------------------
 	// Functional code
 	// --------------------
@@ -335,64 +379,21 @@ class DataEntry
 		this.until = until;
 	}
 
-	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception  // TODO: tidy up and restructure
+	public DataBundle newDataBundle(int view) throws Exception
 	{
-		// Evaluate start date:
-		boolean newBundleRequired = false;
-		Calendar calendarStart = new GregorianCalendar(date[2], date[1], date[0]);
-		if (dataBundle == null)
+		return new DataBundle(money, 1, date, getEndDate(getCalendarStart(date, view), view));
+	}
+
+	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception
+	{
+		if (dataBundle.isInTimeframe(date))
 		{
-			newBundleRequired = true;
-			switch (view)  // TODO: maybe move this into the data section
-			{
-				case 1:  // Daily
-					break;
-				case 2:  // Weekly
-					calendarStart.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test, doesn't seem to work as intended
-					break;
-				case 3:  // Monthly
-					calendarStart.set(Calendar.DAY_OF_MONTH, 1);  // TODO: test
-					break;
-				case 4:  // Yearly
-					calendarStart.set(Calendar.DAY_OF_YEAR, 1);  // TODO: test
-					break;
-				default:
-					throw new Exception("ERROR: Invalid view selection");
-			}
+			return dataBundle.addEntry(money);
 		}
-		else if (dataBundle.isInTimeframe(calendarStart) == false)
+		else
 		{
-			newBundleRequired = true;
-			calendarStart = dataBundle.getCalendarEnd();
-			calendarStart.add(Calendar.DAY_OF_MONTH, 1);
+			return new DataBundle(money, 1, date, getEndDate(dataBundle.getNextCalendarStart(), view));
 		}
-		// Evaluate end date:
-		if (newBundleRequired)
-		{
-			Calendar calendarEnd = (GregorianCalendar)calendarStart.clone();
-			switch (view)  // TODO: maybe move this into the data section
-			{
-				case 1:  // Daily
-					break;
-				case 2:  // Weekly
-					calendarEnd.add(Calendar.WEEK_OF_MONTH, 1);
-					break;
-				case 3:  // Monthly
-					calendarEnd.add(Calendar.MONTH, 1);
-					break;
-				case 4:  // Yearly
-					calendarEnd.add(Calendar.YEAR, 1);
-					break;
-				default:
-					throw new Exception("ERROR: Invalid view selection");
-			}
-			// Create new data bundle:
-			int[] end = {calendarEnd.get(Calendar.DAY_OF_MONTH), calendarEnd.get(Calendar.MONTH), calendarEnd.get(Calendar.YEAR)};
-			dataBundle = new DataBundle(date, end);
-		}
-		// Add entry to data bundle:
-		dataBundle.addEntry(money);
-		return dataBundle;
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception

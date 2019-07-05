@@ -344,7 +344,7 @@ public class MainFrame  // Singleton class
 		dataEntries.add(e);
 	}
 
-	public static List<DataEntry> getDataEntries(DataRowSorting sorting) throws Exception
+	public static LinkedList<DataEntry> getDataEntries(DataRowSorting sorting) throws Exception
 	{
 		var sortedList = new LinkedList<>(dataEntries);
         Collections.sort(sortedList, new DataEntry.DataComparator(sorting));
