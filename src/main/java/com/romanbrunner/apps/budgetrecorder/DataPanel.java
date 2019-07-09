@@ -297,15 +297,14 @@ class DataPanel extends JPanel
 		// Create data field labels:
 		var dataBundles = new LinkedList<DataBundle>();
 		var dataEntries = MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD));
-		DataBundle lastDataBundle = dataEntries.pop().newDataBundle(view);
-		dataBundles.add(lastDataBundle);
+		DataBundle dataBundle = dataEntries.pop().createNewDataBundle(view);
+		dataBundles.add(dataBundle);
 		for (var dataEntry : dataEntries)
 		{
-			DataBundle currentDataBundle = dataEntry.addToDataBundle(lastDataBundle, view);
-			if (currentDataBundle != lastDataBundle)
+			while (dataEntry.tryAddToDataBundle(dataBundle) == false)
 			{
-				lastDataBundle = currentDataBundle;
-				dataBundles.add(currentDataBundle);
+				dataBundle = dataEntry.createNextDataBundle(dataBundle, view);
+				dataBundles.add(dataBundle);
 			}
 		}
 		// TODO: sort dataBundles after sortingBundled

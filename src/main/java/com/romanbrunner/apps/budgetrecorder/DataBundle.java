@@ -254,40 +254,41 @@ class DataBundle
 		this.start = start;
 		this.end = end;
 	}
-	public DataBundle(int[] start, int[] end) throws Exception
+	public DataBundle(float money, int entries, Calendar calendarStart, Calendar calendarEnd) throws Exception
 	{
-		if (start.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid start format (" + start.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-		else if (end.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid end format (" + end.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-
-		money = 0f;
-		entries = 0;
-		this.start = start;
-		this.end = end;
+		this.money = money;
+		this.entries = entries;
+		this.start = calendarToDate(calendarStart);
+		this.end = calendarToDate(calendarEnd);
 	}
 
-	public DataBundle addEntry(float money)
+	private int[] calendarToDate(Calendar calendar)
+	{
+		int[] date = {calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR)};
+		return date;
+	}
+
+	private Calendar dateToCalendar(int[] date)
+	{
+		return new GregorianCalendar(date[2], date[1], date[0]);
+	}
+
+	public void addEntry(float money)
 	{
 		this.money += money;
 		entries += 1;
-		return this;
 	}
 
 	public boolean isInTimeframe(int[] date)
 	{
-		Calendar calendar = new GregorianCalendar(date[2], date[1], date[0]);
-		return (calendar.compareTo(new GregorianCalendar(start[2], start[1], start[0])) >= 0 && calendar.compareTo(new GregorianCalendar(end[2], end[1], end[0])) <= 0);
+		Calendar calendar = dateToCalendar(date);
+		return (calendar.compareTo(dateToCalendar(start)) >= 0 && calendar.compareTo(dateToCalendar(end)) <= 0);
 	}
 
 	public Calendar getNextCalendarStart()
 	{
-		Calendar calendar = new GregorianCalendar(end[2], end[1], end[0]);
-		calendar.add(Calendar.DAY_OF_MONTH, 1);
+		Calendar calendar = dateToCalendar(end);
+		calendar.add(Calendar.DAY_OF_YEAR, 1);  // TODO: test vs. DAY_OF_MONTH etc.
 		return calendar;
 	}
 

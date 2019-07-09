@@ -84,7 +84,7 @@ class DataEntry
 		}
 	}
 
-	public static Calendar getCalendarStart(int[] date, int view) throws Exception
+	private static Calendar getCalendarStart(int[] date, int view) throws Exception
 	{
 		Calendar calendar = new GregorianCalendar(date[2], date[1], date[0]);
 		switch (view)
@@ -92,7 +92,7 @@ class DataEntry
 			case 1:  // Daily
 				break;
 			case 2:  // Weekly
-				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test, doesn't seem to work as intended
+				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test
 				break;
 			case 3:  // Monthly
 				calendar.set(Calendar.DAY_OF_MONTH, 1);  // TODO: test
@@ -106,26 +106,29 @@ class DataEntry
 		return calendar;
 	}
 
-	public static int[] getEndDate(Calendar calendarStart, int view) throws Exception
+	private static Calendar getCalendarEnd(Calendar calendarStart, int view) throws Exception
 	{
-		switch (view)
+		Calendar calendar = (GregorianCalendar)calendarStart.clone();
+		switch (view)  // TODO: fix for months
 		{
 			case 1:  // Daily
 				break;
 			case 2:  // Weekly
-				calendarStart.add(Calendar.WEEK_OF_MONTH, 1);
+				calendar.add(Calendar.WEEK_OF_MONTH, 1);
+				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			case 3:  // Monthly
-					calendarStart.add(Calendar.MONTH, 1);
+				calendar.add(Calendar.MONTH, 1);
+				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			case 4:  // Yearly
-				calendarStart.add(Calendar.YEAR, 1);
+				calendar.add(Calendar.YEAR, 1);
+				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			default:
 				throw new Exception("ERROR: Invalid view selection");
 		}
-		int[] end = {calendarStart.get(Calendar.DAY_OF_MONTH), calendarStart.get(Calendar.MONTH), calendarStart.get(Calendar.YEAR)};
-		return end;
+		return calendar;
 	}
 
 	// --------------------
@@ -379,20 +382,28 @@ class DataEntry
 		this.until = until;
 	}
 
-	public DataBundle newDataBundle(int view) throws Exception
+	public DataBundle createNewDataBundle(int view) throws Exception
 	{
-		return new DataBundle(money, 1, date, getEndDate(getCalendarStart(date, view), view));
+		var calendarStart = getCalendarStart(date, view);
+		return new DataBundle(money, 1, calendarStart, getCalendarEnd(calendarStart, view));
 	}
 
-	public DataBundle addToDataBundle(DataBundle dataBundle, int view) throws Exception
+	public DataBundle createNextDataBundle(DataBundle lastDataBundle, int view) throws Exception
+	{
+		var calendarStart = lastDataBundle.getNextCalendarStart();
+		return new DataBundle(0f, 0, calendarStart, getCalendarEnd(calendarStart, view));
+	}
+
+	public boolean tryAddToDataBundle(DataBundle dataBundle) throws Exception
 	{
 		if (dataBundle.isInTimeframe(date))
 		{
-			return dataBundle.addEntry(money);
+			dataBundle.addEntry(money);
+			return true;
 		}
 		else
 		{
-			return new DataBundle(money, 1, date, getEndDate(dataBundle.getNextCalendarStart(), view));
+			return false;
 		}
 	}
 
