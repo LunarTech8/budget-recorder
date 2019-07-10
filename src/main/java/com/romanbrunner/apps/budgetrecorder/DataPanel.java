@@ -25,7 +25,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-// import javax.swing.JMenuItem;
+import javax.swing.JMenuItem;
 
 
 @SuppressWarnings("serial")
@@ -396,31 +396,23 @@ class DataPanel extends JPanel
 		// Create menu bar:
 		var menuBar = new JMenuBar();
 
-		/* --- Placeholder ---
 		// Add settings menu:
         var menu = new JMenu("Settings");
         menu.setMnemonic(KeyEvent.VK_S);
         menu.getAccessibleContext().setAccessibleDescription("General settings menu");
 		menuBar.add(menu);
-		// Create test item A:
-		var menuItem = new JMenuItem("Test item A", KeyEvent.VK_A);
-        menuItem.getAccessibleContext().setAccessibleDescription("Test item / placeholder for later use");
-		menu.add(menuItem);
-		// Add test submenu:
+		// Add version submenu:
         menu.addSeparator();
-        var submenu = new JMenu("Test submenu");
-        submenu.setMnemonic(KeyEvent.VK_T);
+        var submenu = new JMenu("Version");
+        submenu.setMnemonic(KeyEvent.VK_V);
         menu.add(submenu);
-		// Create test item B:
-		menuItem = new JMenuItem("Test item B", KeyEvent.VK_B);
-		submenu.add(menuItem);
-		// Create test item C:
-		menuItem = new JMenuItem("Test item C", KeyEvent.VK_C);
-		submenu.add(menuItem);
-		*/
+		// Create version items:
+		submenu.add(new JMenuItem("Major: " + MainFrame.VERSION_MAJOR));
+		submenu.add(new JMenuItem("Minor: " + MainFrame.VERSION_MINOR));
+		submenu.add(new JMenuItem("Patch: " + MainFrame.VERSION_PATCH));
 
 		// Add view menu:
-        var menu = new JMenu("View");
+        menu = new JMenu("View");
         menu.setMnemonic(KeyEvent.VK_V);
         menu.getAccessibleContext().setAccessibleDescription("View selection menu");
 		menuBar.add(menu);
