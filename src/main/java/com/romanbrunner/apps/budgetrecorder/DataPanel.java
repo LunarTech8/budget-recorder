@@ -23,6 +23,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -143,6 +144,37 @@ class DataPanel extends JPanel
 		}
 	}
 
+	private class SettingsMenuAL implements ActionListener
+	{
+		private String setting;
+
+		public SettingsMenuAL(String setting)
+		{
+			this.setting = setting;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Change selected setting:
+				switch (setting)
+				{
+					case "ShowEmptyEntries":
+						showEmptyEntries = !showEmptyEntries;
+						refreshPanel();
+						break;
+					default:
+						throw new Exception("ERROR: Invalid setting type");
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
 	private class ViewMenuAL implements ActionListener
 	{
 		private int index;
@@ -156,9 +188,7 @@ class DataPanel extends JPanel
 		{
 			try
 			{
-				// Change view based on the index of the selected radio button:
-				view = index;
-				// Refresh panel:
+				view = index;  // Change view based on the index of the selected radio button
 				refreshPanel();
 			}
 			catch (Exception exception)
@@ -408,10 +438,19 @@ class DataPanel extends JPanel
         menu.setMnemonic(KeyEvent.VK_S);
         menu.getAccessibleContext().setAccessibleDescription("General settings menu");
 		menuBar.add(menu);
-		// Add version submenu:
+		// Add view submenu:
         menu.addSeparator();
-        var submenu = new JMenu("Version");
+        var submenu = new JMenu("View");
         submenu.setMnemonic(KeyEvent.VK_V);
+        menu.add(submenu);
+		// Create version items:
+		JMenuItem menuItem = new JCheckBoxMenuItem("Show empty entries", showEmptyEntries);
+		menuItem.addActionListener(new SettingsMenuAL("ShowEmptyEntries"));
+		submenu.add(menuItem);
+		// Add software version submenu:
+        menu.addSeparator();
+        submenu = new JMenu("Software Version");
+        submenu.setMnemonic(KeyEvent.VK_S);
         menu.add(submenu);
 		// Create version items:
 		submenu.add(new JMenuItem("Major: " + MainFrame.VERSION_MAJOR));
@@ -427,7 +466,7 @@ class DataPanel extends JPanel
 		var group = new ButtonGroup();
 		for (int i = 0; i < SETTINGS_VIEW_NAMES.length; i++)
 		{
-			var menuItem = new JRadioButtonMenuItem(SETTINGS_VIEW_NAMES[i]);
+			menuItem = new JRadioButtonMenuItem(SETTINGS_VIEW_NAMES[i]);
 			if (i == 0)
 			{
 				menuItem.setSelected(true);
