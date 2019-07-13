@@ -264,13 +264,13 @@ class DataBundle
 
 	private int[] calendarToDate(Calendar calendar)
 	{
-		int[] date = {calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR)};
+		int[] date = {calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)};
 		return date;
 	}
 
 	private Calendar dateToCalendar(int[] date)
 	{
-		return new GregorianCalendar(date[2], date[1], date[0]);
+		return new GregorianCalendar(date[2], date[1] - 1, date[0]);
 	}
 
 	public void addEntry(float money)
@@ -285,10 +285,15 @@ class DataBundle
 		return (calendar.compareTo(dateToCalendar(start)) >= 0 && calendar.compareTo(dateToCalendar(end)) <= 0);
 	}
 
+	public boolean hasEntries()
+	{
+		return (entries > 0);
+	}
+
 	public Calendar getNextCalendarStart()
 	{
 		Calendar calendar = dateToCalendar(end);
-		calendar.add(Calendar.DAY_OF_YEAR, 1);  // TODO: test vs. DAY_OF_MONTH etc.
+		calendar.add(Calendar.DAY_OF_YEAR, 1);
 		return calendar;
 	}
 

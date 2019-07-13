@@ -23,13 +23,14 @@ Work status:
 !- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 !- Maybe make autocompletion ignore capitalisation
+!- Maybe recreate a debug & unit test class/system like the one used in the AgeOfWarcraft project
 
 
 // -------------
 // Application design:
 // -------------
 
-!!>>- Data panel: Display data based on view menu selection
+!!>- Data panel: Add a settings button to switch the value of showEmptyEntries
 !- Data panel: Allow more/less info by adding/changing/removing more columns with selectable data type
 !- Data panel: Add edit mode that changes data labels into buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
 !- Maybe use "Mixed" as default value for name and location

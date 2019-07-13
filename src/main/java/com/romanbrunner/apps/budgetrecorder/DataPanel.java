@@ -4,6 +4,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
@@ -53,6 +54,8 @@ class DataPanel extends JPanel
 	// --------------------
 	// Functional code
 	// --------------------
+
+	private static boolean showEmptyEntries = true;
 
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
@@ -303,11 +306,15 @@ class DataPanel extends JPanel
 		{
 			while (dataEntry.tryAddToDataBundle(dataBundle) == false)
 			{
+				if (showEmptyEntries == false && dataBundle.hasEntries() == false)
+				{
+					dataBundles.removeLast();
+				}
 				dataBundle = dataEntry.createNextDataBundle(dataBundle, view);
 				dataBundles.add(dataBundle);
 			}
 		}
-		// TODO: sort dataBundles after sortingBundled
+        Collections.sort(dataBundles, new DataBundle.DataComparator(sortingBundled));
 		for (var dataEntry : dataBundles)
 		{
 			constraints.gridx = 0;

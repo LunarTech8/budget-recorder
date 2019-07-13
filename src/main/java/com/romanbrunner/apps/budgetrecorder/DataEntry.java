@@ -86,19 +86,19 @@ class DataEntry
 
 	private static Calendar getCalendarStart(int[] date, int view) throws Exception
 	{
-		Calendar calendar = new GregorianCalendar(date[2], date[1], date[0]);
+		Calendar calendar = new GregorianCalendar(date[2], date[1] - 1, date[0]);
 		switch (view)
 		{
 			case 1:  // Daily
 				break;
 			case 2:  // Weekly
-				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);  // TODO: test
+				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 				break;
 			case 3:  // Monthly
-				calendar.set(Calendar.DAY_OF_MONTH, 1);  // TODO: test
+				calendar.set(Calendar.DAY_OF_MONTH, 1);
 				break;
 			case 4:  // Yearly
-				calendar.set(Calendar.DAY_OF_YEAR, 1);  // TODO: test
+				calendar.set(Calendar.DAY_OF_YEAR, 1);
 				break;
 			default:
 				throw new Exception("ERROR: Invalid view selection");
@@ -109,25 +109,24 @@ class DataEntry
 	private static Calendar getCalendarEnd(Calendar calendarStart, int view) throws Exception
 	{
 		Calendar calendar = (GregorianCalendar)calendarStart.clone();
-		switch (view)  // TODO: fix for months
+		switch (view)
 		{
 			case 1:  // Daily
+				calendar.add(Calendar.DAY_OF_YEAR, 1);
 				break;
 			case 2:  // Weekly
 				calendar.add(Calendar.WEEK_OF_MONTH, 1);
-				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			case 3:  // Monthly
 				calendar.add(Calendar.MONTH, 1);
-				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			case 4:  // Yearly
 				calendar.add(Calendar.YEAR, 1);
-				calendar.add(Calendar.DAY_OF_YEAR, -1);
 				break;
 			default:
 				throw new Exception("ERROR: Invalid view selection");
 		}
+		calendar.add(Calendar.DAY_OF_YEAR, -1);
 		return calendar;
 	}
 
