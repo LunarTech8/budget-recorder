@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.GregorianCalendar;
+import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -87,7 +88,7 @@ class DataEntry
 	private static Calendar getCalendarStart(int[] date, int view) throws Exception
 	{
 		Calendar calendar = new GregorianCalendar(date[2], date[1] - 1, date[0]);
-		switch (view)
+		switch (view)  // TODO: use one notation or maybe a custom type for "view" and "repeat"
 		{
 			case 1:  // Daily
 				break;
@@ -109,7 +110,7 @@ class DataEntry
 	private static Calendar getCalendarEnd(Calendar calendarStart, int view) throws Exception
 	{
 		Calendar calendar = (GregorianCalendar)calendarStart.clone();
-		switch (view)
+		switch (view)  // TODO: use one notation or maybe a custom type for "view" and "repeat"
 		{
 			case 1:  // Daily
 				calendar.add(Calendar.DAY_OF_YEAR, 1);
@@ -144,6 +145,16 @@ class DataEntry
 	private int repeat;
 	private boolean duration;
 	private int[] until;
+
+	/**
+	 * @return the date
+	 */
+	public int[] getDate()
+    {
+        return date.clone();
+	}
+
+	// TODO: maybe add more getter/setter where needed
 
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
@@ -380,6 +391,27 @@ class DataEntry
 		this.duration = duration;
 		this.until = until;
 	}
+	public DataEntry(DataEntry origin, int[] date, boolean noRepeat) throws Exception
+	{
+		money = origin.money;
+		name = origin.name;
+		location = origin.location;
+		type = origin.type;
+		subtype = origin.subtype;
+		this.date = date;
+		if (noRepeat)
+		{
+			repeat = 0;  // 0 = "Never"
+			duration = true;  // Default value
+			until = new int[]{1, 1, 0};  // Default value
+		}
+		else
+		{
+			repeat = origin.repeat;
+			duration = origin.duration;
+			until = origin.until.clone();
+		}
+	}
 
 	public DataBundle createNewDataBundle(int view) throws Exception
 	{
@@ -398,6 +430,25 @@ class DataEntry
 		if (dataBundle.isInTimeframe(date))
 		{
 			dataBundle.addEntry(money);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	public boolean unpackToList(LinkedList<DataEntry> list, Calendar calendarEnd) throws Exception
+	{
+		if (repeat > 0)
+		{
+			var calendar = getCalendarStart(date, 1);
+			calendar = getCalendarEnd(calendar, repeat + 1);  // Don't add entry itself again
+			while (calendar.compareTo(calendarEnd) <= 0)
+			{
+				list.add(new DataEntry(this, DataBundle.calendarToDate(calendar), true));
+				calendar = getCalendarEnd(calendar, repeat + 1);
+			}
 			return true;
 		}
 		else

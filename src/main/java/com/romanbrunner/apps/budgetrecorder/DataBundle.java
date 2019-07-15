@@ -262,13 +262,13 @@ class DataBundle
 		this.end = calendarToDate(calendarEnd);
 	}
 
-	private int[] calendarToDate(Calendar calendar)
+	public static int[] calendarToDate(Calendar calendar)
 	{
 		int[] date = {calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)};
 		return date;
 	}
 
-	private Calendar dateToCalendar(int[] date)
+	public static Calendar dateToCalendar(int[] date)
 	{
 		return new GregorianCalendar(date[2], date[1] - 1, date[0]);
 	}

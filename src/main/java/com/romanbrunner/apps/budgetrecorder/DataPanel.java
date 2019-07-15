@@ -328,8 +328,17 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
+		var sorting = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD);
+		var dataEntries = MainFrame.getDataEntries(sorting);
+		var calendarEnd = DataBundle.dateToCalendar(dataEntries.getLast().getDate());  // TODO: test
+		var unpackedAddList = new LinkedList<DataEntry>();
+		for (var dataEntry : dataEntries)
+		{
+			dataEntry.unpackToList(unpackedAddList, calendarEnd);
+		}
+		dataEntries.addAll(unpackedAddList);
+		Collections.sort(dataEntries, new DataEntry.DataComparator(sorting));
 		var dataBundles = new LinkedList<DataBundle>();
-		var dataEntries = MainFrame.getDataEntries(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD));
 		DataBundle dataBundle = dataEntries.pop().createNewDataBundle(view);
 		dataBundles.add(dataBundle);
 		for (var dataEntry : dataEntries)
@@ -345,7 +354,7 @@ class DataPanel extends JPanel
 			}
 		}
         Collections.sort(dataBundles, new DataBundle.DataComparator(sortingBundled));
-		for (var dataEntry : dataBundles)
+		for (var sortedDataBundle : dataBundles)
 		{
 			constraints.gridx = 0;
 			for (var dataRowType : DataBundle.DataRowType.values())
@@ -361,7 +370,7 @@ class DataPanel extends JPanel
 						break;
 				}
 				var name = dataRowType.toString();
-				var text = dataEntry.getDataRowValueAsText(dataRowType);
+				var text = sortedDataBundle.getDataRowValueAsText(dataRowType);
 				var label = new JLabel(text, alignment);
 				label.setToolTipText(name + ": " + text);
 				label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
