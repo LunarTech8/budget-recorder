@@ -47,8 +47,7 @@ class DataPanel extends JPanel
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
 	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
-	private static final int DEFAULT_VIEW = 0;
-	private static final String[] SETTINGS_VIEW_NAMES = { "Complete", "Daily", "Weekly", "Monthly", "Yearly" };
+	private static final DataEntry.CycleInterval DEFAULT_VIEW = DataEntry.CycleInterval.NEVER;
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
 
 
@@ -60,7 +59,7 @@ class DataPanel extends JPanel
 
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
-	private int view;
+	private DataEntry.CycleInterval view;
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -177,18 +176,18 @@ class DataPanel extends JPanel
 
 	private class ViewMenuAL implements ActionListener
 	{
-		private int index;
+		private DataEntry.CycleInterval interval;
 
-		public ViewMenuAL(int index)
+		public ViewMenuAL(DataEntry.CycleInterval interval)
 		{
-			this.index = index;
+			this.interval = interval;
 		}
 
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
-				view = index;  // Change view based on the index of the selected radio button
+				view = interval;  // Change view based on the index of the selected radio button
 				refreshPanel();
 			}
 			catch (Exception exception)
@@ -198,7 +197,7 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, int view)
+	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, DataEntry.CycleInterval view)
 	{
 		super(new BorderLayout());
 		this.sortingComplete = sortingComplete;
@@ -327,17 +326,18 @@ class DataPanel extends JPanel
 		var dataPanel = new JPanel(new GridBagLayout());
 		constraints.gridx = 0;
 		constraints.gridy = 0;
-		// Create data field labels:
+		// Unpack repeate entries:
 		var sorting = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD);
 		var dataEntries = MainFrame.getDataEntries(sorting);
-		var calendarEnd = DataBundle.dateToCalendar(dataEntries.getLast().getDate());  // TODO: test
+		var calendarEnd = DataBundle.dateToCalendar(dataEntries.getLast().getDate());
 		var unpackedAddList = new LinkedList<DataEntry>();
 		for (var dataEntry : dataEntries)
 		{
-			dataEntry.unpackToList(unpackedAddList, calendarEnd);
+			dataEntry.unpackToList(unpackedAddList, calendarEnd);  // TODO: test repeats
 		}
 		dataEntries.addAll(unpackedAddList);
 		Collections.sort(dataEntries, new DataEntry.DataComparator(sorting));
+		// Bundle entries:
 		var dataBundles = new LinkedList<DataBundle>();
 		DataBundle dataBundle = dataEntries.pop().createNewDataBundle(view);
 		dataBundles.add(dataBundle);
@@ -354,6 +354,7 @@ class DataPanel extends JPanel
 			}
 		}
         Collections.sort(dataBundles, new DataBundle.DataComparator(sortingBundled));
+		// Create data field labels:
 		for (var sortedDataBundle : dataBundles)
 		{
 			constraints.gridx = 0;
@@ -411,17 +412,13 @@ class DataPanel extends JPanel
 			var headerBorder = BorderFactory.createCompoundBorder(outerPaddingBorder, BorderFactory.createCompoundBorder(new LineBorder(Color.black), innerPaddingBorder));
 
 			// Create new content panel:
-			if (view == 0)
+			if (view == DataEntry.CycleInterval.NEVER)
 			{
 				createCompletePanel(constraints, dataBorder, headerBorder);
 			}
-			else if (view < SETTINGS_VIEW_NAMES.length)
-			{
-				createBundledPanel(constraints, dataBorder, headerBorder);
-			}
 			else
 			{
-				throw new Exception("ERROR: Invalid view selection");
+				createBundledPanel(constraints, dataBorder, headerBorder);
 			}
 		}
 		catch (Exception exception)
@@ -473,15 +470,15 @@ class DataPanel extends JPanel
 		menuBar.add(menu);
 		// Create options:
 		var group = new ButtonGroup();
-		for (int i = 0; i < SETTINGS_VIEW_NAMES.length; i++)
+		for (var interval : DataEntry.CycleInterval.values())
 		{
-			menuItem = new JRadioButtonMenuItem(SETTINGS_VIEW_NAMES[i]);
-			if (i == 0)
+			menuItem = new JRadioButtonMenuItem(interval.toString());
+			if (interval == DataEntry.CycleInterval.NEVER)
 			{
 				menuItem.setSelected(true);
 			}
-			menuItem.setMnemonic(SETTINGS_VIEW_MNEMONICS[i]);
-			menuItem.addActionListener(new ViewMenuAL(i));
+			menuItem.setMnemonic(SETTINGS_VIEW_MNEMONICS[interval.toInt()]);
+			menuItem.addActionListener(new ViewMenuAL(interval));
 			group.add(menuItem);
 			menu.add(menuItem);
 		}

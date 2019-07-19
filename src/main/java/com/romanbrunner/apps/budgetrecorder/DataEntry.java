@@ -46,7 +46,6 @@ class DataEntry
 		// Income:
 		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
-	public static final String[] REPEAT_NAMES = { "Never", "Daily", "Weekly", "Monthly", "Yearly" };
 	public static final int DATA_ROW_TYPE_COUNT = DataRowType.values().length;
 
 	public enum DataRowType
@@ -85,47 +84,85 @@ class DataEntry
 		}
 	}
 
-	private static Calendar getCalendarStart(int[] date, int view) throws Exception
+	public enum CycleInterval
+	{
+		NEVER("Never", 0), DAILY("Daily", 1), WEEKLY("Weekly", 2), MONTHLY("Monthly", 3), YEARLY("Yearly", 4);
+
+		private final String name;
+		private final int index;
+
+		private static class InitChecker
+		{
+			private static int counter = 0;
+		}
+
+		private CycleInterval(String name, int index)
+		{
+			InitChecker.counter += 1;
+			if (index < 0 || index >= InitChecker.counter)
+			{
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + InitChecker.counter + ")");
+			}
+
+			this.name = name;
+			this.index = index;
+		}
+
+		public static CycleInterval byIndex(int index)
+		{
+			return CycleInterval.values()[index];  // Save because of initial continuity check
+		}
+
+		@Override
+		public String toString()
+		{
+			return name;
+		}
+
+		public int toInt()
+		{
+			return index;
+		}
+	}
+
+	private static Calendar getCalendarStart(int[] date, CycleInterval interval) throws Exception
 	{
 		Calendar calendar = new GregorianCalendar(date[2], date[1] - 1, date[0]);
-		switch (view)  // TODO: use one notation or maybe a custom type for "view" and "repeat"
+		switch (interval)
 		{
-			case 1:  // Daily
-				break;
-			case 2:  // Weekly
+			case WEEKLY:
 				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 				break;
-			case 3:  // Monthly
+			case MONTHLY:
 				calendar.set(Calendar.DAY_OF_MONTH, 1);
 				break;
-			case 4:  // Yearly
+			case YEARLY:
 				calendar.set(Calendar.DAY_OF_YEAR, 1);
 				break;
 			default:
-				throw new Exception("ERROR: Invalid view selection");
+				break;
 		}
 		return calendar;
 	}
 
-	private static Calendar getCalendarEnd(Calendar calendarStart, int view) throws Exception
+	private static Calendar getCalendarEnd(Calendar calendarStart, CycleInterval interval) throws Exception
 	{
 		Calendar calendar = (GregorianCalendar)calendarStart.clone();
-		switch (view)  // TODO: use one notation or maybe a custom type for "view" and "repeat"
+		switch (interval)
 		{
-			case 1:  // Daily
+			case NEVER:
+			case DAILY:
 				calendar.add(Calendar.DAY_OF_YEAR, 1);
 				break;
-			case 2:  // Weekly
+			case WEEKLY:
 				calendar.add(Calendar.WEEK_OF_MONTH, 1);
 				break;
-			case 3:  // Monthly
+			case MONTHLY:
 				calendar.add(Calendar.MONTH, 1);
 				break;
-			case 4:  // Yearly
+			case YEARLY:
 				calendar.add(Calendar.YEAR, 1);
 				break;
-			default:
-				throw new Exception("ERROR: Invalid view selection");
 		}
 		calendar.add(Calendar.DAY_OF_YEAR, -1);
 		return calendar;
@@ -191,7 +228,7 @@ class DataEntry
 				}
 				jsonGenerator.writeEndArray();
 				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.repeat);
-				if (obj.repeat != 0)  // 0 = "Never"
+				if (CycleInterval.byIndex(obj.repeat) != CycleInterval.NEVER)
 				{
 					jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.duration);
 					if (obj.duration != true)  // true = "Infinitely"
@@ -401,7 +438,7 @@ class DataEntry
 		this.date = date;
 		if (noRepeat)
 		{
-			repeat = 0;  // 0 = "Never"
+			repeat = CycleInterval.NEVER.toInt();
 			duration = true;  // Default value
 			until = new int[]{1, 1, 0};  // Default value
 		}
@@ -413,16 +450,16 @@ class DataEntry
 		}
 	}
 
-	public DataBundle createNewDataBundle(int view) throws Exception
+	public DataBundle createNewDataBundle(CycleInterval interval) throws Exception
 	{
-		var calendarStart = getCalendarStart(date, view);
-		return new DataBundle(money, 1, calendarStart, getCalendarEnd(calendarStart, view));
+		var calendarStart = getCalendarStart(date, interval);
+		return new DataBundle(money, 1, calendarStart, getCalendarEnd(calendarStart, interval));
 	}
 
-	public DataBundle createNextDataBundle(DataBundle lastDataBundle, int view) throws Exception
+	public DataBundle createNextDataBundle(DataBundle lastDataBundle, CycleInterval interval) throws Exception
 	{
 		var calendarStart = lastDataBundle.getNextCalendarStart();
-		return new DataBundle(0f, 0, calendarStart, getCalendarEnd(calendarStart, view));
+		return new DataBundle(0f, 0, calendarStart, getCalendarEnd(calendarStart, interval));
 	}
 
 	public boolean tryAddToDataBundle(DataBundle dataBundle) throws Exception
@@ -442,12 +479,12 @@ class DataEntry
 	{
 		if (repeat > 0)
 		{
-			var calendar = getCalendarStart(date, 1);
-			calendar = getCalendarEnd(calendar, repeat + 1);  // Don't add entry itself again
+			var calendar = getCalendarStart(date, CycleInterval.DAILY);
+			calendar = getCalendarEnd(calendar, CycleInterval.byIndex(repeat));  // Don't add entry itself again
 			while (calendar.compareTo(calendarEnd) <= 0)
 			{
 				list.add(new DataEntry(this, DataBundle.calendarToDate(calendar), true));
-				calendar = getCalendarEnd(calendar, repeat + 1);
+				calendar = getCalendarEnd(calendar, CycleInterval.byIndex(repeat));
 			}
 			return true;
 		}
@@ -518,11 +555,11 @@ class DataEntry
 			}
 			case REPEAT:
 			{
-				return REPEAT_NAMES[repeat];
+				return CycleInterval.byIndex(repeat).toString();
 			}
 			case DURATION:
 			{
-				if (repeat == 0)  // 0 = "Never"
+				if (CycleInterval.byIndex(repeat) == CycleInterval.NEVER)
 				{
 					return "-";
 				}
@@ -540,7 +577,7 @@ class DataEntry
 			}
 			case UNTIL:
 			{
-				if (repeat == 0 || duration)  // 0 = "Never" / true = "Infinitely"
+				if (CycleInterval.byIndex(repeat) == CycleInterval.NEVER || duration)  // true = "Infinitely"
 				{
 					return "-";
 				}

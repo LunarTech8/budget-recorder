@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -18,6 +19,7 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerDateModel;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
+
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -291,7 +293,7 @@ class InputPanel extends JPanel
 			{
 				// Evaluate repeat data field:
 				var repeatDataField = dataFields[DataEntry.DataRowType.REPEAT.toInt()];
-				boolean isVisible = ((int)repeatDataField.getValue() != 0);  // 0 = "Never"
+				boolean isVisible = (DataEntry.CycleInterval.byIndex((int)repeatDataField.getValue()) != DataEntry.CycleInterval.NEVER);
 				// Adjust visibility for duration data field:
 				var durationDataField = dataFields[DataEntry.DataRowType.DURATION.toInt()];
 				durationDataField.getJComponent().setVisible(isVisible);
@@ -433,7 +435,9 @@ class InputPanel extends JPanel
 						dataField = new DateDataField(label, 100, 1000);
 						break;
 					case REPEAT:
-						dataField = new ComboBoxDataField(label, DataEntry.REPEAT_NAMES, new RepeatDataFieldAL());
+						dataField = new ComboBoxDataField(label, Arrays.stream(DataEntry.CycleInterval.values()).toArray(String[]::new), new RepeatDataFieldAL());  // TODO: throws error, fix
+						// Arrays.copyOf(objectArray, objectArray.length, String[].class)
+						// Arrays.asList(Object_Array).toArray(new String[Object_Array.length]);
 						break;
 					case DURATION:
 						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());

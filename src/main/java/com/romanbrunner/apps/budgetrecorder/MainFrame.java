@@ -36,9 +36,6 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import com.romanbrunner.apps.budgetrecorder.InputPanel;
-import com.romanbrunner.apps.budgetrecorder.DataEntry;
-
 
 @SuppressWarnings("serial")
 @SpringBootApplication
