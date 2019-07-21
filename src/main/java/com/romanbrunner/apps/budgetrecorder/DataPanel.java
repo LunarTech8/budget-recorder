@@ -47,7 +47,7 @@ class DataPanel extends JPanel
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
 	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
-	private static final DataEntry.CycleInterval DEFAULT_VIEW = DataEntry.CycleInterval.NEVER;
+	private static final DataEntry.Interval DEFAULT_VIEW = DataEntry.Interval.NEVER;
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
 
 
@@ -59,7 +59,7 @@ class DataPanel extends JPanel
 
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
-	private DataEntry.CycleInterval view;
+	private DataEntry.Interval view;
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -176,9 +176,9 @@ class DataPanel extends JPanel
 
 	private class ViewMenuAL implements ActionListener
 	{
-		private DataEntry.CycleInterval interval;
+		private DataEntry.Interval interval;
 
-		public ViewMenuAL(DataEntry.CycleInterval interval)
+		public ViewMenuAL(DataEntry.Interval interval)
 		{
 			this.interval = interval;
 		}
@@ -197,7 +197,7 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, DataEntry.CycleInterval view)
+	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, DataEntry.Interval view)
 	{
 		super(new BorderLayout());
 		this.sortingComplete = sortingComplete;
@@ -217,7 +217,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create header buttons:
-		for (var dataRowType : DataEntry.DataRowType.values())
+		for (var dataRowType : DataEntry.DataRowType.Data.values)
 		{
 			var name = dataRowType.toString();
 			var text = HEADER_TEXT.replace("<NAME>", name);
@@ -253,7 +253,7 @@ class DataPanel extends JPanel
 		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
 		{
 			constraints.gridx = 0;
-			for (var dataRowType : DataEntry.DataRowType.values())
+			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
 				int alignment;
 				switch (dataRowType)
@@ -283,7 +283,7 @@ class DataPanel extends JPanel
 		var scroller = new JScrollPane();
 		scroller.setViewportView(dataPanel);
 		scroller.setColumnHeaderView(headerPanel);
-		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataEntry.DATA_ROW_TYPE_COUNT + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
+		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataEntry.DataRowType.Data.length + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
 		add(scroller, BorderLayout.CENTER);
 	}
 
@@ -294,7 +294,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create header buttons:
-		for (var dataRowType : DataBundle.DataRowType.values())
+		for (var dataRowType : DataBundle.DataRowType.Data.values)
 		{
 			var name = dataRowType.toString();
 			var text = HEADER_TEXT.replace("<NAME>", name);
@@ -329,11 +329,11 @@ class DataPanel extends JPanel
 		// Unpack repeate entries:
 		var sorting = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD);
 		var dataEntries = MainFrame.getDataEntries(sorting);
-		var calendarEnd = DataBundle.dateToCalendar(dataEntries.getLast().getDate());
+		var end = dataEntries.getLast().getDate();
 		var unpackedAddList = new LinkedList<DataEntry>();
 		for (var dataEntry : dataEntries)
 		{
-			dataEntry.unpackToList(unpackedAddList, calendarEnd);  // TODO: test repeats
+			dataEntry.unpackToList(unpackedAddList, end);  // TODO: test repeats
 		}
 		dataEntries.addAll(unpackedAddList);
 		Collections.sort(dataEntries, new DataEntry.DataComparator(sorting));
@@ -358,7 +358,7 @@ class DataPanel extends JPanel
 		for (var sortedDataBundle : dataBundles)
 		{
 			constraints.gridx = 0;
-			for (var dataRowType : DataBundle.DataRowType.values())
+			for (var dataRowType : DataBundle.DataRowType.Data.values)
 			{
 				int alignment;
 				switch (dataRowType)
@@ -388,7 +388,7 @@ class DataPanel extends JPanel
 		var scroller = new JScrollPane();
 		scroller.setViewportView(dataPanel);
 		scroller.setColumnHeaderView(headerPanel);
-		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataBundle.DATA_ROW_TYPE_COUNT + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
+		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataBundle.DataRowType.Data.length + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
 		add(scroller, BorderLayout.CENTER);
 	}
 
@@ -412,7 +412,7 @@ class DataPanel extends JPanel
 			var headerBorder = BorderFactory.createCompoundBorder(outerPaddingBorder, BorderFactory.createCompoundBorder(new LineBorder(Color.black), innerPaddingBorder));
 
 			// Create new content panel:
-			if (view == DataEntry.CycleInterval.NEVER)
+			if (view == DataEntry.Interval.NEVER)
 			{
 				createCompletePanel(constraints, dataBorder, headerBorder);
 			}
@@ -470,10 +470,10 @@ class DataPanel extends JPanel
 		menuBar.add(menu);
 		// Create options:
 		var group = new ButtonGroup();
-		for (var interval : DataEntry.CycleInterval.values())
+		for (var interval : DataEntry.Interval.Data.values)
 		{
 			menuItem = new JRadioButtonMenuItem(interval.toString());
-			if (interval == DataEntry.CycleInterval.NEVER)
+			if (interval == DataEntry.Interval.NEVER)
 			{
 				menuItem.setSelected(true);
 			}

@@ -3,9 +3,7 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
 import java.util.LinkedList;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -46,7 +44,6 @@ class DataEntry
 		// Income:
 		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
-	public static final int DATA_ROW_TYPE_COUNT = DataRowType.values().length;
 
 	public enum DataRowType
 	{
@@ -55,21 +52,34 @@ class DataEntry
 		private final String name;
 		private final int index;
 
-		private static class InitChecker
+		public static class Data
 		{
-			private static int counter = 0;
+			public static int length = 0;
+			public static DataRowType[] values = {};
 		}
 
 		private DataRowType(String name, int index)
 		{
-			InitChecker.counter += 1;
-			if (index < 0 || index >= InitChecker.counter)
+			Data.length += 1;
+			if (index < 0 || index >= Data.length)
 			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + InitChecker.counter + ")");
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
 			}
+			Data.values = Arrays.copyOf(Data.values, Data.length);
+			Data.values[Data.length - 1] = this;
 
 			this.name = name;
 			this.index = index;
+		}
+
+		public static DataRowType byIndex(int index)
+		{
+			if (index < 0 || index >= Data.length)
+			{
+				System.out.println("ERROR: Invalid index (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
+			}
+
+			return Data.values[index];
 		}
 
 		@Override
@@ -84,33 +94,94 @@ class DataEntry
 		}
 	}
 
-	public enum CycleInterval
+	public enum Interval
 	{
 		NEVER("Never", 0), DAILY("Daily", 1), WEEKLY("Weekly", 2), MONTHLY("Monthly", 3), YEARLY("Yearly", 4);
 
 		private final String name;
 		private final int index;
 
-		private static class InitChecker
+		public static class Data
 		{
-			private static int counter = 0;
+			public static int length = 0;
+			public static Interval[] values = {};
 		}
 
-		private CycleInterval(String name, int index)
+		private Interval(String name, int index)
 		{
-			InitChecker.counter += 1;
-			if (index < 0 || index >= InitChecker.counter)
+			Data.length += 1;
+			if (index < 0 || index >= Data.length)
 			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + InitChecker.counter + ")");
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
 			}
+			Data.values = Arrays.copyOf(Data.values, Data.length);
+			Data.values[Data.length - 1] = this;
 
 			this.name = name;
 			this.index = index;
 		}
 
-		public static CycleInterval byIndex(int index)
+		public static Interval byIndex(int index)
 		{
-			return CycleInterval.values()[index];  // Save because of initial continuity check
+			if (index < 0 || index >= Data.length)
+			{
+				System.out.println("ERROR: Invalid index (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
+			}
+
+			return Data.values[index];
+		}
+
+		public static String[] getNames()
+		{
+			var names = new String[Data.length];
+			for (int i = 0; i < Data.length; i++)
+			{
+				names[i] = Data.values[i].toString();
+			}
+			return names;
+		}
+
+		public static Date getIntervalStart(Date date, Interval interval) throws Exception
+		{
+			Calendar calendar = Date.dateToCalendar(date);
+			switch (interval)
+			{
+				case WEEKLY:
+					calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+					break;
+				case MONTHLY:
+					calendar.set(Calendar.DAY_OF_MONTH, 1);
+					break;
+				case YEARLY:
+					calendar.set(Calendar.DAY_OF_YEAR, 1);
+					break;
+				default:
+					break;
+			}
+			return Date.calendarToDate(calendar);
+		}
+
+		public static Date getIntervalEnd(Date date, Interval interval) throws Exception
+		{
+			Calendar calendar = Date.dateToCalendar(date);
+			switch (interval)
+			{
+				case NEVER:
+				case DAILY:
+					calendar.add(Calendar.DAY_OF_YEAR, 1);
+					break;
+				case WEEKLY:
+					calendar.add(Calendar.WEEK_OF_MONTH, 1);
+					break;
+				case MONTHLY:
+					calendar.add(Calendar.MONTH, 1);
+					break;
+				case YEARLY:
+					calendar.add(Calendar.YEAR, 1);
+					break;
+			}
+			calendar.add(Calendar.DAY_OF_YEAR, -1);
+			return Date.calendarToDate(calendar);
 		}
 
 		@Override
@@ -125,73 +196,27 @@ class DataEntry
 		}
 	}
 
-	private static Calendar getCalendarStart(int[] date, CycleInterval interval) throws Exception
-	{
-		Calendar calendar = new GregorianCalendar(date[2], date[1] - 1, date[0]);
-		switch (interval)
-		{
-			case WEEKLY:
-				calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-				break;
-			case MONTHLY:
-				calendar.set(Calendar.DAY_OF_MONTH, 1);
-				break;
-			case YEARLY:
-				calendar.set(Calendar.DAY_OF_YEAR, 1);
-				break;
-			default:
-				break;
-		}
-		return calendar;
-	}
-
-	private static Calendar getCalendarEnd(Calendar calendarStart, CycleInterval interval) throws Exception
-	{
-		Calendar calendar = (GregorianCalendar)calendarStart.clone();
-		switch (interval)
-		{
-			case NEVER:
-			case DAILY:
-				calendar.add(Calendar.DAY_OF_YEAR, 1);
-				break;
-			case WEEKLY:
-				calendar.add(Calendar.WEEK_OF_MONTH, 1);
-				break;
-			case MONTHLY:
-				calendar.add(Calendar.MONTH, 1);
-				break;
-			case YEARLY:
-				calendar.add(Calendar.YEAR, 1);
-				break;
-		}
-		calendar.add(Calendar.DAY_OF_YEAR, -1);
-		return calendar;
-	}
-
 	// --------------------
 	// Functional code
 	// --------------------
 
-	private static final int DATE_ARRAY_SIZE = 3;
 	private float money;
 	private String name;
 	private String location;
 	private int type;
 	private int subtype;
-	private int[] date;
-	private int repeat;
+	private Date date;
+	private Interval repeat;
 	private boolean duration;
-	private int[] until;
+	private Date until;
 
 	/**
 	 * @return the date
 	 */
-	public int[] getDate()
+	public Date getDate()
     {
         return date.clone();
 	}
-
-	// TODO: maybe add more getter/setter where needed
 
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
@@ -214,29 +239,28 @@ class DataEntry
 				jsonGenerator.writeStartObject();
 
 				// Store data rows:
-				var dataRowType = DataRowType.values();
 				int i = 0;
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.money);
-				jsonGenerator.writeStringField(dataRowType[i++].toString(), obj.name);
-				jsonGenerator.writeStringField(dataRowType[i++].toString(), obj.location);
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.type);
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.subtype);
-				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.money);
+				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.name);
+				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.location);
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.type);
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.subtype);
+				jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
+				for (int j = 0; j < Date.ARRAY_SIZE; j++)
 				{
-					jsonGenerator.writeNumber(obj.date[j]);
+					jsonGenerator.writeNumber(obj.date.getValue(j));
 				}
 				jsonGenerator.writeEndArray();
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.repeat);
-				if (CycleInterval.byIndex(obj.repeat) != CycleInterval.NEVER)
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.repeat.toInt());
+				if (obj.repeat != Interval.NEVER)
 				{
-					jsonGenerator.writeBooleanField(dataRowType[i++].toString(), obj.duration);
+					jsonGenerator.writeBooleanField(DataRowType.byIndex(i++).toString(), obj.duration);
 					if (obj.duration != true)  // true = "Infinitely"
 					{
-						jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-						for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+						jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
+						for (int j = 0; j < Date.ARRAY_SIZE; j++)
 						{
-							jsonGenerator.writeNumber(obj.until[j]);
+							jsonGenerator.writeNumber(obj.until.getValue(j));
 						}
 						jsonGenerator.writeEndArray();
 					}
@@ -290,31 +314,30 @@ class DataEntry
 				final JsonNode node = codec.readTree(parser);
 
 				// Extract data row values:
-				var dataRowType = DataRowType.values();
 				int i = 0;
 				JsonNode iNode;
-				float money = node.get(dataRowType[i++].toString()).floatValue();
-				String name = node.get(dataRowType[i++].toString()).textValue();
-				String location = node.get(dataRowType[i++].toString()).textValue();
-				int type = node.get(dataRowType[i++].toString()).intValue();
-				int subtype = node.get(dataRowType[i++].toString()).intValue();
-				int[] date = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
-				int repeat = node.get(dataRowType[i++].toString()).intValue();
+				float money = node.get(DataRowType.byIndex(i++).toString()).floatValue();
+				String name = node.get(DataRowType.byIndex(i++).toString()).textValue();
+				String location = node.get(DataRowType.byIndex(i++).toString()).textValue();
+				int type = node.get(DataRowType.byIndex(i++).toString()).intValue();
+				int subtype = node.get(DataRowType.byIndex(i++).toString()).intValue();
+				int[] date = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
+				int repeat = node.get(DataRowType.byIndex(i++).toString()).intValue();
 				boolean duration = true;  // Default value
-				iNode = node.get(dataRowType[i++].toString());
+				iNode = node.get(DataRowType.byIndex(i++).toString());
 				if (iNode != null)
 				{
 					duration = iNode.booleanValue();
 				}
-				int[] until = new int[]{1, 1, 0};  // Default value
-				iNode = node.get(dataRowType[i++].toString());
+				int[] until = Date.DEFAULT_DATE_VALUES;  // Default value
+				iNode = node.get(DataRowType.byIndex(i++).toString());
 				if (iNode != null)
 				{
-					until = arrayNodeToIntArray(iNode, DATE_ARRAY_SIZE);
+					until = arrayNodeToIntArray(iNode, Date.ARRAY_SIZE);
 				}
 
 				// Convert extracted values into new data entry:
-				return new DataEntry(money, name, location, type, subtype, date, repeat, duration, until);
+				return new DataEntry(money, name, location, type, subtype, new Date(date), Interval.byIndex(repeat), duration, new Date(until));
 			}
 			catch (Exception exception)
 			{
@@ -377,9 +400,9 @@ class DataEntry
 					case SUBTYPE:
 						return entryA.subtype - entryB.subtype;
 					case DATE:
-						return (entryA.date[0] - entryB.date[0]) + (entryA.date[1] - entryB.date[1]) * 100 + (entryA.date[2] - entryB.date[2]) * 10000;
+						return entryA.date.compareTo(entryB.date);
 					case REPEAT:
-						return entryA.repeat - entryB.repeat;
+						return entryA.repeat.compareTo(entryB.repeat);
 					case DURATION:
 						if (entryA.duration == entryB.duration)
 						{
@@ -394,7 +417,7 @@ class DataEntry
 							return -1;
 						}
 					case UNTIL:
-						return (entryA.until[0] - entryB.until[0]) + (entryA.until[1] - entryB.until[1]) * 100 + (entryA.until[2] - entryB.until[2]) * 10000;
+						return entryA.until.compareTo(entryB.until);
 					default:
 						return entryA.getDataRowValueAsString(sorting.row).compareTo(entryB.getDataRowValueAsString(sorting.row));
 				}
@@ -407,17 +430,8 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(float money, String name, String location, int type, int subtype, int[] date, int repeat, boolean duration, int[] until) throws Exception
+	public DataEntry(float money, String name, String location, int type, int subtype, Date date, Interval repeat, boolean duration, Date until)
 	{
-		if (date.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid date format (" + date.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-		else if (until.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid until format (" + until.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-
 		this.money = money;
 		this.name = name;
 		this.location = location;
@@ -428,7 +442,7 @@ class DataEntry
 		this.duration = duration;
 		this.until = until;
 	}
-	public DataEntry(DataEntry origin, int[] date, boolean noRepeat) throws Exception
+	public DataEntry(DataEntry origin, Date date, boolean noRepeat)
 	{
 		money = origin.money;
 		name = origin.name;
@@ -438,9 +452,9 @@ class DataEntry
 		this.date = date;
 		if (noRepeat)
 		{
-			repeat = CycleInterval.NEVER.toInt();
+			repeat = Interval.NEVER;
 			duration = true;  // Default value
-			until = new int[]{1, 1, 0};  // Default value
+			until = Date.DEFAULT_DATE;  // Default value
 		}
 		else
 		{
@@ -450,21 +464,21 @@ class DataEntry
 		}
 	}
 
-	public DataBundle createNewDataBundle(CycleInterval interval) throws Exception
+	public DataBundle createNewDataBundle(Interval interval) throws Exception
 	{
-		var calendarStart = getCalendarStart(date, interval);
-		return new DataBundle(money, 1, calendarStart, getCalendarEnd(calendarStart, interval));
+		var start = Interval.getIntervalStart(date, interval);
+		return new DataBundle(money, 1, start, Interval.getIntervalEnd(start, interval));
 	}
 
-	public DataBundle createNextDataBundle(DataBundle lastDataBundle, CycleInterval interval) throws Exception
+	public DataBundle createNextDataBundle(DataBundle lastDataBundle, Interval interval) throws Exception
 	{
-		var calendarStart = lastDataBundle.getNextCalendarStart();
-		return new DataBundle(0f, 0, calendarStart, getCalendarEnd(calendarStart, interval));
+		var start = lastDataBundle.getNextStart();
+		return new DataBundle(0f, 0, start, Interval.getIntervalEnd(start, interval));
 	}
 
 	public boolean tryAddToDataBundle(DataBundle dataBundle) throws Exception
 	{
-		if (dataBundle.isInTimeframe(date))
+		if (date.isInTimeframe(dataBundle.getStart(), dataBundle.getEnd()))
 		{
 			dataBundle.addEntry(money);
 			return true;
@@ -475,16 +489,16 @@ class DataEntry
 		}
 	}
 
-	public boolean unpackToList(LinkedList<DataEntry> list, Calendar calendarEnd) throws Exception
+	public boolean unpackToList(LinkedList<DataEntry> list, Date end) throws Exception
 	{
-		if (repeat > 0)
+		if (repeat != Interval.NEVER)
 		{
-			var calendar = getCalendarStart(date, CycleInterval.DAILY);
-			calendar = getCalendarEnd(calendar, CycleInterval.byIndex(repeat));  // Don't add entry itself again
-			while (calendar.compareTo(calendarEnd) <= 0)
+			Date date = Interval.getIntervalStart(this.date, Interval.DAILY);
+			date = Interval.getIntervalEnd(date, repeat);  // Don't add entry itself again
+			while (date.compareTo(end) <= 0)
 			{
-				list.add(new DataEntry(this, DataBundle.calendarToDate(calendar), true));
-				calendar = getCalendarEnd(calendar, CycleInterval.byIndex(repeat));
+				list.add(new DataEntry(this, date, true));
+				date = Interval.getIntervalEnd(date, repeat);
 			}
 			return true;
 		}
@@ -509,13 +523,13 @@ class DataEntry
 			case SUBTYPE:
 				return Integer.toString(subtype);
 			case DATE:
-				return Arrays.stream(date).mapToObj(String::valueOf).collect(Collectors.joining("."));
+				return date.toString();
 			case REPEAT:
-				return Integer.toString(repeat);
+				return repeat.toString();
 			case DURATION:
 				return Boolean.toString(duration);
 			case UNTIL:
-				return Arrays.stream(until).mapToObj(String::valueOf).collect(Collectors.joining("."));
+				return until.toString();
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
@@ -537,29 +551,15 @@ class DataEntry
 				return SUBTYPE_NAMES[type][subtype];
 			case DATE:
 			{
-				String dateText = "";
-				int i = 0;
-				if (date[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(date[i]) + ".";
-				i++;
-				if (date[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(date[i]) + ".";
-				i++;
-				return dateText + Integer.toString(date[i]);
+				return date.getAsText();
 			}
 			case REPEAT:
 			{
-				return CycleInterval.byIndex(repeat).toString();
+				return repeat.toString();
 			}
 			case DURATION:
 			{
-				if (CycleInterval.byIndex(repeat) == CycleInterval.NEVER)
+				if (repeat == Interval.NEVER)
 				{
 					return "-";
 				}
@@ -577,27 +577,13 @@ class DataEntry
 			}
 			case UNTIL:
 			{
-				if (CycleInterval.byIndex(repeat) == CycleInterval.NEVER || duration)  // true = "Infinitely"
+				if (repeat == Interval.NEVER || duration)  // true = "Infinitely"
 				{
 					return "-";
 				}
 				else
 				{
-					String untilText = "";
-					int i = 0;
-					if (until[i] <= 9)
-					{
-						untilText = untilText + "0";
-					}
-					untilText = untilText + Integer.toString(until[i]) + ".";
-					i++;
-					if (until[i] <= 9)
-					{
-						untilText = untilText + "0";
-					}
-					untilText = untilText + Integer.toString(until[i]) + ".";
-					i++;
-					return untilText + Integer.toString(until[i]);
+					return until.getAsText();
 				}
 			}
 			default:

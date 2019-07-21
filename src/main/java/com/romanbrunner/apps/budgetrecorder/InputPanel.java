@@ -7,9 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.stream.Stream;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -53,7 +51,7 @@ class InputPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private DataField dataFields[] = new DataField[DataEntry.DATA_ROW_TYPE_COUNT];
+	private DataField dataFields[] = new DataField[DataEntry.DataRowType.Data.length];
 
 	private abstract class DataField
 	{
@@ -165,11 +163,11 @@ class InputPanel extends JPanel
 		{
 			super(label);
 			var calendar = Calendar.getInstance();
-			var initDate = calendar.getTime();
+			java.util.Date initDate = calendar.getTime();
 			calendar.add(Calendar.YEAR, -maxBackYears);
-			var earliestDate = calendar.getTime();
+			java.util.Date earliestDate = calendar.getTime();
 			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
-			var latestDate = calendar.getTime();
+			java.util.Date latestDate = calendar.getTime();
 			dataField = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
 			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
 		}
@@ -293,7 +291,7 @@ class InputPanel extends JPanel
 			{
 				// Evaluate repeat data field:
 				var repeatDataField = dataFields[DataEntry.DataRowType.REPEAT.toInt()];
-				boolean isVisible = (DataEntry.CycleInterval.byIndex((int)repeatDataField.getValue()) != DataEntry.CycleInterval.NEVER);
+				boolean isVisible = (DataEntry.Interval.byIndex((int)repeatDataField.getValue()) != DataEntry.Interval.NEVER);
 				// Adjust visibility for duration data field:
 				var durationDataField = dataFields[DataEntry.DataRowType.DURATION.toInt()];
 				durationDataField.getJComponent().setVisible(isVisible);
@@ -347,10 +345,10 @@ class InputPanel extends JPanel
 					(String)dataFields[i++].getValue(),
 					(int)dataFields[i++].getValue(),
 					(int)dataFields[i++].getValue(),
-					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray(),
-					(int)dataFields[i++].getValue(),
+					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()),
+					DataEntry.Interval.byIndex((int)dataFields[i++].getValue()),
 					(boolean)dataFields[i++].getValue(),
-					Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()
+					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray())
 					));
 				// Write database to json:
 				MainFrame.writeDatabaseFile();
@@ -404,7 +402,7 @@ class InputPanel extends JPanel
 
 			// Create data row components:
 			constraints.gridy = 0;
-			for (var dataRowType : DataEntry.DataRowType.values())
+			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
 				// Create name label:
 				constraints.gridx = 0;
@@ -435,9 +433,7 @@ class InputPanel extends JPanel
 						dataField = new DateDataField(label, 100, 1000);
 						break;
 					case REPEAT:
-						dataField = new ComboBoxDataField(label, Arrays.stream(DataEntry.CycleInterval.values()).toArray(String[]::new), new RepeatDataFieldAL());  // TODO: throws error, fix
-						// Arrays.copyOf(objectArray, objectArray.length, String[].class)
-						// Arrays.asList(Object_Array).toArray(new String[Object_Array.length]);
+						dataField = new ComboBoxDataField(label, DataEntry.Interval.getNames(), new RepeatDataFieldAL());
 						break;
 					case DURATION:
 						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());
@@ -466,7 +462,7 @@ class InputPanel extends JPanel
 			button.addActionListener(new AddButtonAL());
 			constraints.gridwidth = 2;
 			constraints.gridx = 0;
-			constraints.gridy = DataEntry.DATA_ROW_TYPE_COUNT;
+			constraints.gridy = DataEntry.DataRowType.Data.length;
 			add(button, constraints);
 		}
 		catch (Exception exception)

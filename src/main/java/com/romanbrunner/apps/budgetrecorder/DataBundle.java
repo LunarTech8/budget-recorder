@@ -3,8 +3,6 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Comparator;
-import java.util.GregorianCalendar;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -25,8 +23,6 @@ class DataBundle
 	// Data code
 	// --------------------
 
-	public static final int DATA_ROW_TYPE_COUNT = DataRowType.values().length;
-
 	public enum DataRowType
 	{
 		MONEY("Money", 0), ENTRIES("Entries", 1), START("Start", 2), END("End", 3);
@@ -34,21 +30,34 @@ class DataBundle
 		private final String name;
 		private final int index;
 
-		private static class InitChecker
+		public static class Data
 		{
-			private static int counter = 0;
+			public static int length = 0;
+			public static DataRowType[] values = {};
 		}
 
 		private DataRowType(String name, int index)
 		{
-			InitChecker.counter += 1;
-			if (index < 0 || index >= InitChecker.counter)
+			Data.length += 1;
+			if (index < 0 || index >= Data.length)
 			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + InitChecker.counter + ")");
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
 			}
+			Data.values = Arrays.copyOf(Data.values, Data.length);
+			Data.values[Data.length - 1] = this;
 
 			this.name = name;
 			this.index = index;
+		}
+
+		public static DataRowType byIndex(int index)
+		{
+			if (index < 0 || index >= Data.length)
+			{
+				System.out.println("ERROR: Invalid index (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
+			}
+
+			return Data.values[index];
 		}
 
 		@Override
@@ -67,11 +76,26 @@ class DataBundle
 	// Functional code
 	// --------------------
 
-	private static final int DATE_ARRAY_SIZE = 3;
 	private float money;
 	private int entries;
-	private int[] start;
-	private int[] end;
+	private Date start;
+	private Date end;
+
+	/**
+	 * @return the start
+	 */
+	public Date getStart()
+    {
+		return start.clone();
+	}
+
+	/**
+	 * @return the end
+	 */
+	public Date getEnd()
+    {
+		return end.clone();
+	}
 
 	public static class Serializer extends StdSerializer<DataBundle>
 	{
@@ -94,19 +118,18 @@ class DataBundle
 				jsonGenerator.writeStartObject();
 
 				// Store data rows:
-				var dataRowType = DataRowType.values();
 				int i = 0;
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.money);
-				jsonGenerator.writeNumberField(dataRowType[i++].toString(), obj.entries);
-				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.money);
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.entries);
+				jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
+				for (int j = 0; j < Date.ARRAY_SIZE; j++)
 				{
-					jsonGenerator.writeNumber(obj.start[j]);
+					jsonGenerator.writeNumber(obj.start.getValue(j));
 				}
-				jsonGenerator.writeArrayFieldStart(dataRowType[i++].toString());
-				for (int j = 0; j < DATE_ARRAY_SIZE; j++)
+				jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
+				for (int j = 0; j < Date.ARRAY_SIZE; j++)
 				{
-					jsonGenerator.writeNumber(obj.end[j]);
+					jsonGenerator.writeNumber(obj.end.getValue(j));
 				}
 				jsonGenerator.writeEndArray();
 				jsonGenerator.writeEndObject();
@@ -158,15 +181,14 @@ class DataBundle
 				final JsonNode node = codec.readTree(parser);
 
 				// Extract data row values:
-				var dataRowType = DataRowType.values();
 				int i = 0;
-				float money = node.get(dataRowType[i++].toString()).floatValue();
-				int entries = node.get(dataRowType[i++].toString()).intValue();
-				int[] start = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
-				int[] end = arrayNodeToIntArray(node.get(dataRowType[i++].toString()), DATE_ARRAY_SIZE);
+				float money = node.get(DataRowType.byIndex(i++).toString()).floatValue();
+				int entries = node.get(DataRowType.byIndex(i++).toString()).intValue();
+				int[] start = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
+				int[] end = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
 
 				// Convert extracted values into new data entry:
-				return new DataBundle(money, entries, start, end);
+				return new DataBundle(money, entries, new Date(start),new Date(end));
 			}
 			catch (Exception exception)
 			{
@@ -223,9 +245,9 @@ class DataBundle
 					case ENTRIES:
 						return entryA.entries - entryB.entries;
 					case START:
-						return (entryA.start[0] - entryB.start[0]) + (entryA.start[1] - entryB.start[1]) * 100 + (entryA.start[2] - entryB.start[2]) * 10000;
+						return entryA.start.compareTo(entryB.start);
 					case END:
-						return (entryA.end[0] - entryB.end[0]) + (entryA.end[1] - entryB.end[1]) * 100 + (entryA.end[2] - entryB.end[2]) * 10000;
+						return entryA.end.compareTo(entryB.end);
 					default:
 						return entryA.getDataRowValueAsString(sorting.row).compareTo(entryB.getDataRowValueAsString(sorting.row));
 				}
@@ -238,39 +260,12 @@ class DataBundle
 		}
 	}
 
-	public DataBundle(float money, int entries, int[] start, int[] end) throws Exception
+	public DataBundle(float money, int entries, Date start, Date end)
 	{
-		if (start.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid start format (" + start.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-		else if (end.length != DATE_ARRAY_SIZE)
-		{
-			throw new Exception("ERROR: Invalid end format (" + end.length + " numbers instead of " + DATE_ARRAY_SIZE + ")");
-		}
-
 		this.money = money;
 		this.entries = entries;
 		this.start = start;
 		this.end = end;
-	}
-	public DataBundle(float money, int entries, Calendar calendarStart, Calendar calendarEnd) throws Exception
-	{
-		this.money = money;
-		this.entries = entries;
-		this.start = calendarToDate(calendarStart);
-		this.end = calendarToDate(calendarEnd);
-	}
-
-	public static int[] calendarToDate(Calendar calendar)
-	{
-		int[] date = {calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR)};
-		return date;
-	}
-
-	public static Calendar dateToCalendar(int[] date)
-	{
-		return new GregorianCalendar(date[2], date[1] - 1, date[0]);
 	}
 
 	public void addEntry(float money)
@@ -279,22 +274,16 @@ class DataBundle
 		entries += 1;
 	}
 
-	public boolean isInTimeframe(int[] date)
-	{
-		Calendar calendar = dateToCalendar(date);
-		return (calendar.compareTo(dateToCalendar(start)) >= 0 && calendar.compareTo(dateToCalendar(end)) <= 0);
-	}
-
 	public boolean hasEntries()
 	{
 		return (entries > 0);
 	}
 
-	public Calendar getNextCalendarStart()
+	public Date getNextStart() throws Exception
 	{
-		Calendar calendar = dateToCalendar(end);
+		Calendar calendar = Date.dateToCalendar(end);
 		calendar.add(Calendar.DAY_OF_YEAR, 1);
-		return calendar;
+		return Date.calendarToDate(calendar);
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception
@@ -306,9 +295,9 @@ class DataBundle
 			case ENTRIES:
 				return Integer.toString(entries);
 			case START:
-				return Arrays.stream(start).mapToObj(String::valueOf).collect(Collectors.joining("."));
+				return start.toString();
 			case END:
-				return Arrays.stream(end).mapToObj(String::valueOf).collect(Collectors.joining("."));
+				return end.toString();
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
@@ -324,39 +313,11 @@ class DataBundle
 				return Integer.toString(entries);
 			case START:
 			{
-				String dateText = "";
-				int i = 0;
-				if (start[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(start[i]) + ".";
-				i++;
-				if (start[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(start[i]) + ".";
-				i++;
-				return dateText + Integer.toString(start[i]);
+				return start.getAsText();
 			}
 			case END:
 			{
-				String dateText = "";
-				int i = 0;
-				if (end[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(end[i]) + ".";
-				i++;
-				if (end[i] <= 9)
-				{
-					dateText = dateText + "0";
-				}
-				dateText = dateText + Integer.toString(end[i]) + ".";
-				i++;
-				return dateText + Integer.toString(end[i]);
+				return end.getAsText();
 			}
 			default:
 				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");

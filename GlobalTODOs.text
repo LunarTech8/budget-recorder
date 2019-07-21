@@ -19,6 +19,7 @@ Work status:
 // Programming:
 // -------------
 
+!!!- BUG: Fix crash after selecting another view
 !!- Make autocomplete to use only entries of same type-subtype
 !- Restrict "until" field to always be later than current "date" field
 !- Maybe use a better/custom json schema
