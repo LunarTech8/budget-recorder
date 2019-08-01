@@ -1,7 +1,6 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Comparator;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -86,7 +85,7 @@ class DataBundle
 	 */
 	public Date getStart()
     {
-		return start.clone();
+		return start;
 	}
 
 	/**
@@ -94,7 +93,7 @@ class DataBundle
 	 */
 	public Date getEnd()
     {
-		return end.clone();
+		return end;
 	}
 
 	public static class Serializer extends StdSerializer<DataBundle>
@@ -277,13 +276,6 @@ class DataBundle
 	public boolean hasEntries()
 	{
 		return (entries > 0);
-	}
-
-	public Date getNextStart() throws Exception
-	{
-		Calendar calendar = Date.dateToCalendar(end);
-		calendar.add(Calendar.DAY_OF_YEAR, 1);
-		return Date.calendarToDate(calendar);
 	}
 
 	public String getDataRowValueAsString(DataRowType dataRowType) throws Exception

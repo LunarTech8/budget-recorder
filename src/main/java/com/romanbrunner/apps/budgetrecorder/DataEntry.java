@@ -1,7 +1,6 @@
 package com.romanbrunner.apps.budgetrecorder;
 
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.LinkedList;
 
@@ -14,6 +13,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
+import com.romanbrunner.apps.budgetrecorder.Date.Interval;
 
 
 @JsonSerialize(using = DataEntry.Serializer.class)
@@ -94,108 +95,6 @@ class DataEntry
 		}
 	}
 
-	public enum Interval
-	{
-		NEVER("Never", 0), DAILY("Daily", 1), WEEKLY("Weekly", 2), MONTHLY("Monthly", 3), YEARLY("Yearly", 4);
-
-		private final String name;
-		private final int index;
-
-		public static class Data
-		{
-			public static int length = 0;
-			public static Interval[] values = {};
-		}
-
-		private Interval(String name, int index)
-		{
-			Data.length += 1;
-			if (index < 0 || index >= Data.length)
-			{
-				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
-			}
-			Data.values = Arrays.copyOf(Data.values, Data.length);
-			Data.values[Data.length - 1] = this;
-
-			this.name = name;
-			this.index = index;
-		}
-
-		public static Interval byIndex(int index)
-		{
-			if (index < 0 || index >= Data.length)
-			{
-				System.out.println("ERROR: Invalid index (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
-			}
-
-			return Data.values[index];
-		}
-
-		public static String[] getNames()
-		{
-			var names = new String[Data.length];
-			for (int i = 0; i < Data.length; i++)
-			{
-				names[i] = Data.values[i].toString();
-			}
-			return names;
-		}
-
-		public static Date getIntervalStart(Date date, Interval interval) throws Exception
-		{
-			Calendar calendar = Date.dateToCalendar(date);
-			switch (interval)
-			{
-				case WEEKLY:
-					calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-					break;
-				case MONTHLY:
-					calendar.set(Calendar.DAY_OF_MONTH, 1);
-					break;
-				case YEARLY:
-					calendar.set(Calendar.DAY_OF_YEAR, 1);
-					break;
-				default:
-					break;
-			}
-			return Date.calendarToDate(calendar);
-		}
-
-		public static Date getIntervalEnd(Date date, Interval interval) throws Exception
-		{
-			Calendar calendar = Date.dateToCalendar(date);
-			switch (interval)
-			{
-				case NEVER:
-				case DAILY:
-					calendar.add(Calendar.DAY_OF_YEAR, 1);
-					break;
-				case WEEKLY:
-					calendar.add(Calendar.WEEK_OF_MONTH, 1);
-					break;
-				case MONTHLY:
-					calendar.add(Calendar.MONTH, 1);
-					break;
-				case YEARLY:
-					calendar.add(Calendar.YEAR, 1);
-					break;
-			}
-			calendar.add(Calendar.DAY_OF_YEAR, -1);
-			return Date.calendarToDate(calendar);
-		}
-
-		@Override
-		public String toString()
-		{
-			return name;
-		}
-
-		public int toInt()
-		{
-			return index;
-		}
-	}
-
 	// --------------------
 	// Functional code
 	// --------------------
@@ -215,7 +114,7 @@ class DataEntry
 	 */
 	public Date getDate()
     {
-        return date.clone();
+        return date;
 	}
 
 	public static class Serializer extends StdSerializer<DataEntry>
@@ -460,7 +359,7 @@ class DataEntry
 		{
 			repeat = origin.repeat;
 			duration = origin.duration;
-			until = origin.until.clone();
+			until = origin.until;
 		}
 	}
 
@@ -472,7 +371,7 @@ class DataEntry
 
 	public DataBundle createNextDataBundle(DataBundle lastDataBundle, Interval interval) throws Exception
 	{
-		var start = lastDataBundle.getNextStart();
+		var start = lastDataBundle.getEnd().getNextDay();
 		return new DataBundle(0f, 0, start, Interval.getIntervalEnd(start, interval));
 	}
 
@@ -493,12 +392,17 @@ class DataEntry
 	{
 		if (repeat != Interval.NEVER)
 		{
-			Date date = Interval.getIntervalStart(this.date, Interval.DAILY);
-			date = Interval.getIntervalEnd(date, repeat);  // Don't add entry itself again
+			Date date = Interval.getIntervalNextStart(this.date, repeat);  // Don't add entry itself again
+			// Regard duration:
+			if (duration == false && until.compareTo(end) < 0)
+			{
+				end = until;
+			}
+			// Create and add repeating entries:
 			while (date.compareTo(end) <= 0)
 			{
 				list.add(new DataEntry(this, date, true));
-				date = Interval.getIntervalEnd(date, repeat);
+				date = Interval.getIntervalNextStart(date, repeat);
 			}
 			return true;
 		}

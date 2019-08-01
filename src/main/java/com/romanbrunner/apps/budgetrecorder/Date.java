@@ -8,6 +8,10 @@ import java.util.stream.Collectors;
 
 public class Date
 {
+	// --------------------
+	// Data code
+	// --------------------
+
 	public static final int ARRAY_SIZE = 3;
 	public static final int[] DEFAULT_DATE_VALUES = new int[]{ 1, 1, 1900 };
 	public static final Date DEFAULT_DATE;
@@ -23,7 +27,123 @@ public class Date
 		}
 	}
 
-	private int[] values;
+	public enum Interval
+	{
+		NEVER("Never", 0), DAILY("Daily", 1), WEEKLY("Weekly", 2), MONTHLY("Monthly", 3), YEARLY("Yearly", 4);
+
+		private final String name;
+		private final int index;
+
+		public static class Data
+		{
+			public static int length = 0;
+			public static Interval[] values = {};
+		}
+
+		private Interval(String name, int index)
+		{
+			Data.length += 1;
+			if (index < 0 || index >= Data.length)
+			{
+				System.out.println("ERROR: Invalid index for " + name + " (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
+			}
+			Data.values = Arrays.copyOf(Data.values, Data.length);
+			Data.values[Data.length - 1] = this;
+
+			this.name = name;
+			this.index = index;
+		}
+
+		public static Interval byIndex(int index)
+		{
+			if (index < 0 || index >= Data.length)
+			{
+				System.out.println("ERROR: Invalid index (" + index + " has to be at least 0 and smaller than " + Data.length + ")");
+			}
+
+			return Data.values[index];
+		}
+
+		public static String[] getNames()
+		{
+			var names = new String[Data.length];
+			for (int i = 0; i < Data.length; i++)
+			{
+				names[i] = Data.values[i].toString();
+			}
+			return names;
+		}
+
+		private static Calendar getIntervalNextStartCalendar(Calendar calendar, Interval interval)
+		{
+			switch (interval)
+			{
+				case NEVER:
+				case DAILY:
+					calendar.add(Calendar.DAY_OF_YEAR, 1);
+					break;
+				case WEEKLY:
+					calendar.add(Calendar.WEEK_OF_MONTH, 1);
+					break;
+				case MONTHLY:
+					calendar.add(Calendar.MONTH, 1);
+					break;
+				case YEARLY:
+					calendar.add(Calendar.YEAR, 1);
+					break;
+			}
+			return calendar;
+		}
+
+		public static Date getIntervalStart(Date date, Interval interval) throws Exception
+		{
+			Calendar calendar = Date.dateToCalendar(date);
+			switch (interval)
+			{
+				case WEEKLY:
+					calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+					break;
+				case MONTHLY:
+					calendar.set(Calendar.DAY_OF_MONTH, 1);
+					break;
+				case YEARLY:
+					calendar.set(Calendar.DAY_OF_YEAR, 1);
+					break;
+				default:
+					break;
+			}
+			return Date.calendarToDate(calendar);
+		}
+
+		public static Date getIntervalEnd(Date date, Interval interval) throws Exception
+		{
+			Calendar calendar = getIntervalNextStartCalendar(Date.dateToCalendar(date), interval);
+			calendar.add(Calendar.DAY_OF_YEAR, -1);
+			return Date.calendarToDate(calendar);
+		}
+
+		public static Date getIntervalNextStart(Date date, Interval interval) throws Exception
+		{
+			return Date.calendarToDate(getIntervalNextStartCalendar(Date.dateToCalendar(date), interval));
+		}
+
+		@Override
+		public String toString()
+		{
+			return name;
+		}
+
+		public int toInt()
+		{
+			return index;
+		}
+	}
+
+	// --------------------
+	// Functional code
+	// --------------------
+
+	private final int[] values;  // Values should stay fixed after construction. Use new objects if other values are required.
 
 	public Date(int day, int month, int year) throws Exception
 	{
@@ -54,12 +174,12 @@ public class Date
 		}
 	}
 
-	public static Date calendarToDate(Calendar calendar) throws Exception
+	private static Date calendarToDate(Calendar calendar) throws Exception
 	{
 		return new Date(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR));
 	}
 
-	public static Calendar dateToCalendar(Date date)
+	private static Calendar dateToCalendar(Date date)
 	{
 		return new GregorianCalendar(date.values[2], date.values[1] - 1, date.values[0]);
 	}
@@ -68,6 +188,13 @@ public class Date
 	{
 		Calendar calendar = dateToCalendar(this);
 		return (calendar.compareTo(dateToCalendar(start)) >= 0 && calendar.compareTo(dateToCalendar(end)) <= 0);
+	}
+
+	public Date getNextDay() throws Exception
+	{
+		Calendar calendar = Date.dateToCalendar(this);
+		calendar.add(Calendar.DAY_OF_YEAR, 1);
+		return Date.calendarToDate(calendar);
 	}
 
 	public int getValue(int index) throws Exception
@@ -110,7 +237,7 @@ public class Date
 	{
 		try
 		{
-			return new Date(values);
+			throw new Exception("ERROR: clone() shouldn't be required because date values are final. Thus you can savely use the same object multiple times.");
 		}
 		catch (Exception exception)
 		{

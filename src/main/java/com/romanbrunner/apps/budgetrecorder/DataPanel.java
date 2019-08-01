@@ -29,6 +29,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+import com.romanbrunner.apps.budgetrecorder.Date.Interval;
+
 
 @SuppressWarnings("serial")
 class DataPanel extends JPanel
@@ -47,7 +49,7 @@ class DataPanel extends JPanel
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
 	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
-	private static final DataEntry.Interval DEFAULT_VIEW = DataEntry.Interval.NEVER;
+	private static final Interval DEFAULT_VIEW = Interval.NEVER;
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
 
 
@@ -59,7 +61,7 @@ class DataPanel extends JPanel
 
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
-	private DataEntry.Interval view;
+	private Interval view;
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -176,9 +178,9 @@ class DataPanel extends JPanel
 
 	private class ViewMenuAL implements ActionListener
 	{
-		private DataEntry.Interval interval;
+		private Interval interval;
 
-		public ViewMenuAL(DataEntry.Interval interval)
+		public ViewMenuAL(Interval interval)
 		{
 			this.interval = interval;
 		}
@@ -197,7 +199,7 @@ class DataPanel extends JPanel
 		}
 	}
 
-	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, DataEntry.Interval view)
+	public DataPanel(DataEntry.DataRowSorting sortingComplete, DataBundle.DataRowSorting sortingBundled, Interval view)
 	{
 		super(new BorderLayout());
 		this.sortingComplete = sortingComplete;
@@ -333,11 +335,11 @@ class DataPanel extends JPanel
 		var unpackedAddList = new LinkedList<DataEntry>();
 		for (var dataEntry : dataEntries)
 		{
-			dataEntry.unpackToList(unpackedAddList, end);  // TODO: test repeats
+			dataEntry.unpackToList(unpackedAddList, end);
 		}
 		dataEntries.addAll(unpackedAddList);
 		Collections.sort(dataEntries, new DataEntry.DataComparator(sorting));
-		// Bundle entries:
+		// Bundle entries based on view settings:
 		var dataBundles = new LinkedList<DataBundle>();
 		DataBundle dataBundle = dataEntries.pop().createNewDataBundle(view);
 		dataBundles.add(dataBundle);
@@ -412,7 +414,7 @@ class DataPanel extends JPanel
 			var headerBorder = BorderFactory.createCompoundBorder(outerPaddingBorder, BorderFactory.createCompoundBorder(new LineBorder(Color.black), innerPaddingBorder));
 
 			// Create new content panel:
-			if (view == DataEntry.Interval.NEVER)
+			if (view == Interval.NEVER)
 			{
 				createCompletePanel(constraints, dataBorder, headerBorder);
 			}
@@ -470,10 +472,10 @@ class DataPanel extends JPanel
 		menuBar.add(menu);
 		// Create options:
 		var group = new ButtonGroup();
-		for (var interval : DataEntry.Interval.Data.values)
+		for (var interval : Interval.Data.values)
 		{
 			menuItem = new JRadioButtonMenuItem(interval.toString());
-			if (interval == DataEntry.Interval.NEVER)
+			if (interval == Interval.NEVER)
 			{
 				menuItem.setSelected(true);
 			}

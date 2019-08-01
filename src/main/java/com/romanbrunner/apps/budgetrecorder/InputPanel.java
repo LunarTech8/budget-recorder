@@ -27,6 +27,8 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 
+import com.romanbrunner.apps.budgetrecorder.Date.Interval;
+
 
 @SuppressWarnings("serial")
 class InputPanel extends JPanel
@@ -179,12 +181,12 @@ class InputPanel extends JPanel
 
 		public Object getValue()
 		{
-			return DateFormat.getDateInstance(DateFormat.MEDIUM).format((Date)dataField.getModel().getValue());
+			return DateFormat.getDateInstance(DateFormat.MEDIUM).format((java.util.Date)dataField.getModel().getValue());
 		}
 
 		public String getValueAsText()
 		{
-			return DateFormat.getDateInstance(DateFormat.SHORT).format((Date)dataField.getModel().getValue());
+			return DateFormat.getDateInstance(DateFormat.SHORT).format((java.util.Date)dataField.getModel().getValue());
 		}
 	}
 
@@ -291,7 +293,7 @@ class InputPanel extends JPanel
 			{
 				// Evaluate repeat data field:
 				var repeatDataField = dataFields[DataEntry.DataRowType.REPEAT.toInt()];
-				boolean isVisible = (DataEntry.Interval.byIndex((int)repeatDataField.getValue()) != DataEntry.Interval.NEVER);
+				boolean isVisible = (Interval.byIndex((int)repeatDataField.getValue()) != Interval.NEVER);
 				// Adjust visibility for duration data field:
 				var durationDataField = dataFields[DataEntry.DataRowType.DURATION.toInt()];
 				durationDataField.getJComponent().setVisible(isVisible);
@@ -346,7 +348,7 @@ class InputPanel extends JPanel
 					(int)dataFields[i++].getValue(),
 					(int)dataFields[i++].getValue(),
 					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()),
-					DataEntry.Interval.byIndex((int)dataFields[i++].getValue()),
+					Interval.byIndex((int)dataFields[i++].getValue()),
 					(boolean)dataFields[i++].getValue(),
 					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray())
 					));
@@ -433,7 +435,7 @@ class InputPanel extends JPanel
 						dataField = new DateDataField(label, 100, 1000);
 						break;
 					case REPEAT:
-						dataField = new ComboBoxDataField(label, DataEntry.Interval.getNames(), new RepeatDataFieldAL());
+						dataField = new ComboBoxDataField(label, Interval.getNames(), new RepeatDataFieldAL());
 						break;
 					case DURATION:
 						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());

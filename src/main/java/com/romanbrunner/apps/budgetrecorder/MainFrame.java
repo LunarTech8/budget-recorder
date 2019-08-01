@@ -273,15 +273,16 @@ public class MainFrame  // Singleton class
 		{
 			var prop = new Properties();
 			prop.load(inputStream);
-			databaseName = prop.getProperty("databaseName");
 			testModeActive = prop.getProperty("testModeActive").equals("true");
 			if (testModeActive)
 			{
+				databaseName = prop.getProperty("testDatabaseName");
 				databasePath = prop.getProperty("testDatabasePath");
 				backupPath = prop.getProperty("testBackupPath");
 			}
 			else
 			{
+				databaseName = prop.getProperty("databaseName");
 				databasePath = prop.getProperty("databasePath");
 				backupPath = prop.getProperty("backupPath");
 			}
