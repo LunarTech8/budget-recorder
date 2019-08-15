@@ -6,8 +6,8 @@ import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.LinkedList;
 import java.util.stream.Stream;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -227,23 +227,32 @@ class InputPanel extends JPanel
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";
 		private JTextField dataField;
-		private Autocomplete autoComplete;
+		private Autocomplete autoComplete[][];
 
 		public TextDataField(JLabel label)
 		{
 			super(label);
 			dataField = new JTextField();
 		}
-		public TextDataField(JLabel label, ArrayList<String> keywords)
+		public TextDataField(JLabel label, LinkedList<String>[][] keywords)
 		{
 			super(label);
 			dataField = new JTextField();
-			// Add autocompletion:
-			autoComplete = new Autocomplete(dataField, keywords);
-			dataField.getDocument().addDocumentListener(autoComplete);
-			// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
-			dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
-			dataField.getActionMap().put(COMMIT_ACTION, autoComplete.new CommitAction());
+			// Add autocompletions:
+			autoComplete = new Autocomplete[keywords.length][];
+			for (int i = 0; i < keywords.length; i++)
+			{
+				autoComplete[i] = new Autocomplete[keywords[i].length];
+				for (int j = 0; j < keywords[i].length; j++)
+				{
+					// Create autocomplete and document listener:
+					autoComplete[i][j] = new Autocomplete(dataField, keywords[i][j]);
+					dataField.getDocument().addDocumentListener(autoComplete[i][j]);
+					// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
+					dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
+					dataField.getActionMap().put(COMMIT_ACTION, autoComplete[i][j].new CommitAction());
+				}
+			}
 		}
 
 		public JComponent getJComponent()
@@ -261,9 +270,9 @@ class InputPanel extends JPanel
 			return dataField.getText();
 		}
 
-		public void updateAutocomplete(ArrayList<String> keywords)
+		public void updateAutocomplete(int type, int subtype, String keyword)
 		{
-			autoComplete.setKeywords(keywords);
+			autoComplete[type][subtype].addKeyword(keyword);
 		}
 	}
 
@@ -341,12 +350,17 @@ class InputPanel extends JPanel
 			{
 				// Extract entered values, create data entry and add it to the database:
 				int i = 0;
+				var money = (float)dataFields[i++].getValue();
+				var name = (String)dataFields[i++].getValue();
+				var location = (String)dataFields[i++].getValue();
+				var type = (int)dataFields[i++].getValue();
+				var subtype = (int)dataFields[i++].getValue();
 				MainFrame.addDataEntry(new DataEntry(
-					(float)dataFields[i++].getValue(),
-					(String)dataFields[i++].getValue(),
-					(String)dataFields[i++].getValue(),
-					(int)dataFields[i++].getValue(),
-					(int)dataFields[i++].getValue(),
+					money,
+					name,
+					location,
+					type,
+					subtype,
 					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()),
 					Interval.byIndex((int)dataFields[i++].getValue()),
 					(boolean)dataFields[i++].getValue(),
@@ -380,8 +394,8 @@ class InputPanel extends JPanel
 				};
 				new java.util.Timer().schedule(task, ADD_CONFIRMATION_TIME);
 				// Update autocompletions:
-				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.NAME));
-				((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).updateAutocomplete(MainFrame.getDataRowValuesAsStrings(DataEntry.DataRowType.LOCATION));
+				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).updateAutocomplete(type, subtype, name);
+				((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).updateAutocomplete(type, subtype, location);
 			}
 			catch (Exception exception)
 			{

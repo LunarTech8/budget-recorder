@@ -9,7 +9,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -348,18 +347,32 @@ public class MainFrame  // Singleton class
 		return sortedList;
 	}
 
-	public static ArrayList<String> getDataRowValuesAsStrings(DataEntry.DataRowType dataRowType) throws Exception
+	@SuppressWarnings("unchecked")
+	public static LinkedList<String>[][] getDataRowValuesAsStrings(DataEntry.DataRowType dataRowType) throws Exception
 	{
-		var keywords = new LinkedList<String>();
-		for (var dataEntry : dataEntries)
+		// Create and initialise keywords lists:
+		LinkedList<String>[][] keywords = new LinkedList[DataEntry.TYPE_NAMES.length][];
+		for (int i = 0; i < DataEntry.TYPE_NAMES.length; i++)
 		{
-			var newKeyword = dataEntry.getDataRowValueAsString(dataRowType);
-			if (keywords.contains(newKeyword) == false)
+			var subtypeLength = DataEntry.SUBTYPE_NAMES[i].length;
+			keywords[i] = new LinkedList[subtypeLength];
+			for (int j = 0; j < subtypeLength; j++)
 			{
-				keywords.add(newKeyword);
+				keywords[i][j] = new LinkedList<String>();
 			}
 		}
-		return new ArrayList<>(keywords);
+		// Fill lists with data entries:
+		for (var dataEntry : dataEntries)
+		{
+			var type = dataEntry.getType();
+			var subtype = dataEntry.getSubtype();
+			var newKeyword = dataEntry.getDataRowValueAsString(dataRowType);
+			if (keywords[type][subtype].contains(newKeyword) == false)
+			{
+				keywords[type][subtype].add(newKeyword);
+			}
+		}
+		return keywords;
 	}
 
 	public static void writeDatabaseFile() throws Exception

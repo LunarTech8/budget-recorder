@@ -19,12 +19,13 @@ Work status:
 // Programming:
 // -------------
 
-!!- Input panel: Make autocomplete to use only entries of same type-subtype
+!!>>>- Input panel: Make autocomplete to use only entries of same type-subtype
+!!- Data panel: Make number of displayed restictable
 !- Input panel: Restrict "until" field to always be later than current "date" field
-!- Maybe use a better/custom json schema
 !- Maybe add specific tooltips for the different types and subtypes if possible
 !- Maybe make autocompletion ignore capitalisation
 !- Maybe recreate a debug & unit test class/system like the one used in the AgeOfWarcraft project
+!- Maybe use a better/custom json schema
 
 
 // -------------
@@ -33,7 +34,6 @@ Work status:
 
 !!- Data panel: Add edit mode that changes data labels into buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
 !! Data panel: Add search functionality
-!- Data panel: Allow more/less info by adding/changing/removing more columns with selectable data type
 !- Add more tooltips wherever possible
 
 

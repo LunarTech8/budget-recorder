@@ -27,14 +27,22 @@ public class Autocomplete implements DocumentListener
 	private JTextField textField;
 	private Mode mode = Mode.INSERT;
 
-	/**
-	 * Sets keywords to the given list of strings.
-	 */
+	/** Sets keywords to the given list of strings. */
 	public void setKeywords(List<String> keywords)
     {
 		this.keywords = keywords;
-		Collections.sort(keywords);
-    }
+		Collections.sort(this.keywords);
+	}
+
+	/** Adds given string to the current list of keywords if it isn't already included. */
+	public void addKeyword(String keyword)
+	{
+		if (keywords.contains(keyword) == false)
+		{
+			keywords.add(keyword);
+			Collections.sort(this.keywords);
+		}
+	}
 
 	public Autocomplete(JTextField textField, List<String> keywords)
 	{

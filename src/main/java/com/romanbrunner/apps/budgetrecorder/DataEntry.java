@@ -117,6 +117,22 @@ class DataEntry
         return date;
 	}
 
+	/**
+	 * @return the type
+	 */
+	public int getType()
+    {
+        return type;
+	}
+
+	/**
+	 * @return the subtype
+	 */
+	public int getSubtype()
+    {
+        return subtype;
+	}
+
 	public static class Serializer extends StdSerializer<DataEntry>
 	{
 		private static final long serialVersionUID = 1L;
