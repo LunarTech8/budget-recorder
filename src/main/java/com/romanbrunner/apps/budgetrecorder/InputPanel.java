@@ -47,6 +47,10 @@ class InputPanel extends JPanel
 	private static final String DATA_ROW_TEXT = "<NAME>:";
 	private static final String DATA_ROW_TOOLTIP = "Define the value for <NAME> in the field to the right.";
 	private static final String DATA_FIELD_TOOLTIP = "Define the value for <NAME> here.";
+	private static final float INIT_VALUE_MONEY = 0.F;
+	private static final int INIT_INDEX_TYPE = 0;
+	private static final int INIT_INDEX_SUBTYPE = 0;
+	private static final int INIT_INDEX_REPEAT = 0;
 
 
 	// --------------------
@@ -115,15 +119,17 @@ class InputPanel extends JPanel
 	{
 		private JComboBox<String> dataField;
 
-		public ComboBoxDataField(JLabel label, String[] items)
+		public ComboBoxDataField(JLabel label, String[] items, int initSelectedIndex)
 		{
 			super(label);
 			dataField = new JComboBox<String>(items);
+			dataField.setSelectedIndex(initSelectedIndex);
 		}
-		public ComboBoxDataField(JLabel label, String[] items, ActionListener actionListener)
+		public ComboBoxDataField(JLabel label, String[] items, int initSelectedIndex, ActionListener actionListener)
 		{
 			super(label);
 			dataField = new JComboBox<String>(items);
+			dataField.setSelectedIndex(initSelectedIndex);
 			dataField.addActionListener(actionListener);
 		}
 
@@ -227,32 +233,35 @@ class InputPanel extends JPanel
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";
 		private JTextField dataField;
-		private Autocomplete autoComplete[][];
+		private Autocomplete autocompletes[][];
+		private Autocomplete activatedAutocomplete;
 
 		public TextDataField(JLabel label)
 		{
 			super(label);
 			dataField = new JTextField();
 		}
-		public TextDataField(JLabel label, LinkedList<String>[][] keywords)
+		public TextDataField(JLabel label, LinkedList<String>[][] keywords, int initTypeIndex, int initSubtypeIndex)
 		{
 			super(label);
 			dataField = new JTextField();
 			// Add autocompletions:
-			autoComplete = new Autocomplete[keywords.length][];
+			autocompletes = new Autocomplete[keywords.length][];
 			for (int i = 0; i < keywords.length; i++)
 			{
-				autoComplete[i] = new Autocomplete[keywords[i].length];
+				autocompletes[i] = new Autocomplete[keywords[i].length];
 				for (int j = 0; j < keywords[i].length; j++)
 				{
 					// Create autocomplete and document listener:
-					autoComplete[i][j] = new Autocomplete(dataField, keywords[i][j]);
-					dataField.getDocument().addDocumentListener(autoComplete[i][j]);
+					autocompletes[i][j] = new Autocomplete(dataField, keywords[i][j], false);
+					dataField.getDocument().addDocumentListener(autocompletes[i][j]);
 					// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
 					dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
-					dataField.getActionMap().put(COMMIT_ACTION, autoComplete[i][j].new CommitAction());
+					dataField.getActionMap().put(COMMIT_ACTION, autocompletes[i][j].new CommitAction());
 				}
 			}
+			activatedAutocomplete = autocompletes[initTypeIndex][initSubtypeIndex];
+			activatedAutocomplete.changeActivation(true);
 		}
 
 		public JComponent getJComponent()
@@ -270,9 +279,16 @@ class InputPanel extends JPanel
 			return dataField.getText();
 		}
 
-		public void updateAutocomplete(int type, int subtype, String keyword)
+		public void updateAutocomplete(int typeIndex, int subtypeIndex, String keyword)
 		{
-			autoComplete[type][subtype].addKeyword(keyword);
+			autocompletes[typeIndex][subtypeIndex].addKeyword(keyword);
+		}
+
+		public void activateAutocomplete(int typeIndex, int subtypeIndex)
+		{
+			activatedAutocomplete.changeActivation(false);
+			activatedAutocomplete = autocompletes[typeIndex][subtypeIndex];
+			activatedAutocomplete.changeActivation(true);
 		}
 	}
 
@@ -286,6 +302,29 @@ class InputPanel extends JPanel
 				var typeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()];
 				var subtypeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()];
 				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeComboBox.getSelectedIndex()]);
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class SubtypeDataFieldAL implements ActionListener
+	{
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Adjust autocompletion activations:
+				var subtypeSelectedIndex = ((ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()]).getSelectedIndex();
+				if (subtypeSelectedIndex < 0)
+				{
+					return;  // Ignore events with unselected subtype
+				}
+				var typeSelectedIndex = ((ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()]).getSelectedIndex();
+				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).activateAutocomplete(typeSelectedIndex, subtypeSelectedIndex);
+				((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).activateAutocomplete(typeSelectedIndex, subtypeSelectedIndex);
 			}
 			catch (Exception exception)
 			{
@@ -433,23 +472,23 @@ class InputPanel extends JPanel
 				switch (dataRowType)
 				{
 					case MONEY:
-						dataField = new CurrencyDataField(label, 0, 2);
+						dataField = new CurrencyDataField(label, INIT_VALUE_MONEY, 2);
 						break;
 					case NAME:
 					case LOCATION:
-						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType));
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), INIT_INDEX_TYPE, INIT_INDEX_SUBTYPE);
 						break;
 					case TYPE:
-						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, new TypeDataFieldAL());
+						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, INIT_INDEX_TYPE, new TypeDataFieldAL());
 						break;
 					case SUBTYPE:
-						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[0]);
+						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[INIT_INDEX_TYPE], INIT_INDEX_SUBTYPE, new SubtypeDataFieldAL());
 						break;
 					case DATE:
 						dataField = new DateDataField(label, 100, 1000);
 						break;
 					case REPEAT:
-						dataField = new ComboBoxDataField(label, Interval.getNames(), new RepeatDataFieldAL());
+						dataField = new ComboBoxDataField(label, Interval.getNames(), INIT_INDEX_REPEAT, new RepeatDataFieldAL());
 						break;
 					case DURATION:
 						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());

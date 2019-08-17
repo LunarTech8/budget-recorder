@@ -26,29 +26,14 @@ public class Autocomplete implements DocumentListener
 	private List<String> keywords;
 	private JTextField textField;
 	private Mode mode = Mode.INSERT;
+	private boolean isActive;
 
-	/** Sets keywords to the given list of strings. */
-	public void setKeywords(List<String> keywords)
-    {
-		this.keywords = keywords;
-		Collections.sort(this.keywords);
-	}
-
-	/** Adds given string to the current list of keywords if it isn't already included. */
-	public void addKeyword(String keyword)
-	{
-		if (keywords.contains(keyword) == false)
-		{
-			keywords.add(keyword);
-			Collections.sort(this.keywords);
-		}
-	}
-
-	public Autocomplete(JTextField textField, List<String> keywords)
+	public Autocomplete(JTextField textField, List<String> keywords, boolean isActive)
 	{
 		this.textField = textField;
 		this.keywords = keywords;
 		Collections.sort(keywords);
+		this.isActive = isActive;
 	}
 
 	@Override
@@ -60,7 +45,7 @@ public class Autocomplete implements DocumentListener
 	@Override
 	public void insertUpdate(DocumentEvent ev)
 	{
-		if (ev.getLength() != 1)
+		if (isActive == false || ev.getLength() != 1)
 		{
 			return;
 		}
@@ -112,6 +97,7 @@ public class Autocomplete implements DocumentListener
 		}
 	}
 
+	/** Class for inserting chosen completion. */
 	public class CommitAction extends AbstractAction
 	{
 		private static final long serialVersionUID = 5794543109646743416L;
@@ -133,6 +119,7 @@ public class Autocomplete implements DocumentListener
 		}
 	}
 
+	/** Class for displaying found completion in the text field. */
 	private class CompletionTask implements Runnable
 	{
 		private String completion;
@@ -153,6 +140,29 @@ public class Autocomplete implements DocumentListener
 			textField.moveCaretPosition(position);
 			mode = Mode.COMPLETION;
 		}
+	}
+
+	/** Sets keywords to the given list of strings. */
+	public void setKeywords(List<String> keywords)
+    {
+		this.keywords = keywords;
+		Collections.sort(this.keywords);
+	}
+
+	/** Adds given string to the current list of keywords if it isn't already included. */
+	public void addKeyword(String keyword)
+	{
+		if (keywords.contains(keyword) == false)
+		{
+			keywords.add(keyword);
+			Collections.sort(this.keywords);
+		}
+	}
+
+	/** Turn active autocompletion on or off. */
+	public void changeActivation(boolean turnOn)
+	{
+		isActive = turnOn;
 	}
 
 }

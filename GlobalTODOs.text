@@ -19,7 +19,6 @@ Work status:
 // Programming:
 // -------------
 
-!!>>>- Input panel: Make autocomplete to use only entries of same type-subtype
 !!- Data panel: Make number of displayed restictable
 !- Input panel: Restrict "until" field to always be later than current "date" field
 !- Maybe add specific tooltips for the different types and subtypes if possible
