@@ -10,10 +10,12 @@ import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -51,7 +53,13 @@ class DataPanel extends JPanel
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
 	private static final Interval DEFAULT_VIEW = Interval.NEVER;
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
-
+	private static final int VERSION_PADDING_SIZE = 5;
+	private static final int ENTRIES_LIMIT_MIN = 0;
+	private static final int ENTRIES_LIMIT_MAX = 500;
+	private static final int ENTRIES_LIMIT_DEFAULT = 100;
+	private static final int ENTRIES_LIMITER_MINOR_SPACING = 10;
+	private static final int ENTRIES_LIMITER_MAJOR_SPACING = 100;
+	private static final int ENTRIES_LIMITER_FONT_SIZE = 10;
 
 	// --------------------
 	// Functional code
@@ -451,24 +459,43 @@ class DataPanel extends JPanel
         var submenu = new JMenu("View");
         submenu.setMnemonic(KeyEvent.VK_V);
         menu.add(submenu);
-		// Create version items:
+		// Create show empty entries check box item:
 		JMenuItem menuItem = new JCheckBoxMenuItem("Show empty entries", showEmptyEntries);
 		menuItem.addActionListener(new SettingsMenuAL("ShowEmptyEntries"));
 		submenu.add(menuItem);
+		// Create limiter slider:
+		submenu.addSeparator();
+		submenu.add(new JLabel("Displayed entries limit:", SwingConstants.LEFT));
+		JSlider slider = new JSlider(JSlider.HORIZONTAL, ENTRIES_LIMIT_MIN, ENTRIES_LIMIT_MAX, ENTRIES_LIMIT_DEFAULT);
+		slider.setMinorTickSpacing(ENTRIES_LIMITER_MINOR_SPACING);
+		slider.setMajorTickSpacing(ENTRIES_LIMITER_MAJOR_SPACING);
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+		slider.setFont(new Font("Serif", Font.ITALIC, ENTRIES_LIMITER_FONT_SIZE));
+		submenu.add(slider);
 		// Add software version submenu:
         menu.addSeparator();
         submenu = new JMenu("Software Version");
         submenu.setMnemonic(KeyEvent.VK_S);
         menu.add(submenu);
-		// Create version items:
-		submenu.add(new JMenuItem("Major: " + MainFrame.VERSION_MAJOR));
-		submenu.add(new JMenuItem("Minor: " + MainFrame.VERSION_MINOR));
-		submenu.add(new JMenuItem("Patch: " + MainFrame.VERSION_PATCH));
+		// Create version labels:
+		var label = new JLabel("Major: " + MainFrame.VERSION_MAJOR);
+		label.setFont(label.getFont().deriveFont(Font.ITALIC));
+        label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
+		submenu.add(label);
+		label = new JLabel("Minor: " + MainFrame.VERSION_MINOR);
+		label.setFont(label.getFont().deriveFont(Font.ITALIC));
+        label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
+		submenu.add(label);
+		label = new JLabel("Patch: " + MainFrame.VERSION_PATCH);
+		label.setFont(label.getFont().deriveFont(Font.ITALIC));
+        label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
+		submenu.add(label);
 
-		// Add view menu:
-        menu = new JMenu("View");
-        menu.setMnemonic(KeyEvent.VK_V);
-        menu.getAccessibleContext().setAccessibleDescription("View selection menu");
+		// Add bundle menu:
+        menu = new JMenu("Bundle");
+        menu.setMnemonic(KeyEvent.VK_B);
+        menu.getAccessibleContext().setAccessibleDescription("Bundle selection menu");
 		menuBar.add(menu);
 		// Create options:
 		var group = new ButtonGroup();
