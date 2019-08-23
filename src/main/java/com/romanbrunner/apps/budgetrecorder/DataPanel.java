@@ -21,7 +21,8 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
-
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -53,19 +54,33 @@ class DataPanel extends JPanel
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
 	private static final Interval DEFAULT_VIEW = Interval.NEVER;
 	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
-	private static final int VERSION_PADDING_SIZE = 5;
+
+	private static final String SETTINGS_MENU_TEXT = "Settings";
+	private static final String SETTINGS_MENU_DESCRIPTION = "General settings menu";
+	private static final String VIEW_SUBMENU_TEXT = "View";
+	private static final String SHOW_EMPTY_ENTRIES_TEXT = "Show empty entries";
 	private static final int ENTRIES_LIMIT_MIN = 0;
 	private static final int ENTRIES_LIMIT_MAX = 500;
 	private static final int ENTRIES_LIMIT_DEFAULT = 100;
 	private static final int ENTRIES_LIMITER_MINOR_SPACING = 10;
 	private static final int ENTRIES_LIMITER_MAJOR_SPACING = 100;
 	private static final int ENTRIES_LIMITER_FONT_SIZE = 10;
+	private static final String ENTRIES_LIMITER_TEXT = "Displayed entries limit: <LIMIT>";
+	private static final String VERSION_SUBMENU_TEXT = "Software Version";
+	private static final int VERSION_PADDING_SIZE = 5;
+	private static final String VERSION_TEXT_MAJOR = "Major: <VERSION>";
+	private static final String VERSION_TEXT_MINOR = "Minor: <VERSION>";
+	private static final String VERSION_TEXT_PATCH = "Patch: <VERSION>";
+	private static final String BUNDLE_MENU_TEXT = "Bundle";
+	private static final String BUNDLE_MENU_DESCRIPTION = "Bundle selection menu";
+
 
 	// --------------------
 	// Functional code
 	// --------------------
 
 	private static boolean showEmptyEntries = true;
+	private static int displayedEntriesLimit = ENTRIES_LIMIT_DEFAULT;
 
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
@@ -184,11 +199,11 @@ class DataPanel extends JPanel
 		}
 	}
 
-	private class ViewMenuAL implements ActionListener
+	private class BundleMenuAL implements ActionListener
 	{
 		private Interval interval;
 
-		public ViewMenuAL(Interval interval)
+		public BundleMenuAL(Interval interval)
 		{
 			this.interval = interval;
 		}
@@ -203,6 +218,27 @@ class DataPanel extends JPanel
 			catch (Exception exception)
 			{
 				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class LimiterSliderCL implements ChangeListener
+	{
+		private JLabel label;
+
+		public LimiterSliderCL(JLabel label)
+		{
+			this.label = label;
+		}
+
+		public void stateChanged(ChangeEvent event)
+		{
+			JSlider source = (JSlider)event.getSource();
+			if (!source.getValueIsAdjusting())
+			{
+				displayedEntriesLimit = (int)source.getValue();
+				label.setText(ENTRIES_LIMITER_TEXT.replace("<LIMIT>", String.valueOf(displayedEntriesLimit)));
+				refreshPanel();
 			}
 		}
 	}
@@ -260,8 +296,13 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
+		var dataEntryCounter = 0;
 		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
 		{
+			if (dataEntryCounter >= displayedEntriesLimit)
+			{
+				break;
+			}
 			constraints.gridx = 0;
 			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
@@ -287,6 +328,7 @@ class DataPanel extends JPanel
 			}
 
 			constraints.gridy++;
+			dataEntryCounter++;
 		}
 
 		// Put the panels in a scroll pane:
@@ -365,8 +407,13 @@ class DataPanel extends JPanel
 		}
         Collections.sort(dataBundles, new DataBundle.DataComparator(sortingBundled));
 		// Create data field labels:
+		var dataEntryCounter = 0;
 		for (var sortedDataBundle : dataBundles)
 		{
+			if (dataEntryCounter >= displayedEntriesLimit)
+			{
+				break;
+			}
 			constraints.gridx = 0;
 			for (var dataRowType : DataBundle.DataRowType.Data.values)
 			{
@@ -392,6 +439,7 @@ class DataPanel extends JPanel
 			}
 
 			constraints.gridy++;
+			dataEntryCounter++;
 		}
 
 		// Put the panels in a scroll pane:
@@ -450,52 +498,54 @@ class DataPanel extends JPanel
 		var menuBar = new JMenuBar();
 
 		// Add settings menu:
-        var menu = new JMenu("Settings");
+        var menu = new JMenu(SETTINGS_MENU_TEXT);
         menu.setMnemonic(KeyEvent.VK_S);
-        menu.getAccessibleContext().setAccessibleDescription("General settings menu");
+        menu.getAccessibleContext().setAccessibleDescription(SETTINGS_MENU_DESCRIPTION);
 		menuBar.add(menu);
 		// Add view submenu:
         menu.addSeparator();
-        var submenu = new JMenu("View");
+        var submenu = new JMenu(VIEW_SUBMENU_TEXT);
         submenu.setMnemonic(KeyEvent.VK_V);
         menu.add(submenu);
 		// Create show empty entries check box item:
-		JMenuItem menuItem = new JCheckBoxMenuItem("Show empty entries", showEmptyEntries);
+		JMenuItem menuItem = new JCheckBoxMenuItem(SHOW_EMPTY_ENTRIES_TEXT, showEmptyEntries);
 		menuItem.addActionListener(new SettingsMenuAL("ShowEmptyEntries"));
 		submenu.add(menuItem);
 		// Create limiter slider:
 		submenu.addSeparator();
-		submenu.add(new JLabel("Displayed entries limit:", SwingConstants.LEFT));
+		var label = new JLabel(ENTRIES_LIMITER_TEXT.replace("<LIMIT>", String.valueOf(displayedEntriesLimit)), SwingConstants.LEFT);
+		submenu.add(label);
 		JSlider slider = new JSlider(JSlider.HORIZONTAL, ENTRIES_LIMIT_MIN, ENTRIES_LIMIT_MAX, ENTRIES_LIMIT_DEFAULT);
 		slider.setMinorTickSpacing(ENTRIES_LIMITER_MINOR_SPACING);
 		slider.setMajorTickSpacing(ENTRIES_LIMITER_MAJOR_SPACING);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.setFont(new Font("Serif", Font.ITALIC, ENTRIES_LIMITER_FONT_SIZE));
+		slider.addChangeListener(new LimiterSliderCL(label));
 		submenu.add(slider);
 		// Add software version submenu:
         menu.addSeparator();
-        submenu = new JMenu("Software Version");
+        submenu = new JMenu(VERSION_SUBMENU_TEXT);
         submenu.setMnemonic(KeyEvent.VK_S);
         menu.add(submenu);
 		// Create version labels:
-		var label = new JLabel("Major: " + MainFrame.VERSION_MAJOR);
+		label = new JLabel(VERSION_TEXT_MAJOR.replace("<VERSION>", String.valueOf(MainFrame.VERSION_MAJOR)));
 		label.setFont(label.getFont().deriveFont(Font.ITALIC));
         label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
 		submenu.add(label);
-		label = new JLabel("Minor: " + MainFrame.VERSION_MINOR);
+		label = new JLabel(VERSION_TEXT_MINOR.replace("<VERSION>", String.valueOf(MainFrame.VERSION_MINOR)));
 		label.setFont(label.getFont().deriveFont(Font.ITALIC));
         label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
 		submenu.add(label);
-		label = new JLabel("Patch: " + MainFrame.VERSION_PATCH);
+		label = new JLabel(VERSION_TEXT_PATCH.replace("<VERSION>", String.valueOf(MainFrame.VERSION_PATCH)));
 		label.setFont(label.getFont().deriveFont(Font.ITALIC));
         label.setBorder(BorderFactory.createEmptyBorder(VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE, VERSION_PADDING_SIZE));
 		submenu.add(label);
 
 		// Add bundle menu:
-        menu = new JMenu("Bundle");
+        menu = new JMenu(BUNDLE_MENU_TEXT);
         menu.setMnemonic(KeyEvent.VK_B);
-        menu.getAccessibleContext().setAccessibleDescription("Bundle selection menu");
+        menu.getAccessibleContext().setAccessibleDescription(BUNDLE_MENU_DESCRIPTION);
 		menuBar.add(menu);
 		// Create options:
 		var group = new ButtonGroup();
@@ -507,7 +557,7 @@ class DataPanel extends JPanel
 				menuItem.setSelected(true);
 			}
 			menuItem.setMnemonic(SETTINGS_VIEW_MNEMONICS[interval.toInt()]);
-			menuItem.addActionListener(new ViewMenuAL(interval));
+			menuItem.addActionListener(new BundleMenuAL(interval));
 			group.add(menuItem);
 			menu.add(menuItem);
 		}

@@ -20,7 +20,6 @@ Work status:
 // Programming:
 // -------------
 
-!!>>- Data panel: Make number of displayed restictable
 !- Input panel: Restrict "until" field to always be later than current "date" field
 !- Maybe add specific tooltips for the different types and subtypes if possible
 !- Maybe make autocompletion ignore capitalisation
@@ -41,4 +40,4 @@ Work status:
 // Resources:
 // -------------
 
-!!- Add grafics for up/down sorting and use them instead of text
+!!- Add graphics for up/down sorting and use them instead of text
