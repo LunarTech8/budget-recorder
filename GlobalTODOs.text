@@ -31,8 +31,8 @@ Work status:
 // Application design:
 // -------------
 
-!!- Data panel: Add edit mode that changes data labels into buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
-!! Data panel: Add search functionality
+!!>>- Data panel: Change data labels into buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
+!!- Data panel: Add search functionality
 !- Add more tooltips wherever possible
 
 

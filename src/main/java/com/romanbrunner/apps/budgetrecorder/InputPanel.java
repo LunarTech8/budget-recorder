@@ -59,7 +59,7 @@ class InputPanel extends JPanel
 
 	private DataField dataFields[] = new DataField[DataEntry.DataRowType.Data.length];
 
-	private abstract class DataField
+	public abstract class DataField
 	{
 		private JLabel label;
 
@@ -84,7 +84,7 @@ class InputPanel extends JPanel
 		public abstract String getValueAsText();
 	}
 
-	private class CurrencyDataField extends DataField
+	public class CurrencyDataField extends DataField
 	{
 		private JFormattedTextField dataField;
 
@@ -115,7 +115,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class ComboBoxDataField extends DataField
+	public class ComboBoxDataField extends DataField
 	{
 		private JComboBox<String> dataField;
 
@@ -163,7 +163,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class DateDataField extends DataField
+	public class DateDataField extends DataField
 	{
 		private JSpinner dataField;
 
@@ -196,7 +196,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class CheckBoxDataField extends DataField
+	public class CheckBoxDataField extends DataField
 	{
 		private JCheckBox dataField;
 
@@ -228,7 +228,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	private class TextDataField extends DataField
+	public class TextDataField extends DataField
 	{
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";

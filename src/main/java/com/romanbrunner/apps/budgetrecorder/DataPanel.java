@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -168,6 +169,75 @@ class DataPanel extends JPanel
 		}
 	}
 
+	private class DataFieldButtonAL implements ActionListener
+	{
+		private DataEntry.DataRowType dataRowType;
+		private JButton button;
+		private DataEntry dataEntry;
+		private InputPanel.DataField dataField;
+
+		public DataFieldButtonAL(DataEntry.DataRowType dataRowType, JButton button, DataEntry dataEntry)
+		{
+			this.dataRowType = dataRowType;
+			this.button = button;
+			this.dataEntry = dataEntry;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				var dataPanel = button.getParent();
+				for (int i = 0; i < dataPanel.getComponentCount(); i++)
+				{
+					if (dataPanel.getComponent(i) == button)
+					{
+						dataPanel.remove(button);
+						switch (dataRowType)
+						{
+							case MONEY:
+								dataField = new InputPanel.CurrencyDataField(null, Float.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), 2);
+								break;
+							case NAME:
+							case LOCATION:
+								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.TYPE)), Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.SUBTYPE)));
+								break;
+							case TYPE:
+								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new TypeDataFieldAL());
+								break;
+							case SUBTYPE:
+								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.TYPE))], Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new SubtypeDataFieldAL());
+								break;
+							case DATE:
+								dataField = new InputPanel.DateDataField(null, 100, 1000);
+								break;
+							case REPEAT:
+								dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new RepeatDataFieldAL());
+								break;
+							case DURATION:
+								dataField = new InputPanel.CheckBoxDataField(null, "Infinitely", new DurationDataFieldAL());
+								dataField.setVisible(false);
+								break;
+							case UNTIL:
+								dataField = new InputPanel.DateDataField(null, 100, 1000);
+								dataField.setVisible(false);
+								break;
+							default:
+								dataField = new InputPanel.TextDataField(null);
+								break;
+						}
+						dataPanel.add(dataField.getJComponent(), i);
+						break;
+					}
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
 	private class SettingsMenuAL implements ActionListener
 	{
 		private String setting;
@@ -310,19 +380,22 @@ class DataPanel extends JPanel
 				switch (dataRowType)
 				{
 					case MONEY:
-						alignment = JLabel.RIGHT;
+						alignment = SwingConstants.RIGHT;
 						break;
 					default:
-						alignment = JLabel.LEFT;
+						alignment = SwingConstants.LEFT;
 						break;
 				}
 				var name = dataRowType.toString();
 				var text = dataEntry.getDataRowValueAsText(dataRowType);
-				var label = new JLabel(text, alignment);
-				label.setToolTipText(name + ": " + text);
-				label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
-				label.setBorder(dataBorder);
-				dataPanel.add(label, constraints);
+				var button = new JButton(text);
+				button.setHorizontalAlignment(alignment);
+				button.setToolTipText(name + ": " + text);
+				button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
+				button.setBorder(dataBorder);
+				button.setContentAreaFilled(false);
+				button.addActionListener(new DataFieldButtonAL(dataRowType, button, dataEntry));
+				dataPanel.add(button, constraints);
 
 				constraints.gridx++;
 			}
