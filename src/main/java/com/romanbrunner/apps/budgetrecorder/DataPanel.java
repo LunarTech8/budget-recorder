@@ -16,7 +16,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -196,37 +195,38 @@ class DataPanel extends JPanel
 						switch (dataRowType)
 						{
 							case MONEY:
-								dataField = new InputPanel.CurrencyDataField(null, Float.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), 2);
+								dataField = new InputPanel.CurrencyDataField(null, dataEntry.getMoney(), 2);
 								break;
 							case NAME:
+								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
+								break;
 							case LOCATION:
-								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.TYPE)), Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.SUBTYPE)));
+								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
 								break;
 							case TYPE:
-								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new TypeDataFieldAL());
+								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType());
 								break;
 							case SUBTYPE:
-								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[Integer.valueOf(dataEntry.getDataRowValueAsString(DataEntry.DataRowType.TYPE))], Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new SubtypeDataFieldAL());
+								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
 								break;
 							case DATE:
-								dataField = new InputPanel.DateDataField(null, 100, 1000);
+								dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
 								break;
 							case REPEAT:
-								dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), Integer.valueOf(dataEntry.getDataRowValueAsString(dataRowType)), new RepeatDataFieldAL());
+								dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt());
 								break;
 							case DURATION:
-								dataField = new InputPanel.CheckBoxDataField(null, "Infinitely", new DurationDataFieldAL());
-								dataField.setVisible(false);
+								dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
 								break;
 							case UNTIL:
-								dataField = new InputPanel.DateDataField(null, 100, 1000);
-								dataField.setVisible(false);
+								dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
 								break;
 							default:
-								dataField = new InputPanel.TextDataField(null);
-								break;
+								throw new Exception("ERROR: Unaccounted data row type (" + dataRowType.toString() + ")");
 						}
 						dataPanel.add(dataField.getJComponent(), i);
+						// TODO: create an AL for dataField so that changes can be taken to the database when Enter or another data button is pressed; then replace dataField with button
+						// TODO: replace dataField with button when another data button is pressed; only one editable dataField at a time
 						break;
 					}
 				}

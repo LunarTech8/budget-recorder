@@ -45,6 +45,8 @@ class DataEntry
 		// Income:
 		{ "Profession", "Job", "Gift", "Sale", "Generic" },
 	};
+	public static final String DURATION_TEXT_ON = "Infinitely";
+	public static final String DURATION_TEXT_OFF = "Limited";
 
 	public enum DataRowType
 	{
@@ -110,11 +112,27 @@ class DataEntry
 	private Date until;
 
 	/**
-	 * @return the date
+	 * @return the money
 	 */
-	public Date getDate()
+	public Float getMoney()
     {
-        return date;
+        return money;
+	}
+
+	/**
+	 * @return the name
+	 */
+	public String getName()
+    {
+        return name;
+	}
+
+	/**
+	 * @return the location
+	 */
+	public String getLocation()
+    {
+        return location;
 	}
 
 	/**
@@ -131,6 +149,38 @@ class DataEntry
 	public int getSubtype()
     {
         return subtype;
+	}
+
+	/**
+	 * @return the date
+	 */
+	public Date getDate()
+    {
+        return date;
+	}
+
+	/**
+	 * @return the repeat
+	 */
+	public Interval getRepeat()
+    {
+        return repeat;
+	}
+
+	/**
+	 * @return the duration
+	 */
+	public boolean getDuration()
+    {
+        return duration;
+	}
+
+	/**
+	 * @return the until
+	 */
+	public Date getUntil()
+    {
+        return until;
 	}
 
 	public static class Serializer extends StdSerializer<DataEntry>
@@ -487,11 +537,11 @@ class DataEntry
 				{
 					if (duration)
 					{
-						return "Infinitely";
+						return DURATION_TEXT_ON;
 					}
 					else
 					{
-						return "Limited";
+						return DURATION_TEXT_OFF;
 					}
 				}
 			}

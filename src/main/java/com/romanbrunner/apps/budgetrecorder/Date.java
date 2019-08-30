@@ -174,12 +174,12 @@ public class Date
 		}
 	}
 
-	private static Date calendarToDate(Calendar calendar) throws Exception
+	public static Date calendarToDate(Calendar calendar) throws Exception
 	{
 		return new Date(calendar.get(Calendar.DAY_OF_MONTH), calendar.get(Calendar.MONTH) + 1, calendar.get(Calendar.YEAR));
 	}
 
-	private static Calendar dateToCalendar(Date date)
+	public static Calendar dateToCalendar(Date date)
 	{
 		return new GregorianCalendar(date.values[2], date.values[1] - 1, date.values[0]);
 	}

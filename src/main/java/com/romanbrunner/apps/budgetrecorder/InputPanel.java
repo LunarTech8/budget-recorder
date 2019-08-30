@@ -59,7 +59,7 @@ class InputPanel extends JPanel
 
 	private DataField dataFields[] = new DataField[DataEntry.DataRowType.Data.length];
 
-	public abstract class DataField
+	public abstract static class DataField
 	{
 		private JLabel label;
 
@@ -84,7 +84,7 @@ class InputPanel extends JPanel
 		public abstract String getValueAsText();
 	}
 
-	public class CurrencyDataField extends DataField
+	public static class CurrencyDataField extends DataField
 	{
 		private JFormattedTextField dataField;
 
@@ -115,7 +115,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	public class ComboBoxDataField extends DataField
+	public static class ComboBoxDataField extends DataField
 	{
 		private JComboBox<String> dataField;
 
@@ -163,7 +163,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	public class DateDataField extends DataField
+	public static class DateDataField extends DataField
 	{
 		private JSpinner dataField;
 
@@ -172,6 +172,18 @@ class InputPanel extends JPanel
 			super(label);
 			var calendar = Calendar.getInstance();
 			java.util.Date initDate = calendar.getTime();
+			calendar.add(Calendar.YEAR, -maxBackYears);
+			java.util.Date earliestDate = calendar.getTime();
+			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
+			java.util.Date latestDate = calendar.getTime();
+			dataField = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
+			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
+		}
+		public DateDataField(JLabel label, int maxBackYears, int maxUpYears, Calendar initCalendar)
+		{
+			super(label);
+			var calendar = Calendar.getInstance();
+			java.util.Date initDate = initCalendar.getTime();
 			calendar.add(Calendar.YEAR, -maxBackYears);
 			java.util.Date earliestDate = calendar.getTime();
 			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
@@ -196,10 +208,15 @@ class InputPanel extends JPanel
 		}
 	}
 
-	public class CheckBoxDataField extends DataField
+	public static class CheckBoxDataField extends DataField
 	{
 		private JCheckBox dataField;
 
+		public CheckBoxDataField(JLabel label, String text, boolean initIsChecked)
+		{
+			super(label);
+			dataField = new JCheckBox(text, initIsChecked);
+		}
 		public CheckBoxDataField(JLabel label, String text, ActionListener actionListener)
 		{
 			super(label);
@@ -228,7 +245,7 @@ class InputPanel extends JPanel
 		}
 	}
 
-	public class TextDataField extends DataField
+	public static class TextDataField extends DataField
 	{
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";
@@ -236,11 +253,6 @@ class InputPanel extends JPanel
 		private Autocomplete autocompletes[][];
 		private Autocomplete activatedAutocomplete;
 
-		public TextDataField(JLabel label)
-		{
-			super(label);
-			dataField = new JTextField();
-		}
 		public TextDataField(JLabel label, LinkedList<String>[][] keywords, int initTypeIndex, int initSubtypeIndex)
 		{
 			super(label);
@@ -263,6 +275,29 @@ class InputPanel extends JPanel
 			activatedAutocomplete = autocompletes[initTypeIndex][initSubtypeIndex];
 			activatedAutocomplete.changeActivation(true);
 		}
+		public TextDataField(JLabel label, LinkedList<String>[][] keywords, int initTypeIndex, int initSubtypeIndex, String initText)
+		{
+			super(label);
+			dataField = new JTextField(initText);
+			// Add autocompletions:
+			autocompletes = new Autocomplete[keywords.length][];
+			for (int i = 0; i < keywords.length; i++)
+			{
+				autocompletes[i] = new Autocomplete[keywords[i].length];
+				for (int j = 0; j < keywords[i].length; j++)
+				{
+					// Create autocomplete and document listener:
+					autocompletes[i][j] = new Autocomplete(dataField, keywords[i][j], false);
+					dataField.getDocument().addDocumentListener(autocompletes[i][j]);
+					// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
+					dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
+					dataField.getActionMap().put(COMMIT_ACTION, autocompletes[i][j].new CommitAction());
+				}
+			}
+			activatedAutocomplete = autocompletes[initTypeIndex][initSubtypeIndex];
+			activatedAutocomplete.changeActivation(true);
+		}
+
 
 		public JComponent getJComponent()
 		{
@@ -491,7 +526,7 @@ class InputPanel extends JPanel
 						dataField = new ComboBoxDataField(label, Interval.getNames(), INIT_INDEX_REPEAT, new RepeatDataFieldAL());
 						break;
 					case DURATION:
-						dataField = new CheckBoxDataField(label, "Infinitely", new DurationDataFieldAL());
+						dataField = new CheckBoxDataField(label, DataEntry.DURATION_TEXT_ON, new DurationDataFieldAL());
 						dataField.setVisible(false);
 						break;
 					case UNTIL:
@@ -499,8 +534,7 @@ class InputPanel extends JPanel
 						dataField.setVisible(false);
 						break;
 					default:
-						dataField = new TextDataField(label);
-						break;
+						throw new Exception("ERROR: Unaccounted data row type (" + dataRowType.toString() + ")");
 				}
 				var component = dataField.getJComponent();
 				component.setToolTipText(DATA_FIELD_TOOLTIP.replace("<NAME>", name));
