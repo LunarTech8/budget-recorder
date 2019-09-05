@@ -85,6 +85,7 @@ class DataPanel extends JPanel
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
 	private Interval view;
+	private GridBagConstraints constraints;
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -174,62 +175,69 @@ class DataPanel extends JPanel
 		private JButton button;
 		private DataEntry dataEntry;
 		private InputPanel.DataField dataField;
+		private int gridx;
+		private int gridy;
 
 		public DataFieldButtonAL(DataEntry.DataRowType dataRowType, JButton button, DataEntry dataEntry)
 		{
 			this.dataRowType = dataRowType;
 			this.button = button;
 			this.dataEntry = dataEntry;
+			// Store current grid position:
+			gridx = constraints.gridx;
+			gridy = constraints.gridy;
 		}
 
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
-				var dataPanel = button.getParent();
-				for (int i = 0; i < dataPanel.getComponentCount(); i++)
+				switch (dataRowType)
 				{
-					if (dataPanel.getComponent(i) == button)
-					{
-						dataPanel.remove(button);
-						switch (dataRowType)
-						{
-							case MONEY:
-								dataField = new InputPanel.CurrencyDataField(null, dataEntry.getMoney(), 2);
-								break;
-							case NAME:
-								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
-								break;
-							case LOCATION:
-								dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
-								break;
-							case TYPE:
-								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType());
-								break;
-							case SUBTYPE:
-								dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
-								break;
-							case DATE:
-								dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
-								break;
-							case REPEAT:
-								dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt());
-								break;
-							case DURATION:
-								dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
-								break;
-							case UNTIL:
-								dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
-								break;
-							default:
-								throw new Exception("ERROR: Unaccounted data row type (" + dataRowType.toString() + ")");
-						}
-						dataPanel.add(dataField.getJComponent(), i);
-						// TODO: create an AL for dataField so that changes can be taken to the database when Enter or another data button is pressed; then replace dataField with button
-						// TODO: replace dataField with button when another data button is pressed; only one editable dataField at a time
+					case MONEY:
+						dataField = new InputPanel.CurrencyDataField(null, dataEntry.getMoney(), 2);
 						break;
-					}
+					case NAME:
+						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
+						break;
+					case LOCATION:
+						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
+						break;
+					case TYPE:
+						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType());
+						break;
+					case SUBTYPE:
+						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
+						break;
+					case DATE:
+						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
+						break;
+					case REPEAT:
+						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt());
+						break;
+					case DURATION:
+						// TODO: check if changeable, else don't replace button
+						dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
+						break;
+					case UNTIL:
+						// TODO: check if changeable, else don't replace button
+						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
+						break;
+					default:
+						throw new Exception("ERROR: Unaccounted data row type (" + dataRowType.toString() + ")");
 				}
+				if (dataField != null)
+				{
+					var dataPanel = button.getParent();
+					dataPanel.remove(button);
+					constraints.gridx = gridx;
+					constraints.gridy = gridy;
+					dataPanel.add(dataField.getJComponent(), constraints);
+					revalidate();
+					repaint();
+				}
+				// TODO: create an AL for dataField so that changes can be taken to the database when Enter or another data button is pressed; then replace dataField with button
+				// TODO: replace dataField with button when another data button is pressed; only one editable dataField at a time
 			}
 			catch (Exception exception)
 			{
@@ -530,7 +538,7 @@ class DataPanel extends JPanel
 			// Remove old content:
 			this.removeAll();
 
-			GridBagConstraints constraints = new GridBagConstraints();
+			constraints = new GridBagConstraints();
 			// Define default constraints:
 			constraints.fill = GridBagConstraints.BOTH;
 			constraints.weightx = 0.5;
