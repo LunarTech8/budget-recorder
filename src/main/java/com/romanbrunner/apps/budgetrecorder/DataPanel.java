@@ -16,17 +16,22 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -73,6 +78,7 @@ class DataPanel extends JPanel
 	private static final String VERSION_TEXT_PATCH = "Patch: <VERSION>";
 	private static final String BUNDLE_MENU_TEXT = "Bundle";
 	private static final String BUNDLE_MENU_DESCRIPTION = "Bundle selection menu";
+	private static final int DEFAULT_INDEX_SUBTYPE = 0;
 
 
 	// --------------------
@@ -86,6 +92,7 @@ class DataPanel extends JPanel
 	private DataBundle.DataRowSorting sortingBundled;
 	private Interval view;
 	private GridBagConstraints constraints;
+	private DataFieldButtonAL activeDataField = null;
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -174,15 +181,18 @@ class DataPanel extends JPanel
 		private DataEntry.DataRowType dataRowType;
 		private JButton button;
 		private DataEntry dataEntry;
-		private InputPanel.DataField dataField;
+		private Border dataBorder;
 		private int gridx;
 		private int gridy;
+		private InputPanel.DataField dataField;
 
 		public DataFieldButtonAL(DataEntry.DataRowType dataRowType, JButton button, DataEntry dataEntry)
 		{
 			this.dataRowType = dataRowType;
 			this.button = button;
 			this.dataEntry = dataEntry;
+
+			dataBorder = button.getBorder();
 			// Store current grid position:
 			gridx = constraints.gridx;
 			gridy = constraints.gridy;
@@ -192,6 +202,12 @@ class DataPanel extends JPanel
 		{
 			try
 			{
+				// Deactivate current active data field if existent:
+				if (activeDataField != null)
+				{
+					deactivateActiveDataField(true);
+				}
+				// Create new active data field:
 				switch (dataRowType)
 				{
 					case MONEY:
@@ -204,7 +220,7 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
 						break;
 					case TYPE:
-						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType());
+						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType(), new TypeDataFieldAL(dataEntry));
 						break;
 					case SUBTYPE:
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
@@ -213,10 +229,11 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
 						break;
 					case REPEAT:
+						// TODO: might require own AL like TypeDataFieldAL
 						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt());
 						break;
 					case DURATION:
-						// TODO: check if changeable, else don't replace button
+						// TODO: check if changeable, else don't replace button, might require own AL like TypeDataFieldAL
 						dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
 						break;
 					case UNTIL:
@@ -228,16 +245,56 @@ class DataPanel extends JPanel
 				}
 				if (dataField != null)
 				{
+					// Remove button:
 					var dataPanel = button.getParent();
 					dataPanel.remove(button);
+					// Add data field:
 					constraints.gridx = gridx;
 					constraints.gridy = gridy;
 					dataPanel.add(dataField.getJComponent(), constraints);
+					activeDataField = this;
+					// Refresh data panel:
 					revalidate();
 					repaint();
 				}
-				// TODO: create an AL for dataField so that changes can be taken to the database when Enter or another data button is pressed; then replace dataField with button
-				// TODO: replace dataField with button when another data button is pressed; only one editable dataField at a time
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class TypeDataFieldAL implements ActionListener
+	{
+		private DataEntry dataEntry;
+
+		public TypeDataFieldAL(DataEntry dataEntry)
+		{
+			this.dataEntry = dataEntry;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Change subtype of data entry to default if selected index is unequal to type of data entry and adjust its button:
+				@SuppressWarnings("unchecked")
+				var comboBox = (JComboBox<String>)event.getSource();
+				if (comboBox.getSelectedIndex() != dataEntry.getType())
+				{
+					// Adjust subtype value:
+					dataEntry.setValue(DataEntry.DataRowType.SUBTYPE, (Object)DEFAULT_INDEX_SUBTYPE);
+					// Adjust button name:
+					JButton subtypeButton = null;
+					// TODO: find method to get button
+					// -> container index or class property won't work because it changes when removing/adding buttons
+					// -> maybe use an bidirectional dictionary "typeButton <-> subtypeButton"
+					subtypeButton.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
+					// Refresh data panel:
+					revalidate();
+					repaint();
+				}
 			}
 			catch (Exception exception)
 			{
@@ -328,10 +385,81 @@ class DataPanel extends JPanel
 		this.sortingBundled = sortingBundled;
 		this.view = view;
 		recreatePanel();
+
+		// Register active data field confirmation:
+		var enterAction = new AbstractAction()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				try
+				{
+					// Deactivate current active data field if existent:
+					if (activeDataField != null)
+					{
+						deactivateActiveDataField(true);
+					}
+				}
+				catch (Exception exception)
+				{
+					exception.printStackTrace();
+				}
+			}
+		};
+		this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
+		this.getActionMap().put("Enter", enterAction);
+		// FIXME: doesn't work for changed fields that react differently on enter key (like text field, combo box field) -> maybe active data field needs an AL that reacts on enter
 	}
 	public DataPanel()
 	{
 		this(DEFAULT_DATA_ROW_SORTING_COMPLETE, DEFAULT_DATA_ROW_SORTING_BUNDLED, DEFAULT_VIEW);
+	}
+
+	private JButton createDataFieldButton(DataEntry.DataRowType dataRowType, DataEntry dataEntry, Border dataBorder) throws Exception
+	{
+		int alignment;
+		switch (dataRowType)
+		{
+			case MONEY:
+				alignment = SwingConstants.RIGHT;
+				break;
+			default:
+				alignment = SwingConstants.LEFT;
+				break;
+		}
+		var name = dataRowType.toString();
+		var text = dataEntry.getDataRowValueAsText(dataRowType);
+		var button = new JButton(text);
+		button.setHorizontalAlignment(alignment);
+		button.setToolTipText(name + ": " + text);
+		button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
+		button.setBorder(dataBorder);
+		button.setContentAreaFilled(false);
+		button.addActionListener(new DataFieldButtonAL(dataRowType, button, dataEntry));
+		return button;
+	}
+
+	private void deactivateActiveDataField(boolean overwriteData) throws Exception
+	{
+		// Overwrite data if required:
+		if (overwriteData)
+		{
+			// Extract entered value and adjust data entry:
+			activeDataField.dataEntry.setValue(activeDataField.dataRowType, activeDataField.dataField.getValue());
+			// Write database to json:
+			MainFrame.writeDatabaseFile();
+		}
+		// Remove data field:
+		var component = activeDataField.dataField.getJComponent();
+		var dataPanel = component.getParent();
+		dataPanel.remove(component);
+		// Add button:
+		constraints.gridx = activeDataField.gridx;
+		constraints.gridy = activeDataField.gridy;
+		dataPanel.add(createDataFieldButton(activeDataField.dataRowType, activeDataField.dataEntry, activeDataField.dataBorder), constraints);
+		activeDataField = null;
+		// Refresh data panel:
+		revalidate();
+		repaint();
 	}
 
 	private void createCompletePanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
@@ -384,26 +512,7 @@ class DataPanel extends JPanel
 			constraints.gridx = 0;
 			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
-				int alignment;
-				switch (dataRowType)
-				{
-					case MONEY:
-						alignment = SwingConstants.RIGHT;
-						break;
-					default:
-						alignment = SwingConstants.LEFT;
-						break;
-				}
-				var name = dataRowType.toString();
-				var text = dataEntry.getDataRowValueAsText(dataRowType);
-				var button = new JButton(text);
-				button.setHorizontalAlignment(alignment);
-				button.setToolTipText(name + ": " + text);
-				button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
-				button.setBorder(dataBorder);
-				button.setContentAreaFilled(false);
-				button.addActionListener(new DataFieldButtonAL(dataRowType, button, dataEntry));
-				dataPanel.add(button, constraints);
+				dataPanel.add(createDataFieldButton(dataRowType, dataEntry, dataBorder), constraints);
 
 				constraints.gridx++;
 			}

@@ -3,6 +3,7 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -475,6 +476,42 @@ class DataEntry
 		else
 		{
 			return false;
+		}
+	}
+
+	public void setValue(DataRowType dataRowType, Object value) throws Exception
+	{
+		switch (dataRowType)
+		{
+			case MONEY:
+				money = (float)value;
+				break;
+			case NAME:
+				name = (String)value;
+				break;
+			case LOCATION:
+				location = (String)value;
+				break;
+			case TYPE:
+				type = (int)value;
+				break;
+			case SUBTYPE:
+				subtype = (int)value;
+				break;
+			case DATE:
+				date = new Date(Stream.of(((String)value).split("[.]")).mapToInt(Integer::parseInt).toArray());
+				break;
+			case REPEAT:
+				repeat = Interval.byIndex((int)value);
+				break;
+			case DURATION:
+				duration = (boolean)value;
+				break;
+			case UNTIL:
+				until = new Date(Stream.of(((String)value).split("[.]")).mapToInt(Integer::parseInt).toArray());
+				break;
+			default:
+				throw new Exception("ERROR: Invalid data row type (" + dataRowType.toString() + ")");
 		}
 	}
 
