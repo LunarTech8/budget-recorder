@@ -38,6 +38,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
+import com.romanbrunner.apps.budgetrecorder.DataEntry;
+
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
 
 @SuppressWarnings("serial")
@@ -78,7 +81,8 @@ class DataPanel extends JPanel
 	private static final String VERSION_TEXT_PATCH = "Patch: <VERSION>";
 	private static final String BUNDLE_MENU_TEXT = "Bundle";
 	private static final String BUNDLE_MENU_DESCRIPTION = "Bundle selection menu";
-	private static final int DEFAULT_INDEX_SUBTYPE = 0;
+	private static final int DEFAULT_VALUE_SUBTYPE = 0;
+	private static final boolean DEFAULT_VALUE_DURATION = false;
 
 
 	// --------------------
@@ -93,6 +97,8 @@ class DataPanel extends JPanel
 	private Interval view;
 	private GridBagConstraints constraints;
 	private DataFieldButtonAL activeDataField = null;
+	private DualHashBidiMap<JComponent, JComponent> biMapTypeCompToSubtypeComp = new DualHashBidiMap<JComponent, JComponent>();
+	private DualHashBidiMap<JComponent, JComponent> biMapRepeatCompToDurationComp = new DualHashBidiMap<JComponent, JComponent>();
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -229,16 +235,20 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
 						break;
 					case REPEAT:
-						// TODO: might require own AL like TypeDataFieldAL
-						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt());
+						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt(), new RepeatDataFieldAL(dataEntry));
 						break;
 					case DURATION:
-						// TODO: check if changeable, else don't replace button, might require own AL like TypeDataFieldAL
-						dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
+						// TODO: requires own AL like TypeDataFieldAL
+						if (dataEntry.getRepeat() != Interval.NEVER)
+						{
+							dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
+						}
 						break;
 					case UNTIL:
-						// TODO: check if changeable, else don't replace button
-						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
+						if (dataEntry.getRepeat() != Interval.NEVER && dataEntry.getDuration() == false)
+						{
+							dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
+						}
 						break;
 					default:
 						throw new Exception("ERROR: Unaccounted data row type (" + dataRowType.toString() + ")");
@@ -251,7 +261,10 @@ class DataPanel extends JPanel
 					// Add data field:
 					constraints.gridx = gridx;
 					constraints.gridy = gridy;
-					dataPanel.add(dataField.getJComponent(), constraints);
+					var component = dataField.getJComponent();
+					dataPanel.add(component, constraints);
+					// Adjust global variables:
+					adjustComponentMap(dataRowType, button, component);
 					activeDataField = this;
 					// Refresh data panel:
 					revalidate();
@@ -278,19 +291,55 @@ class DataPanel extends JPanel
 		{
 			try
 			{
-				// Change subtype of data entry to default if selected index is unequal to type of data entry and adjust its button:
+				// Change subtype of data entry to default and adjust its button if selected index is unequal to type of data entry:
 				@SuppressWarnings("unchecked")
 				var comboBox = (JComboBox<String>)event.getSource();
-				if (comboBox.getSelectedIndex() != dataEntry.getType())
+				var newValue = comboBox.getSelectedIndex();
+				if (newValue != dataEntry.getType())
 				{
-					// Adjust subtype value:
-					dataEntry.setValue(DataEntry.DataRowType.SUBTYPE, (Object)DEFAULT_INDEX_SUBTYPE);
-					// Adjust button name:
-					JButton subtypeButton = null;
-					// TODO: find method to get button
-					// -> container index or class property won't work because it changes when removing/adding buttons
-					// -> maybe use an bidirectional dictionary "typeButton <-> subtypeButton"
-					subtypeButton.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
+					// Adjust type and subtype data entry values:
+					dataEntry.setValue(DataEntry.DataRowType.TYPE, (Object)newValue);
+					dataEntry.setValue(DataEntry.DataRowType.SUBTYPE, (Object)DEFAULT_VALUE_SUBTYPE);
+					// Adjust subtype button name:
+					JButton button = (JButton)biMapTypeCompToSubtypeComp.get(comboBox);
+					button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
+					// Refresh data panel:
+					revalidate();
+					repaint();
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class RepeatDataFieldAL implements ActionListener
+	{
+		private DataEntry dataEntry;
+
+		public RepeatDataFieldAL(DataEntry dataEntry)
+		{
+			this.dataEntry = dataEntry;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Change duration of data entry to default and adjust its button if selected index is unequal to repeat of data entry relating to the interval never:
+				@SuppressWarnings("unchecked")
+				var comboBox = (JComboBox<String>)event.getSource();
+				var newValue = comboBox.getSelectedIndex();
+				if ((Interval.byIndex(newValue) == Interval.NEVER) != (dataEntry.getRepeat() == Interval.NEVER))
+				{
+					// Adjust repeat and duration data entry values:
+					dataEntry.setValue(DataEntry.DataRowType.REPEAT, (Object)newValue);
+					dataEntry.setValue(DataEntry.DataRowType.DURATION, (Object)DEFAULT_VALUE_DURATION);
+					// Adjust duration button name:
+					JButton button = (JButton)biMapRepeatCompToDurationComp.get(comboBox);
+					button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.DURATION));
 					// Refresh data panel:
 					revalidate();
 					repaint();
@@ -414,6 +463,27 @@ class DataPanel extends JPanel
 		this(DEFAULT_DATA_ROW_SORTING_COMPLETE, DEFAULT_DATA_ROW_SORTING_BUNDLED, DEFAULT_VIEW);
 	}
 
+	private void adjustComponentMap(DataEntry.DataRowType dataRowType, JComponent oldComponent, JComponent newComponent)
+	{
+		switch (dataRowType)
+		{
+			case TYPE:
+				biMapTypeCompToSubtypeComp.put(newComponent, biMapTypeCompToSubtypeComp.get(oldComponent));
+				break;
+			case SUBTYPE:
+				biMapTypeCompToSubtypeComp.put(biMapTypeCompToSubtypeComp.getKey(oldComponent), newComponent);
+				break;
+			case REPEAT:
+				biMapRepeatCompToDurationComp.put(newComponent, biMapRepeatCompToDurationComp.get(oldComponent));
+				break;
+			case DURATION:
+				biMapRepeatCompToDurationComp.put(biMapRepeatCompToDurationComp.getKey(oldComponent), newComponent);
+				break;
+			default:
+				break;
+		}
+	}
+
 	private JButton createDataFieldButton(DataEntry.DataRowType dataRowType, DataEntry dataEntry, Border dataBorder) throws Exception
 	{
 		int alignment;
@@ -455,7 +525,10 @@ class DataPanel extends JPanel
 		// Add button:
 		constraints.gridx = activeDataField.gridx;
 		constraints.gridy = activeDataField.gridy;
-		dataPanel.add(createDataFieldButton(activeDataField.dataRowType, activeDataField.dataEntry, activeDataField.dataBorder), constraints);
+		var button = createDataFieldButton(activeDataField.dataRowType, activeDataField.dataEntry, activeDataField.dataBorder);
+		dataPanel.add(button, constraints);
+		// Adjust global variables:
+		adjustComponentMap(activeDataField.dataRowType, component, button);
 		activeDataField = null;
 		// Refresh data panel:
 		revalidate();
@@ -510,9 +583,20 @@ class DataPanel extends JPanel
 				break;
 			}
 			constraints.gridx = 0;
+			JButton lastButton = null;
 			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
-				dataPanel.add(createDataFieldButton(dataRowType, dataEntry, dataBorder), constraints);
+				var currentButton = createDataFieldButton(dataRowType, dataEntry, dataBorder);
+				dataPanel.add(currentButton, constraints);
+				if (dataRowType == DataEntry.DataRowType.SUBTYPE)
+				{
+					biMapTypeCompToSubtypeComp.put(lastButton, currentButton);
+				}
+				else if (dataRowType == DataEntry.DataRowType.DURATION)
+				{
+					biMapRepeatCompToDurationComp.put(lastButton, currentButton);
+				}
+				lastButton = currentButton;
 
 				constraints.gridx++;
 			}
