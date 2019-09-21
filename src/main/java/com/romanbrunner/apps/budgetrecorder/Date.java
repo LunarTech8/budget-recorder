@@ -13,13 +13,12 @@ public class Date
 	// --------------------
 
 	public static final int ARRAY_SIZE = 3;
-	public static final int[] DEFAULT_DATE_VALUES = new int[]{ 1, 1, 1900 };
-	public static final Date DEFAULT_DATE;
+	public static final Date CURRENT_DATE;
 	static
 	{
 		try
 		{
-			DEFAULT_DATE = new Date(DEFAULT_DATE_VALUES);
+			CURRENT_DATE = calendarToDate(Calendar.getInstance());
 		}
 		catch (final Exception exception)
 		{
@@ -205,6 +204,11 @@ public class Date
 		}
 
 		return values[index];
+	}
+
+	public int[] getValues()
+	{
+		return values;
 	}
 
 	public String getAsText()

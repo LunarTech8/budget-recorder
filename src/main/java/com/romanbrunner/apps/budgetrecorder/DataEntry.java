@@ -26,6 +26,16 @@ class DataEntry
 	// Data code
 	// --------------------
 
+	public static final float DEFAULT_VALUE_MONEY = 0.F;
+	public static final String DEFAULT_VALUE_NAME = "";
+	public static final String DEFAULT_VALUE_LOCATION = "";
+	public static final int DEFAULT_VALUE_TYPE = 0;
+	public static final int DEFAULT_VALUE_SUBTYPE = 0;
+	public static final Date DEFAULT_VALUE_DATE = Date.CURRENT_DATE;
+	public static final Interval DEFAULT_VALUE_REPEAT = Interval.NEVER;
+	public static final boolean DEFAULT_VALUE_DURATION = true;
+	public static final Date DEFAULT_VALUE_UNTIL = Date.CURRENT_DATE;
+
 	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Hardeware", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
 	public static final String[][] SUBTYPE_NAMES =
 	{
@@ -289,13 +299,13 @@ class DataEntry
 				int subtype = node.get(DataRowType.byIndex(i++).toString()).intValue();
 				int[] date = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
 				int repeat = node.get(DataRowType.byIndex(i++).toString()).intValue();
-				boolean duration = true;  // Default value
+				boolean duration = DEFAULT_VALUE_DURATION;
 				iNode = node.get(DataRowType.byIndex(i++).toString());
 				if (iNode != null)
 				{
 					duration = iNode.booleanValue();
 				}
-				int[] until = Date.DEFAULT_DATE_VALUES;  // Default value
+				int[] until = DEFAULT_VALUE_UNTIL.getValues();
 				iNode = node.get(DataRowType.byIndex(i++).toString());
 				if (iNode != null)
 				{
@@ -419,8 +429,8 @@ class DataEntry
 		if (noRepeat)
 		{
 			repeat = Interval.NEVER;
-			duration = true;  // Default value
-			until = Date.DEFAULT_DATE;  // Default value
+			duration = DEFAULT_VALUE_DURATION;
+			until = DEFAULT_VALUE_UNTIL;
 		}
 		else
 		{

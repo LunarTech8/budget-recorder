@@ -29,6 +29,7 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -39,6 +40,7 @@ import javax.swing.JMenuItem;
 
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
+import com.romanbrunner.apps.budgetrecorder.InputPanel;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -81,8 +83,6 @@ class DataPanel extends JPanel
 	private static final String VERSION_TEXT_PATCH = "Patch: <VERSION>";
 	private static final String BUNDLE_MENU_TEXT = "Bundle";
 	private static final String BUNDLE_MENU_DESCRIPTION = "Bundle selection menu";
-	private static final int DEFAULT_VALUE_SUBTYPE = 0;
-	private static final boolean DEFAULT_VALUE_DURATION = false;
 
 
 	// --------------------
@@ -99,6 +99,7 @@ class DataPanel extends JPanel
 	private DataFieldButtonAL activeDataField = null;
 	private DualHashBidiMap<JComponent, JComponent> biMapTypeCompToSubtypeComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapRepeatCompToDurationComp = new DualHashBidiMap<JComponent, JComponent>();
+	private DualHashBidiMap<JComponent, JComponent> biMapDurationCompToUntilComp = new DualHashBidiMap<JComponent, JComponent>();
 
 	private class HeaderButtonCompleteAL implements ActionListener
 	{
@@ -217,7 +218,7 @@ class DataPanel extends JPanel
 				switch (dataRowType)
 				{
 					case MONEY:
-						dataField = new InputPanel.CurrencyDataField(null, dataEntry.getMoney(), 2);
+						dataField = new InputPanel.CurrencyDataField(null, 2, dataEntry.getMoney());
 						break;
 					case NAME:
 						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
@@ -226,28 +227,27 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
 						break;
 					case TYPE:
-						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType(), new TypeDataFieldAL(dataEntry));
+						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType(), new DataFieldModificationAL(dataEntry, dataRowType));
 						break;
 					case SUBTYPE:
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
 						break;
 					case DATE:
-						dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getDate()));
+						dataField = new InputPanel.DateDataField(null, 100, 1000, dataEntry.getDate());
 						break;
 					case REPEAT:
-						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt(), new RepeatDataFieldAL(dataEntry));
+						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt(), new DataFieldModificationAL(dataEntry, dataRowType));
 						break;
 					case DURATION:
-						// TODO: requires own AL like TypeDataFieldAL
 						if (dataEntry.getRepeat() != Interval.NEVER)
 						{
-							dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration());
+							dataField = new InputPanel.CheckBoxDataField(null, DataEntry.DURATION_TEXT_ON, dataEntry.getDuration(), new DataFieldModificationAL(dataEntry, dataRowType));
 						}
 						break;
 					case UNTIL:
 						if (dataEntry.getRepeat() != Interval.NEVER && dataEntry.getDuration() == false)
 						{
-							dataField = new InputPanel.DateDataField(null, 100, 1000, Date.dateToCalendar(dataEntry.getUntil()));
+							dataField = new InputPanel.DateDataField(null, 100, 1000, dataEntry.getUntil());
 						}
 						break;
 					default:
@@ -278,69 +278,95 @@ class DataPanel extends JPanel
 		}
 	}
 
-	private class TypeDataFieldAL implements ActionListener
+	private class DataFieldModificationAL implements ActionListener
 	{
 		private DataEntry dataEntry;
+		private DataEntry.DataRowType dataRowType;
 
-		public TypeDataFieldAL(DataEntry dataEntry)
+		public DataFieldModificationAL(DataEntry dataEntry, DataEntry.DataRowType dataRowType)
 		{
 			this.dataEntry = dataEntry;
+			this.dataRowType = dataRowType;
 		}
 
 		public void actionPerformed(ActionEvent event)
 		{
 			try
 			{
-				// Change subtype of data entry to default and adjust its button if selected index is unequal to type of data entry:
-				@SuppressWarnings("unchecked")
-				var comboBox = (JComboBox<String>)event.getSource();
-				var newValue = comboBox.getSelectedIndex();
-				if (newValue != dataEntry.getType())
+				boolean changesRequired = false;
+				boolean refreshDataPanel = false;
+				JComponent component = null;
+				Object newValueObject = null;
+
+				// Check if changes are required:
+				if (dataRowType == DataEntry.DataRowType.TYPE)
 				{
-					// Adjust type and subtype data entry values:
-					dataEntry.setValue(DataEntry.DataRowType.TYPE, (Object)newValue);
-					dataEntry.setValue(DataEntry.DataRowType.SUBTYPE, (Object)DEFAULT_VALUE_SUBTYPE);
-					// Adjust subtype button name:
-					JButton button = (JButton)biMapTypeCompToSubtypeComp.get(comboBox);
-					button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
-					// Refresh data panel:
-					revalidate();
-					repaint();
+					// Make changes if selected index is unequal to type of data entry:
+					@SuppressWarnings("unchecked")
+					var comboBox = (JComboBox<String>)event.getSource();
+					var newValue = comboBox.getSelectedIndex();
+					changesRequired = (newValue != dataEntry.getType());
+					component = comboBox;
+					newValueObject = newValue;
 				}
-			}
-			catch (Exception exception)
-			{
-				exception.printStackTrace();
-			}
-		}
-	}
-
-	private class RepeatDataFieldAL implements ActionListener
-	{
-		private DataEntry dataEntry;
-
-		public RepeatDataFieldAL(DataEntry dataEntry)
-		{
-			this.dataEntry = dataEntry;
-		}
-
-		public void actionPerformed(ActionEvent event)
-		{
-			try
-			{
-				// Change duration of data entry to default and adjust its button if selected index is unequal to repeat of data entry relating to the interval never:
-				@SuppressWarnings("unchecked")
-				var comboBox = (JComboBox<String>)event.getSource();
-				var newValue = comboBox.getSelectedIndex();
-				if ((Interval.byIndex(newValue) == Interval.NEVER) != (dataEntry.getRepeat() == Interval.NEVER))
+				else if (dataRowType == DataEntry.DataRowType.REPEAT)
 				{
-					// Adjust repeat and duration data entry values:
-					dataEntry.setValue(DataEntry.DataRowType.REPEAT, (Object)newValue);
-					dataEntry.setValue(DataEntry.DataRowType.DURATION, (Object)DEFAULT_VALUE_DURATION);
-					// Adjust duration button name:
-					JButton button = (JButton)biMapRepeatCompToDurationComp.get(comboBox);
-					button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.DURATION));
-					// Refresh data panel:
+					// Make changes if selected index is unequal to repeat of data entry relating to the interval never:
+					@SuppressWarnings("unchecked")
+					var comboBox = (JComboBox<String>)event.getSource();
+					var newValue = comboBox.getSelectedIndex();
+					changesRequired = ((Interval.byIndex(newValue) == Interval.NEVER) != (dataEntry.getRepeat() == Interval.NEVER));
+					component = comboBox;
+					newValueObject = newValue;
+				}
+				else if (dataRowType == DataEntry.DataRowType.DURATION)
+				{
+					// Make changes if selection is unequal to duration of data entry:
+					var checkBox = (JCheckBox)event.getSource();
+					var newValue = checkBox.isSelected();
+					changesRequired = (newValue != dataEntry.getDuration());
+					component = checkBox;
+					newValueObject = newValue;
+				}
+
+				// Make adjustments if required:
+				if (changesRequired)
+				{
+					if (dataRowType == DataEntry.DataRowType.TYPE)
+					{
+						// Adjust data entry values:
+						dataEntry.setValue(DataEntry.DataRowType.TYPE, newValueObject);
+						dataEntry.setValue(DataEntry.DataRowType.SUBTYPE, (Object)DataEntry.DEFAULT_VALUE_SUBTYPE);
+						// Adjust button name:
+						JButton button = (JButton)biMapTypeCompToSubtypeComp.get(component);
+						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
+						refreshDataPanel = true;
+					}
+					else if (dataRowType == DataEntry.DataRowType.REPEAT)
+					{
+						// Adjust data entry value:
+						dataEntry.setValue(DataEntry.DataRowType.REPEAT, newValueObject);
+						// Adjust button names:
+						JButton button = (JButton)biMapRepeatCompToDurationComp.get(component);
+						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.DURATION));
+						button = (JButton)biMapDurationCompToUntilComp.get(button);
+						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
+						refreshDataPanel = true;
+					}
+					else if (dataRowType == DataEntry.DataRowType.DURATION)
+					{
+						// Adjust data entry value:
+						dataEntry.setValue(DataEntry.DataRowType.DURATION, newValueObject);
+						// Adjust button name:
+						JButton button = (JButton)biMapDurationCompToUntilComp.get(component);
+						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
+						refreshDataPanel = true;
+					}
+				}
+
+				// Refresh data panel if required:
+				if (refreshDataPanel)
+				{
 					revalidate();
 					repaint();
 				}
@@ -478,6 +504,10 @@ class DataPanel extends JPanel
 				break;
 			case DURATION:
 				biMapRepeatCompToDurationComp.put(biMapRepeatCompToDurationComp.getKey(oldComponent), newComponent);
+				biMapDurationCompToUntilComp.put(newComponent, biMapDurationCompToUntilComp.get(oldComponent));
+				break;
+			case UNTIL:
+				biMapDurationCompToUntilComp.put(biMapDurationCompToUntilComp.getKey(oldComponent), newComponent);
 				break;
 			default:
 				break;
@@ -595,6 +625,10 @@ class DataPanel extends JPanel
 				else if (dataRowType == DataEntry.DataRowType.DURATION)
 				{
 					biMapRepeatCompToDurationComp.put(lastButton, currentButton);
+				}
+				else if (dataRowType == DataEntry.DataRowType.UNTIL)
+				{
+					biMapDurationCompToUntilComp.put(lastButton, currentButton);
 				}
 				lastButton = currentButton;
 

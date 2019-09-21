@@ -27,7 +27,9 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 
+import com.romanbrunner.apps.budgetrecorder.Date;
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
+import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
 @SuppressWarnings("serial")
@@ -47,10 +49,6 @@ class InputPanel extends JPanel
 	private static final String DATA_ROW_TEXT = "<NAME>:";
 	private static final String DATA_ROW_TOOLTIP = "Define the value for <NAME> in the field to the right.";
 	private static final String DATA_FIELD_TOOLTIP = "Define the value for <NAME> here.";
-	private static final float INIT_VALUE_MONEY = 0.F;
-	private static final int INIT_INDEX_TYPE = 0;
-	private static final int INIT_INDEX_SUBTYPE = 0;
-	private static final int INIT_INDEX_REPEAT = 0;
 
 
 	// --------------------
@@ -88,7 +86,7 @@ class InputPanel extends JPanel
 	{
 		private JFormattedTextField dataField;
 
-		public CurrencyDataField(JLabel label, float initValue, int fractionDigits)
+		public CurrencyDataField(JLabel label, int fractionDigits, float initValue)
 		{
 			super(label);
 			var displayFormat = NumberFormat.getCurrencyInstance();
@@ -167,28 +165,16 @@ class InputPanel extends JPanel
 	{
 		private JSpinner dataField;
 
-		public DateDataField(JLabel label, int maxBackYears, int maxUpYears)
+		public DateDataField(JLabel label, int maxBackYears, int maxUpYears, Date initDate)
 		{
 			super(label);
-			var calendar = Calendar.getInstance();
-			java.util.Date initDate = calendar.getTime();
+			var calendar = Date.dateToCalendar(initDate);
+			java.util.Date date = calendar.getTime();
 			calendar.add(Calendar.YEAR, -maxBackYears);
 			java.util.Date earliestDate = calendar.getTime();
 			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
 			java.util.Date latestDate = calendar.getTime();
-			dataField = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
-			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
-		}
-		public DateDataField(JLabel label, int maxBackYears, int maxUpYears, Calendar initCalendar)
-		{
-			super(label);
-			var calendar = Calendar.getInstance();
-			java.util.Date initDate = initCalendar.getTime();
-			calendar.add(Calendar.YEAR, -maxBackYears);
-			java.util.Date earliestDate = calendar.getTime();
-			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
-			java.util.Date latestDate = calendar.getTime();
-			dataField = new JSpinner(new SpinnerDateModel(initDate, earliestDate, latestDate, Calendar.YEAR));
+			dataField = new JSpinner(new SpinnerDateModel(date, earliestDate, latestDate, Calendar.YEAR));
 			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
 		}
 
@@ -217,10 +203,10 @@ class InputPanel extends JPanel
 			super(label);
 			dataField = new JCheckBox(text, initIsChecked);
 		}
-		public CheckBoxDataField(JLabel label, String text, ActionListener actionListener)
+		public CheckBoxDataField(JLabel label, String text, boolean initIsChecked, ActionListener actionListener)
 		{
 			super(label);
-			dataField = new JCheckBox(text);
+			dataField = new JCheckBox(text, initIsChecked);
 			dataField.addActionListener(actionListener);
 		}
 
@@ -253,28 +239,6 @@ class InputPanel extends JPanel
 		private Autocomplete autocompletes[][];
 		private Autocomplete activatedAutocomplete;
 
-		public TextDataField(JLabel label, LinkedList<String>[][] keywords, int initTypeIndex, int initSubtypeIndex)
-		{
-			super(label);
-			dataField = new JTextField();
-			// Add autocompletions:
-			autocompletes = new Autocomplete[keywords.length][];
-			for (int i = 0; i < keywords.length; i++)
-			{
-				autocompletes[i] = new Autocomplete[keywords[i].length];
-				for (int j = 0; j < keywords[i].length; j++)
-				{
-					// Create autocomplete and document listener:
-					autocompletes[i][j] = new Autocomplete(dataField, keywords[i][j], false);
-					dataField.getDocument().addDocumentListener(autocompletes[i][j]);
-					// Maps the commit key to the commit action, which finishes the autocomplete when given a suggestion:
-					dataField.getInputMap().put(KeyStroke.getKeyStroke(COMMIT_KEY), COMMIT_ACTION);
-					dataField.getActionMap().put(COMMIT_ACTION, autocompletes[i][j].new CommitAction());
-				}
-			}
-			activatedAutocomplete = autocompletes[initTypeIndex][initSubtypeIndex];
-			activatedAutocomplete.changeActivation(true);
-		}
 		public TextDataField(JLabel label, LinkedList<String>[][] keywords, int initTypeIndex, int initSubtypeIndex, String initText)
 		{
 			super(label);
@@ -507,30 +471,32 @@ class InputPanel extends JPanel
 				switch (dataRowType)
 				{
 					case MONEY:
-						dataField = new CurrencyDataField(label, INIT_VALUE_MONEY, 2);
+						dataField = new CurrencyDataField(label, 2, DataEntry.DEFAULT_VALUE_MONEY);
 						break;
 					case NAME:
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_NAME);
+						break;
 					case LOCATION:
-						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), INIT_INDEX_TYPE, INIT_INDEX_SUBTYPE);
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_LOCATION);
 						break;
 					case TYPE:
-						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, INIT_INDEX_TYPE, new TypeDataFieldAL());
+						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, DataEntry.DEFAULT_VALUE_TYPE, new TypeDataFieldAL());
 						break;
 					case SUBTYPE:
-						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[INIT_INDEX_TYPE], INIT_INDEX_SUBTYPE, new SubtypeDataFieldAL());
+						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[DataEntry.DEFAULT_VALUE_TYPE], DataEntry.DEFAULT_VALUE_SUBTYPE, new SubtypeDataFieldAL());
 						break;
 					case DATE:
-						dataField = new DateDataField(label, 100, 1000);
+						dataField = new DateDataField(label, 100, 1000, DataEntry.DEFAULT_VALUE_DATE);
 						break;
 					case REPEAT:
-						dataField = new ComboBoxDataField(label, Interval.getNames(), INIT_INDEX_REPEAT, new RepeatDataFieldAL());
+						dataField = new ComboBoxDataField(label, Interval.getNames(), DataEntry.DEFAULT_VALUE_REPEAT.toInt(), new RepeatDataFieldAL());
 						break;
 					case DURATION:
-						dataField = new CheckBoxDataField(label, DataEntry.DURATION_TEXT_ON, new DurationDataFieldAL());
+						dataField = new CheckBoxDataField(label, DataEntry.DURATION_TEXT_ON, DataEntry.DEFAULT_VALUE_DURATION, new DurationDataFieldAL());
 						dataField.setVisible(false);
 						break;
 					case UNTIL:
-						dataField = new DateDataField(label, 100, 1000);
+						dataField = new DateDataField(label, 100, 1000, DataEntry.DEFAULT_VALUE_DATE);
 						dataField.setVisible(false);
 						break;
 					default:
