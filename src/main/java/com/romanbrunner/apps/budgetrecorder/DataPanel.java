@@ -263,6 +263,28 @@ class DataPanel extends JPanel
 					constraints.gridy = gridy;
 					var component = dataField.getJComponent();
 					dataPanel.add(component, constraints);
+					var enterAction = new AbstractAction()
+					{
+						@Override
+						public void actionPerformed(ActionEvent e)
+						{
+							System.out.println("enter pressed by action");
+							try
+							{
+								// Deactivate current active data field if existent:
+								if (activeDataField != null)
+								{
+									System.out.println("deactivated by action");
+									deactivateActiveDataField(true);
+								}
+							}
+							catch (Exception exception)
+							{
+								exception.printStackTrace();
+							}
+						}
+					};
+					dataField.addActionToKeyStroke(enterAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");  // FIXME: doesn't work for text fields
 					// Adjust global variables:
 					adjustComponentMap(dataRowType, button, component);
 					activeDataField = this;
@@ -462,26 +484,28 @@ class DataPanel extends JPanel
 		recreatePanel();
 
 		// Register active data field confirmation:
-		var enterAction = new AbstractAction()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					// Deactivate current active data field if existent:
-					if (activeDataField != null)
-					{
-						deactivateActiveDataField(true);
-					}
-				}
-				catch (Exception exception)
-				{
-					exception.printStackTrace();
-				}
-			}
-		};
-		this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
-		this.getActionMap().put("Enter", enterAction);
+		// var enterAction = new AbstractAction()
+		// {
+		// 	public void actionPerformed(ActionEvent e)
+		// 	{
+		// 		try
+		// 		{
+		// 			System.out.println("enter pressed");
+		// 			// Deactivate current active data field if existent:
+		// 			if (activeDataField != null)
+		// 			{
+		// 				System.out.println("deactivated");
+		// 				deactivateActiveDataField(true);
+		// 			}
+		// 		}
+		// 		catch (Exception exception)
+		// 		{
+		// 			exception.printStackTrace();
+		// 		}
+		// 	}
+		// };
+		// this.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
+		// this.getActionMap().put("Enter", enterAction);
 		// FIXME: doesn't work for changed fields that react differently on enter key (like text field, combo box field) -> maybe active data field needs an AL that reacts on enter
 	}
 	public DataPanel()
