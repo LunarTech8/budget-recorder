@@ -3,9 +3,12 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.KeyboardFocusManager;
+import java.awt.KeyEventDispatcher;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.stream.Stream;
@@ -57,6 +60,7 @@ class InputPanel extends JPanel
 	// --------------------
 
 	private DataField dataFields[] = new DataField[DataEntry.DataRowType.Data.length];
+	private JButton addButton;
 
 	public abstract static class DataField
 	{
@@ -81,7 +85,7 @@ class InputPanel extends JPanel
 		public abstract JComponent getJComponent();
 		public abstract Object getValue();
 		public abstract String getValueAsText();
-		public abstract void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord);
+		public abstract void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord);
 	}
 
 	public static class CurrencyDataField extends DataField
@@ -114,7 +118,7 @@ class InputPanel extends JPanel
 			return dataField.getText().toString();
 		}
 
-		public void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
+		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
 		{
 			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
 			dataField.getActionMap().put(keyWord, action);
@@ -154,7 +158,7 @@ class InputPanel extends JPanel
 			return dataField.getSelectedItem().toString();
 		}
 
-		public void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
+		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
 		{
 			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
 			dataField.getActionMap().put(keyWord, action);
@@ -207,7 +211,7 @@ class InputPanel extends JPanel
 			return DateFormat.getDateInstance(DateFormat.SHORT).format((java.util.Date)dataField.getModel().getValue());
 		}
 
-		public void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
+		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
 		{
 			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
 			dataField.getActionMap().put(keyWord, action);
@@ -250,7 +254,7 @@ class InputPanel extends JPanel
 			return returnString;
 		}
 
-		public void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
+		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
 		{
 			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
 			dataField.getActionMap().put(keyWord, action);
@@ -303,7 +307,7 @@ class InputPanel extends JPanel
 			return dataField.getText();
 		}
 
-		public void addActionToKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
+		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
 		{
 			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
 			dataField.getActionMap().put(keyWord, action);
@@ -542,19 +546,24 @@ class InputPanel extends JPanel
 				constraints.gridy++;
 			}
 			// Create add button:
-			var button = new JButton(ADD_BUTTON_TEXT);
-			button.setToolTipText(ADD_BUTTON_TOOLTIP);
-			button.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
-			button.addActionListener(new AddButtonAL());
+			addButton = new JButton(ADD_BUTTON_TEXT);
+			addButton.setToolTipText(ADD_BUTTON_TOOLTIP);
+			addButton.setPreferredSize(new Dimension(NAME_LABEL_WIDTH + DATA_FIELD_WIDTH, ADD_BUTTON_HEIGHT));
+			addButton.addActionListener(new AddButtonAL());
 			constraints.gridwidth = 2;
 			constraints.gridx = 0;
 			constraints.gridy = DataEntry.DataRowType.Data.length;
-			add(button, constraints);
+			add(addButton, constraints);
 		}
 		catch (Exception exception)
 		{
 			exception.printStackTrace();
 		}
+	}
+
+	public void pressAddButton()
+	{
+		addButton.doClick();
 	}
 
 }

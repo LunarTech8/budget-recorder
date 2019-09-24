@@ -62,6 +62,7 @@ public class MainFrame  // Singleton class
 
 	private static MainFrame instance = null;
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
+	private static InputPanel inputPanel;
 	private static DataPanel dataPanel;
 	private static JFrame inputFrame;
 	private static JFrame dataFrame;
@@ -205,7 +206,8 @@ public class MainFrame  // Singleton class
 		{
 			throw new Exception("ERROR: Logo file not found");
 		}
-		inputFrame.setContentPane(new InputPanel());
+		inputPanel = new InputPanel();
+		inputFrame.setContentPane(inputPanel);
 
 		// Set the frame size and position:
 		inputFrame.pack();
@@ -221,6 +223,17 @@ public class MainFrame  // Singleton class
 		};
 		inputFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
 		inputFrame.getRootPane().getActionMap().put("Cancel", cancelAction);
+
+		// Add commit command:
+		var enterAction = new AbstractAction()
+		{
+			public void actionPerformed(ActionEvent e)
+			{
+				inputPanel.pressAddButton();
+			}
+		};
+		inputFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
+		inputFrame.getRootPane().getActionMap().put("Enter", enterAction);
 
 		// Display the frame:
 		inputFrame.setVisible(true);

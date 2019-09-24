@@ -11,6 +11,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.KeyboardFocusManager;
+import java.awt.KeyEventDispatcher;
 
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
@@ -284,7 +286,7 @@ class DataPanel extends JPanel
 							}
 						}
 					};
-					dataField.addActionToKeyStroke(enterAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");  // FIXME: doesn't work for text fields
+					dataField.addActionByKeyStroke(enterAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");  // FIXME: doesn't work for text fields
 					// Adjust global variables:
 					adjustComponentMap(dataRowType, button, component);
 					activeDataField = this;
@@ -507,6 +509,24 @@ class DataPanel extends JPanel
 		// this.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
 		// this.getActionMap().put("Enter", enterAction);
 		// FIXME: doesn't work for changed fields that react differently on enter key (like text field, combo box field) -> maybe active data field needs an AL that reacts on enter
+
+		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+		kfm.addKeyEventDispatcher(
+			new KeyEventDispatcher()
+			{
+				public boolean dispatchKeyEvent(KeyEvent event)
+				{
+					if (event.getKeyCode() == KeyEvent.VK_ENTER)
+					{
+						// FIXME: make it register only once and only consume for text fields
+						System.out.println("test01");
+						event.consume();
+						return true;
+					}
+					return false;
+				}
+			}
+		);
 	}
 	public DataPanel()
 	{
