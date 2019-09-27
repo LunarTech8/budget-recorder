@@ -3,12 +3,9 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.KeyboardFocusManager;
-import java.awt.KeyEventDispatcher;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.stream.Stream;
@@ -26,7 +23,6 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.JFormattedTextField;
-import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -85,7 +81,6 @@ class InputPanel extends JPanel
 		public abstract JComponent getJComponent();
 		public abstract Object getValue();
 		public abstract String getValueAsText();
-		public abstract void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord);
 	}
 
 	public static class CurrencyDataField extends DataField
@@ -116,12 +111,6 @@ class InputPanel extends JPanel
 		public String getValueAsText()
 		{
 			return dataField.getText().toString();
-		}
-
-		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
-		{
-			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
-			dataField.getActionMap().put(keyWord, action);
 		}
 	}
 
@@ -156,12 +145,6 @@ class InputPanel extends JPanel
 		public String getValueAsText()
 		{
 			return dataField.getSelectedItem().toString();
-		}
-
-		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
-		{
-			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
-			dataField.getActionMap().put(keyWord, action);
 		}
 
 		public int getSelectedIndex()
@@ -210,12 +193,6 @@ class InputPanel extends JPanel
 		{
 			return DateFormat.getDateInstance(DateFormat.SHORT).format((java.util.Date)dataField.getModel().getValue());
 		}
-
-		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
-		{
-			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
-			dataField.getActionMap().put(keyWord, action);
-		}
 	}
 
 	public static class CheckBoxDataField extends DataField
@@ -252,12 +229,6 @@ class InputPanel extends JPanel
 				returnString = "Not " + returnString;
 			}
 			return returnString;
-		}
-
-		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
-		{
-			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
-			dataField.getActionMap().put(keyWord, action);
 		}
 	}
 
@@ -305,12 +276,6 @@ class InputPanel extends JPanel
 		public String getValueAsText()
 		{
 			return dataField.getText();
-		}
-
-		public void addActionByKeyStroke(Action action, KeyStroke keyStroke, String keyWord)
-		{
-			dataField.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(keyStroke, keyWord);
-			dataField.getActionMap().put(keyWord, action);
 		}
 
 		public void updateAutocomplete(int typeIndex, int subtypeIndex, String keyword)

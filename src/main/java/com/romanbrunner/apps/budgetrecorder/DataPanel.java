@@ -18,7 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
-import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -27,7 +26,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -43,6 +41,7 @@ import javax.swing.JMenuItem;
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
+import com.romanbrunner.apps.budgetrecorder.DataBundle.DataRowType;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -265,28 +264,6 @@ class DataPanel extends JPanel
 					constraints.gridy = gridy;
 					var component = dataField.getJComponent();
 					dataPanel.add(component, constraints);
-					var enterAction = new AbstractAction()
-					{
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							System.out.println("enter pressed by action");
-							try
-							{
-								// Deactivate current active data field if existent:
-								if (activeDataField != null)
-								{
-									System.out.println("deactivated by action");
-									deactivateActiveDataField(true);
-								}
-							}
-							catch (Exception exception)
-							{
-								exception.printStackTrace();
-							}
-						}
-					};
-					dataField.addActionByKeyStroke(enterAction, KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");  // FIXME: doesn't work for text fields
 					// Adjust global variables:
 					adjustComponentMap(dataRowType, button, component);
 					activeDataField = this;
@@ -485,43 +462,44 @@ class DataPanel extends JPanel
 		this.view = view;
 		recreatePanel();
 
-		// Register active data field confirmation:
-		// var enterAction = new AbstractAction()
-		// {
-		// 	public void actionPerformed(ActionEvent e)
-		// 	{
-		// 		try
-		// 		{
-		// 			System.out.println("enter pressed");
-		// 			// Deactivate current active data field if existent:
-		// 			if (activeDataField != null)
-		// 			{
-		// 				System.out.println("deactivated");
-		// 				deactivateActiveDataField(true);
-		// 			}
-		// 		}
-		// 		catch (Exception exception)
-		// 		{
-		// 			exception.printStackTrace();
-		// 		}
-		// 	}
-		// };
-		// this.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
-		// this.getActionMap().put("Enter", enterAction);
-		// FIXME: doesn't work for changed fields that react differently on enter key (like text field, combo box field) -> maybe active data field needs an AL that reacts on enter
-
+		// Key manangement:
 		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
 		kfm.addKeyEventDispatcher(
 			new KeyEventDispatcher()
 			{
 				public boolean dispatchKeyEvent(KeyEvent event)
 				{
-					if (event.getKeyCode() == KeyEvent.VK_ENTER)
+					if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
 					{
-						// FIXME: make it register only once and only consume for text fields
-						System.out.println("test01");
-						event.consume();
-						return true;
+						try
+						{
+							// Deactivate current active data field if existent and consume event:
+							if (activeDataField != null)
+							{
+								var dataRowType = activeDataField.dataRowType;
+								deactivateActiveDataField(true);
+								switch (dataRowType)
+								{
+									case MONEY:
+									case DATE:
+									case UNTIL:
+										// FIXME: because deactivateActiveDataField is called before the key event is dispatched (with return false), changed values are lost
+										return false;
+									case NAME:
+									case LOCATION:
+									case TYPE:
+									case SUBTYPE:
+									case REPEAT:
+									case DURATION:
+										event.consume();
+										return true;
+								}
+							}
+						}
+						catch (Exception exception)
+						{
+							exception.printStackTrace();
+						}
 					}
 					return false;
 				}
