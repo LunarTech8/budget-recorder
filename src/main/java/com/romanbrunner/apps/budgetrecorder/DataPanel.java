@@ -4,15 +4,14 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.Collections;
-import java.util.LinkedList;
+import java.awt.KeyboardFocusManager;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.KeyboardFocusManager;
-import java.awt.KeyEventDispatcher;
+import java.util.Collections;
+import java.util.LinkedList;
 
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
@@ -41,7 +40,6 @@ import javax.swing.JMenuItem;
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
 import com.romanbrunner.apps.budgetrecorder.DataEntry;
 import com.romanbrunner.apps.budgetrecorder.InputPanel;
-import com.romanbrunner.apps.budgetrecorder.DataBundle.DataRowType;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -461,50 +459,6 @@ class DataPanel extends JPanel
 		this.sortingBundled = sortingBundled;
 		this.view = view;
 		recreatePanel();
-
-		// Key manangement:
-		KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
-		kfm.addKeyEventDispatcher(
-			new KeyEventDispatcher()
-			{
-				public boolean dispatchKeyEvent(KeyEvent event)
-				{
-					if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
-					{
-						try
-						{
-							// Deactivate current active data field if existent and consume event:
-							if (activeDataField != null)
-							{
-								var dataRowType = activeDataField.dataRowType;
-								deactivateActiveDataField(true);
-								switch (dataRowType)
-								{
-									case MONEY:
-									case DATE:
-									case UNTIL:
-										// FIXME: because deactivateActiveDataField is called before the key event is dispatched (with return false), changed values are lost
-										return false;
-									case NAME:
-									case LOCATION:
-									case TYPE:
-									case SUBTYPE:
-									case REPEAT:
-									case DURATION:
-										event.consume();
-										return true;
-								}
-							}
-						}
-						catch (Exception exception)
-						{
-							exception.printStackTrace();
-						}
-					}
-					return false;
-				}
-			}
-		);
 	}
 	public DataPanel()
 	{
@@ -820,6 +774,36 @@ class DataPanel extends JPanel
 		recreatePanel();
 		revalidate();
 		repaint();
+	}
+
+	public boolean reactOnKeyStroke(KeyboardFocusManager kfm, KeyEvent event) throws Exception
+	{
+		if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
+		{
+			// Deactivate current active data field if existent and handle event appropriately:
+			if (activeDataField != null)
+			{
+				if (activeDataField.dataField instanceof InputPanel.TextDataField)
+				{
+					event.consume();  // Stop tab spaces in text fields that are caused by enter key commands
+				}
+				else if (activeDataField.dataField instanceof InputPanel.DateDataField)
+				{
+					kfm.redispatchEvent(((InputPanel.DateDataField)activeDataField.dataField).getTextField(), event);
+				}
+				else
+				{
+					kfm.redispatchEvent(activeDataField.dataField.getJComponent(), event);
+				}
+				deactivateActiveDataField(true);
+				return true;
+			}
+		}
+		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE)
+		{
+			System.exit(0);
+		}
+		return false;
 	}
 
 	public JMenuBar createMenuBar()

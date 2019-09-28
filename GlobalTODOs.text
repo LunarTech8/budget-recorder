@@ -32,9 +32,8 @@ Work status:
 // Application design:
 // -------------
 
-!!>>>- Data panel: Change data labels into buttons (using "button.setContentAreaFilled(false);") that turn it to an input field when clicked to allow for direct database manipulation/correction
+!!>>>- Bring panels in focus on start up
 !!- Data panel: Add a remove button for each entry
-!!- Bring panels in focus on start up
 !!- Increase scrolling speed with STRG
 !!- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
 !!- Data panel: Add search functionality

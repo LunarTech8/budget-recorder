@@ -6,6 +6,8 @@ import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.event.KeyEvent;
+import java.awt.KeyboardFocusManager;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.stream.Stream;
@@ -192,6 +194,11 @@ class InputPanel extends JPanel
 		public String getValueAsText()
 		{
 			return DateFormat.getDateInstance(DateFormat.SHORT).format((java.util.Date)dataField.getModel().getValue());
+		}
+
+		public JComponent getTextField()
+		{
+			return ((JSpinner.DefaultEditor)dataField.getEditor()).getTextField();
 		}
 	}
 
@@ -526,9 +533,49 @@ class InputPanel extends JPanel
 		}
 	}
 
-	public void pressAddButton()
+	public boolean reactOnKeyStroke(KeyboardFocusManager kfm, KeyEvent event) throws Exception
 	{
-		addButton.doClick();
+		if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
+		{
+			JComponent focusedComponent = (JComponent)kfm.getFocusOwner();
+			// Reaction in data fields:
+			for (var dataField : dataFields)
+			{
+				var component = dataField.getJComponent();
+				if (component == focusedComponent)
+				{
+					if (dataField instanceof InputPanel.TextDataField)
+					{
+						event.consume();  // Stop tab spaces in text fields that are caused by enter key commands
+					}
+					else
+					{
+						kfm.redispatchEvent(component, event);
+					}
+					addButton.doClick();
+					return true;
+				}
+				else if (dataField instanceof InputPanel.DateDataField)
+				{
+					component = ((InputPanel.DateDataField)dataField).getTextField();
+					if (component == focusedComponent)
+					{
+						kfm.redispatchEvent(component, event);
+						addButton.doClick();
+						return true;
+					}
+				}
+			}
+			// Default reaction:
+			event.consume();
+			addButton.doClick();
+			return true;
+		}
+		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE)
+		{
+			System.exit(0);
+		}
+		return false;
 	}
 
 }

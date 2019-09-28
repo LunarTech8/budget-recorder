@@ -3,8 +3,10 @@ package com.romanbrunner.apps.budgetrecorder;
 // import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.KeyboardFocusManager;
+import java.awt.KeyEventDispatcher;
+import java.awt.Component;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -16,10 +18,8 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.swing.JFrame;
-import javax.swing.KeyStroke;
-import javax.swing.AbstractAction;
+import javax.swing.JRootPane;
 import javax.swing.ImageIcon;
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
-@SuppressWarnings("serial")
+// @SuppressWarnings("serial")
 @SpringBootApplication
 @JsonSerialize(using = MainFrame.Serializer.class)
 @JsonDeserialize(using = MainFrame.Deserializer.class)
@@ -213,27 +213,8 @@ public class MainFrame  // Singleton class
 		inputFrame.pack();
 		inputFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
 
-		// Make frame escapable:
-		var cancelAction = new AbstractAction()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				System.exit(0);
-			}
-		};
-		inputFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-		inputFrame.getRootPane().getActionMap().put("Cancel", cancelAction);
-
-		// Add commit command:
-		var enterAction = new AbstractAction()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				inputPanel.pressAddButton();
-			}
-		};
-		inputFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "Enter");
-		inputFrame.getRootPane().getActionMap().put("Enter", enterAction);
+		// Get panel into focus:
+		inputFrame.getRootPane().requestFocusInWindow();
 
 		// Display the frame:
 		inputFrame.setVisible(true);
@@ -262,17 +243,6 @@ public class MainFrame  // Singleton class
 		// Set the frame size and position:
 		dataFrame.pack();
 		dataFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
-
-		// Make frame escapable:
-		var cancelAction = new AbstractAction()
-		{
-			public void actionPerformed(ActionEvent e)
-			{
-				System.exit(0);
-			}
-		};
-		dataFrame.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "Cancel");
-		dataFrame.getRootPane().getActionMap().put("Cancel", cancelAction);
 
 		// Display the frame:
 		dataFrame.setVisible(true);
@@ -315,6 +285,22 @@ public class MainFrame  // Singleton class
 		mapper.readValue(databaseFile, MainFrame.class);
 	}
 
+	private static JRootPane getRootPane(Component component)
+	{
+		if (component instanceof JRootPane)
+		{
+			return (JRootPane)component;
+		}
+		else if (component.getParent() != null)
+		{
+			return getRootPane(component.getParent());
+		}
+		else
+		{
+			return getRootPane(SwingUtilities.windowForComponent(component));
+		}
+	}
+
 	public static void main(String[] args)
 	{
 		try
@@ -333,6 +319,34 @@ public class MainFrame  // Singleton class
 						// Create frames:
 						createDataFrame();
 						createInputFrame();
+
+						// Key manangement:
+						KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
+						kfm.addKeyEventDispatcher(
+							new KeyEventDispatcher()
+							{
+								public boolean dispatchKeyEvent(KeyEvent event)
+								{
+									try
+									{
+										var focusedRootPane = getRootPane(kfm.getFocusOwner());
+										if (focusedRootPane == dataFrame.getRootPane())
+										{
+											return dataPanel.reactOnKeyStroke(kfm, event);
+										}
+										else if (focusedRootPane == inputFrame.getRootPane())
+										{
+											return inputPanel.reactOnKeyStroke(kfm, event);
+										}
+									}
+									catch (Exception exception)
+									{
+										exception.printStackTrace();
+									}
+									return false;
+								}
+							}
+						);
 					}
 					catch (Exception exception)
 					{
