@@ -3,6 +3,7 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -25,6 +26,8 @@ class DataEntry
 	// --------------------
 	// Data code
 	// --------------------
+
+	private static final String POSITIVE_BALANCE_TYPE_NAME = "Income";
 
 	public static final float DEFAULT_VALUE_MONEY = 0.F;
 	public static final String DEFAULT_VALUE_NAME = "";
@@ -440,10 +443,22 @@ class DataEntry
 		}
 	}
 
+	private float moneyToBalance(float money, int type)
+	{
+		if (Objects.equals(TYPE_NAMES[type], POSITIVE_BALANCE_TYPE_NAME))
+		{
+			return money;
+		}
+		else
+		{
+			return -money;
+		}
+	}
+
 	public DataBundle createNewDataBundle(Interval interval) throws Exception
 	{
 		var start = Interval.getIntervalStart(date, interval);
-		return new DataBundle(money, 1, start, Interval.getIntervalEnd(start, interval));
+		return new DataBundle(moneyToBalance(money, type), 1, start, Interval.getIntervalEnd(start, interval));
 	}
 
 	public DataBundle createNextDataBundle(DataBundle lastDataBundle, Interval interval) throws Exception
@@ -456,7 +471,7 @@ class DataEntry
 	{
 		if (date.isInTimeframe(dataBundle.getStart(), dataBundle.getEnd()))
 		{
-			dataBundle.addEntry(money);
+			dataBundle.addEntry(moneyToBalance(money, type));
 			return true;
 		}
 		else

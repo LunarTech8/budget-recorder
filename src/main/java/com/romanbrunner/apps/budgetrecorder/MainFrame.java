@@ -347,6 +347,10 @@ public class MainFrame  // Singleton class
 								}
 							}
 						);
+
+						// Bring input frame to the front:
+						inputFrame.toFront();
+						inputFrame.repaint();
 					}
 					catch (Exception exception)
 					{

@@ -704,7 +704,7 @@ class DataPanel extends JPanel
 				int alignment;
 				switch (dataRowType)
 				{
-					case MONEY:
+					case BALANCE:
 						alignment = JLabel.RIGHT;
 						break;
 					default:

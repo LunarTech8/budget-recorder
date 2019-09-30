@@ -24,7 +24,7 @@ class DataBundle
 
 	public enum DataRowType
 	{
-		MONEY("Money", 0), ENTRIES("Entries", 1), START("Start", 2), END("End", 3);
+		BALANCE("Balance", 0), ENTRIES("Entries", 1), START("Start", 2), END("End", 3);
 
 		private final String name;
 		private final int index;
@@ -75,7 +75,7 @@ class DataBundle
 	// Functional code
 	// --------------------
 
-	private float money;
+	private float balance;
 	private int entries;
 	private Date start;
 	private Date end;
@@ -118,7 +118,7 @@ class DataBundle
 
 				// Store data rows:
 				int i = 0;
-				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.money);
+				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.balance);
 				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.entries);
 				jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
 				for (int j = 0; j < Date.ARRAY_SIZE; j++)
@@ -181,13 +181,13 @@ class DataBundle
 
 				// Extract data row values:
 				int i = 0;
-				float money = node.get(DataRowType.byIndex(i++).toString()).floatValue();
+				float balance = node.get(DataRowType.byIndex(i++).toString()).floatValue();
 				int entries = node.get(DataRowType.byIndex(i++).toString()).intValue();
 				int[] start = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
 				int[] end = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
 
 				// Convert extracted values into new data entry:
-				return new DataBundle(money, entries, new Date(start),new Date(end));
+				return new DataBundle(balance, entries, new Date(start),new Date(end));
 			}
 			catch (Exception exception)
 			{
@@ -239,8 +239,8 @@ class DataBundle
 				}
 				switch (sorting.row)
 				{
-					case MONEY:
-						return Math.round((entryA.money - entryB.money) * 100F);
+					case BALANCE:
+						return Math.round((entryA.balance - entryB.balance) * 100F);
 					case ENTRIES:
 						return entryA.entries - entryB.entries;
 					case START:
@@ -259,17 +259,17 @@ class DataBundle
 		}
 	}
 
-	public DataBundle(float money, int entries, Date start, Date end)
+	public DataBundle(float balance, int entries, Date start, Date end)
 	{
-		this.money = money;
+		this.balance = balance;
 		this.entries = entries;
 		this.start = start;
 		this.end = end;
 	}
 
-	public void addEntry(float money)
+	public void addEntry(float balance)
 	{
-		this.money += money;
+		this.balance += balance;
 		entries += 1;
 	}
 
@@ -282,8 +282,8 @@ class DataBundle
 	{
 		switch (dataRowType)
 		{
-			case MONEY:
-				return Float.toString(money);
+			case BALANCE:
+				return Float.toString(balance);
 			case ENTRIES:
 				return Integer.toString(entries);
 			case START:
@@ -299,8 +299,8 @@ class DataBundle
 	{
 		switch (dataRowType)
 		{
-			case MONEY:
-				return String.format("%.2f", money) + " €";
+			case BALANCE:
+				return String.format("%.2f", balance) + " €";
 			case ENTRIES:
 				return Integer.toString(entries);
 			case START:

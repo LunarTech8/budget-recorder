@@ -32,13 +32,13 @@ Work status:
 // Application design:
 // -------------
 
-!!>>>- Bring panels in focus on start up
 !!- Data panel: Add a remove button for each entry
 !!- Increase scrolling speed with STRG
 !!- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
 !!- Data panel: Add search functionality
+!- In bundled view: Colour positive balances green and negative balances red
 !- In bundled view: When clicking on an entry show/expand the bundled entries
-!- Add more tooltips wherever possible
+!- Add more/better tooltips wherever possible
 
 
 // -------------
