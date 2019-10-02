@@ -243,6 +243,7 @@ class InputPanel extends JPanel
 	{
 		private static final String COMMIT_ACTION = "commit";
 		private static final String COMMIT_KEY = "ENTER";
+
 		private JTextField dataField;
 		private Autocomplete autocompletes[][];
 		private Autocomplete activatedAutocomplete;

@@ -20,10 +20,10 @@ Work status:
 // Programming:
 // -------------
 
-!- Input panel: Restrict "until" field to always be later than current "date" field
+!!- Input panel: Restrict "until" field to always be later than current "date" field
 !- Try to improve code for constructors with optional inputs
+!- Make autocompletion ignore capitalisation
 !- Maybe add specific tooltips for the different types and subtypes if possible
-!- Maybe make autocompletion ignore capitalisation
 !- Maybe recreate a debug & unit test class/system like the one used in the AgeOfWarcraft project
 !- Maybe use a better/custom json schema
 
@@ -33,7 +33,6 @@ Work status:
 // -------------
 
 !!- Data panel: Add a remove button for each entry
-!!- Increase scrolling speed with STRG
 !!- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
 !!- Data panel: Add search functionality
 !- In bundled view: Colour positive balances green and negative balances red

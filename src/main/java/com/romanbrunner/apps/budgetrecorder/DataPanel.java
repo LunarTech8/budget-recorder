@@ -62,8 +62,10 @@ class DataPanel extends JPanel
 	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
 	private static final Interval DEFAULT_VIEW = Interval.NEVER;
-	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
+	private static final int VERTICAL_SCROLL_SPEED = 12;
+	private static final int VERTICAL_SCROLL_SPEED_MULTIPLIER = 3;
 
+	private static final int[] SETTINGS_VIEW_MNEMONICS = { KeyEvent.VK_C, KeyEvent.VK_D, KeyEvent.VK_W, KeyEvent.VK_M, KeyEvent.VK_Y };
 	private static final String SETTINGS_MENU_TEXT = "Settings";
 	private static final String SETTINGS_MENU_DESCRIPTION = "General settings menu";
 	private static final String VIEW_SUBMENU_TEXT = "View";
@@ -88,13 +90,13 @@ class DataPanel extends JPanel
 	// Functional code
 	// --------------------
 
-	private static boolean showEmptyEntries = true;
-	private static int displayedEntriesLimit = ENTRIES_LIMIT_DEFAULT;
-
+	private boolean showEmptyEntries = true;
+	private int displayedEntriesLimit = ENTRIES_LIMIT_DEFAULT;
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
 	private Interval view;
 	private GridBagConstraints constraints;
+	private JScrollPane scroller;
 	private DataFieldButtonAL activeDataField = null;
 	private DualHashBidiMap<JComponent, JComponent> biMapTypeCompToSubtypeComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapRepeatCompToDurationComp = new DualHashBidiMap<JComponent, JComponent>();
@@ -616,10 +618,11 @@ class DataPanel extends JPanel
 		}
 
 		// Put the panels in a scroll pane:
-		var scroller = new JScrollPane();
+		scroller = new JScrollPane();
 		scroller.setViewportView(dataPanel);
 		scroller.setColumnHeaderView(headerPanel);
 		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataEntry.DataRowType.Data.length + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
+		scroller.getVerticalScrollBar().setUnitIncrement(VERTICAL_SCROLL_SPEED);
 		add(scroller, BorderLayout.CENTER);
 	}
 
@@ -727,10 +730,11 @@ class DataPanel extends JPanel
 		}
 
 		// Put the panels in a scroll pane:
-		var scroller = new JScrollPane();
+		scroller = new JScrollPane();
 		scroller.setViewportView(dataPanel);
 		scroller.setColumnHeaderView(headerPanel);
 		scroller.setPreferredSize(new Dimension(DATA_FIELD_WIDTH * (DataBundle.DataRowType.Data.length + 1), DATA_PANEL_HIGHT));  // Add one entry to width to avoid a width scrollbar
+		scroller.getVerticalScrollBar().setUnitIncrement(VERTICAL_SCROLL_SPEED);
 		add(scroller, BorderLayout.CENTER);
 	}
 
@@ -778,7 +782,7 @@ class DataPanel extends JPanel
 
 	public boolean reactOnKeyStroke(KeyboardFocusManager kfm, KeyEvent event) throws Exception
 	{
-		if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
+		if (event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0 && event.getID() == KeyEvent.KEY_PRESSED)
 		{
 			// Deactivate current active data field if existent and handle event appropriately:
 			if (activeDataField != null)
@@ -802,6 +806,17 @@ class DataPanel extends JPanel
 		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE)
 		{
 			System.exit(0);
+		}
+		else if (event.getKeyCode() == KeyEvent.VK_CONTROL)
+		{
+			if (event.getID() == KeyEvent.KEY_PRESSED)
+			{
+				scroller.getVerticalScrollBar().setUnitIncrement(VERTICAL_SCROLL_SPEED_MULTIPLIER * VERTICAL_SCROLL_SPEED);
+			}
+			else if (event.getID() == KeyEvent.KEY_RELEASED)
+			{
+				scroller.getVerticalScrollBar().setUnitIncrement(VERTICAL_SCROLL_SPEED);
+			}
 		}
 		return false;
 	}
