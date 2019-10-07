@@ -234,7 +234,7 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
 						break;
 					case DATE:
-						dataField = new InputPanel.DateDataField(null, 100, 1000, dataEntry.getDate());
+						dataField = new InputPanel.DateDataField(null, null, null, dataEntry.getDate());
 						break;
 					case REPEAT:
 						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt(), new DataFieldModificationAL(dataEntry, dataRowType));
@@ -248,7 +248,13 @@ class DataPanel extends JPanel
 					case UNTIL:
 						if (dataEntry.getRepeat() != Interval.NEVER && dataEntry.getDuration() == false)
 						{
-							dataField = new InputPanel.DateDataField(null, 100, 1000, dataEntry.getUntil());
+							var minDate = dataEntry.getDate();
+							var initDate = dataEntry.getUntil();
+							if (initDate.compareTo(minDate) < 0)
+							{
+								initDate = minDate;
+							}
+							dataField = new InputPanel.DateDataField(null, minDate, null, initDate);
 						}
 						break;
 					default:

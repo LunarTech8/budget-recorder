@@ -168,16 +168,20 @@ class InputPanel extends JPanel
 	{
 		private JSpinner dataField;
 
-		public DateDataField(JLabel label, int maxBackYears, int maxUpYears, Date initDate)
+		public DateDataField(JLabel label, Date minDate, Date maxDate, Date initDate)
 		{
 			super(label);
-			var calendar = Date.dateToCalendar(initDate);
-			java.util.Date date = calendar.getTime();
-			calendar.add(Calendar.YEAR, -maxBackYears);
-			java.util.Date earliestDate = calendar.getTime();
-			calendar.add(Calendar.YEAR, maxBackYears + maxUpYears);
-			java.util.Date latestDate = calendar.getTime();
-			dataField = new JSpinner(new SpinnerDateModel(date, earliestDate, latestDate, Calendar.YEAR));
+			Comparable<java.util.Date> start = null;
+			Comparable<java.util.Date> end = null;
+			if (minDate != null)
+			{
+				start = Date.dateToCalendar(minDate).getTime();
+			}
+			if (maxDate != null)
+			{
+				end = Date.dateToCalendar(maxDate).getTime();
+			}
+			dataField = new JSpinner(new SpinnerDateModel(Date.dateToCalendar(initDate).getTime(), start, end, Calendar.YEAR));
 			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
 		}
 
@@ -199,6 +203,21 @@ class InputPanel extends JPanel
 		public JComponent getTextField()
 		{
 			return ((JSpinner.DefaultEditor)dataField.getEditor()).getTextField();
+		}
+
+		public void setMinDate(Date minDate)  // TODO: use wherever needed -> after changing the date value in input panel (data panel doesn't need it), use addChangeListener
+		{
+			var spinnerDateModel = ((SpinnerDateModel)dataField.getModel());
+			Comparable<java.util.Date> start = null;
+			if (minDate != null)
+			{
+				start = Date.dateToCalendar(minDate).getTime();
+				if (start.compareTo(spinnerDateModel.getDate()) > 0)
+				{
+					spinnerDateModel.setValue(start);
+				}
+			}
+			spinnerDateModel.setStart(start);
 		}
 	}
 
@@ -494,7 +513,7 @@ class InputPanel extends JPanel
 						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[DataEntry.DEFAULT_VALUE_TYPE], DataEntry.DEFAULT_VALUE_SUBTYPE, new SubtypeDataFieldAL());
 						break;
 					case DATE:
-						dataField = new DateDataField(label, 100, 1000, DataEntry.DEFAULT_VALUE_DATE);
+						dataField = new DateDataField(label, null, null, DataEntry.DEFAULT_VALUE_DATE);
 						break;
 					case REPEAT:
 						dataField = new ComboBoxDataField(label, Interval.getNames(), DataEntry.DEFAULT_VALUE_REPEAT.toInt(), new RepeatDataFieldAL());
@@ -504,7 +523,7 @@ class InputPanel extends JPanel
 						dataField.setVisible(false);
 						break;
 					case UNTIL:
-						dataField = new DateDataField(label, 100, 1000, DataEntry.DEFAULT_VALUE_DATE);
+						dataField = new DateDataField(label, DataEntry.DEFAULT_VALUE_DATE, null, DataEntry.DEFAULT_VALUE_DATE);
 						dataField.setVisible(false);
 						break;
 					default:
