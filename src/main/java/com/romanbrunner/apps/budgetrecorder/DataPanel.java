@@ -4,6 +4,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.text.DateFormat;
 import java.awt.KeyboardFocusManager;
 import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
@@ -17,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.SwingConstants;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -234,7 +236,7 @@ class DataPanel extends JPanel
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
 						break;
 					case DATE:
-						dataField = new InputPanel.DateDataField(null, null, null, dataEntry.getDate());
+						dataField = new InputPanel.DateDataField(null, null, null, dataEntry.getDate(), new DataFieldModificationCL(dataEntry, dataRowType));
 						break;
 					case REPEAT:
 						dataField = new InputPanel.ComboBoxDataField(null, Interval.getNames(), dataEntry.getRepeat().toInt(), new DataFieldModificationAL(dataEntry, dataRowType));
@@ -364,6 +366,65 @@ class DataPanel extends JPanel
 					{
 						// Adjust data entry value:
 						dataEntry.setValue(DataEntry.DataRowType.DURATION, newValueObject);
+						// Adjust button name:
+						JButton button = (JButton)biMapDurationCompToUntilComp.get(component);
+						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
+						refreshDataPanel = true;
+					}
+				}
+
+				// Refresh data panel if required:
+				if (refreshDataPanel)
+				{
+					revalidate();
+					repaint();
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class DataFieldModificationCL implements ChangeListener
+	{
+		private DataEntry dataEntry;
+		private DataEntry.DataRowType dataRowType;
+
+		public DataFieldModificationCL(DataEntry dataEntry, DataEntry.DataRowType dataRowType)
+		{
+			this.dataEntry = dataEntry;
+			this.dataRowType = dataRowType;
+		}
+
+		public void stateChanged(ChangeEvent event)
+		{
+			try
+			{
+				boolean changesRequired = false;
+				boolean refreshDataPanel = false;
+				JComponent component = null;
+				Object newValueObject = null;
+
+				// Check if changes are required:
+				if (dataRowType == DataEntry.DataRowType.DATE)
+				{
+					// Make changes if value is bigger than until of data entry:
+					var spinner = (JSpinner)event.getSource();
+					var newValue = DateFormat.getDateInstance(DateFormat.MEDIUM).format((java.util.Date)spinner.getModel().getValue());
+					changesRequired = (newValue != dataEntry.getUntil().getAsText());  // FIXME: transform dataEntry.getUntil() to correctly formated string
+					component = spinner;
+					newValueObject = newValue;
+				}
+
+				// Make adjustments if required:
+				if (changesRequired)
+				{
+					if (dataRowType == DataEntry.DataRowType.DATE)
+					{
+						// Adjust data entry value:
+						dataEntry.setValue(DataEntry.DataRowType.DATE, newValueObject);
 						// Adjust button name:
 						JButton button = (JButton)biMapDurationCompToUntilComp.get(component);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));

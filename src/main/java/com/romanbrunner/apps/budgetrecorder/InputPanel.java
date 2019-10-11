@@ -17,6 +17,8 @@ import java.text.NumberFormat;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerDateModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 
@@ -128,9 +130,7 @@ class InputPanel extends JPanel
 		}
 		public ComboBoxDataField(JLabel label, String[] items, int initSelectedIndex, ActionListener actionListener)
 		{
-			super(label);
-			dataField = new JComboBox<String>(items);
-			dataField.setSelectedIndex(initSelectedIndex);
+			this(label, items, initSelectedIndex);
 			dataField.addActionListener(actionListener);
 		}
 
@@ -185,6 +185,12 @@ class InputPanel extends JPanel
 			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
 		}
 
+		public DateDataField(JLabel label, Date minDate, Date maxDate, Date initDate, ChangeListener changeListener)
+		{
+			this(label, minDate, maxDate, initDate);
+			dataField.addChangeListener(changeListener);
+		}
+
 		public JComponent getJComponent()
 		{
 			return dataField;
@@ -232,8 +238,7 @@ class InputPanel extends JPanel
 		}
 		public CheckBoxDataField(JLabel label, String text, boolean initIsChecked, ActionListener actionListener)
 		{
-			super(label);
-			dataField = new JCheckBox(text, initIsChecked);
+			this(label, text, initIsChecked);
 			dataField.addActionListener(actionListener);
 		}
 
@@ -351,6 +356,26 @@ class InputPanel extends JPanel
 				var typeSelectedIndex = ((ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()]).getSelectedIndex();
 				((TextDataField)dataFields[DataEntry.DataRowType.NAME.toInt()]).activateAutocomplete(typeSelectedIndex, subtypeSelectedIndex);
 				((TextDataField)dataFields[DataEntry.DataRowType.LOCATION.toInt()]).activateAutocomplete(typeSelectedIndex, subtypeSelectedIndex);
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class DateDataFieldCL implements ChangeListener
+	{
+		public void stateChanged(ChangeEvent event)
+		{
+			try
+			{
+				// Evaluate date data field:
+				var dateDataField = dataFields[DataEntry.DataRowType.DATE.toInt()];
+				var minDate = new Date(Stream.of(((String)dateDataField.getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray());
+				// Adjust min date for until data field:
+				var untilDataField = dataFields[DataEntry.DataRowType.UNTIL.toInt()];
+				((DateDataField)untilDataField).setMinDate(minDate);
 			}
 			catch (Exception exception)
 			{
@@ -513,7 +538,7 @@ class InputPanel extends JPanel
 						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[DataEntry.DEFAULT_VALUE_TYPE], DataEntry.DEFAULT_VALUE_SUBTYPE, new SubtypeDataFieldAL());
 						break;
 					case DATE:
-						dataField = new DateDataField(label, null, null, DataEntry.DEFAULT_VALUE_DATE);
+						dataField = new DateDataField(label, null, null, DataEntry.DEFAULT_VALUE_DATE, new DateDataFieldCL());
 						break;
 					case REPEAT:
 						dataField = new ComboBoxDataField(label, Interval.getNames(), DataEntry.DEFAULT_VALUE_REPEAT.toInt(), new RepeatDataFieldAL());
