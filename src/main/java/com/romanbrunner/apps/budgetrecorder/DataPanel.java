@@ -13,6 +13,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.stream.Stream;
 
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
@@ -101,6 +102,7 @@ class DataPanel extends JPanel
 	private JScrollPane scroller;
 	private DataFieldButtonAL activeDataField = null;
 	private DualHashBidiMap<JComponent, JComponent> biMapTypeCompToSubtypeComp = new DualHashBidiMap<JComponent, JComponent>();
+	private DualHashBidiMap<JComponent, JComponent> biMapDateCompToUntilComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapRepeatCompToDurationComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapDurationCompToUntilComp = new DualHashBidiMap<JComponent, JComponent>();
 
@@ -413,7 +415,7 @@ class DataPanel extends JPanel
 					// Make changes if value is bigger than until of data entry:
 					var spinner = (JSpinner)event.getSource();
 					var newValue = DateFormat.getDateInstance(DateFormat.MEDIUM).format((java.util.Date)spinner.getModel().getValue());
-					changesRequired = (newValue != dataEntry.getUntil().getAsText());  // FIXME: transform dataEntry.getUntil() to correctly formated string
+					changesRequired = (new Date(Stream.of(newValue.split("[.]")).mapToInt(Integer::parseInt).toArray()).compareTo(dataEntry.getUntil()) > 0);
 					component = spinner;
 					newValueObject = newValue;
 				}
@@ -425,8 +427,9 @@ class DataPanel extends JPanel
 					{
 						// Adjust data entry value:
 						dataEntry.setValue(DataEntry.DataRowType.DATE, newValueObject);
+						dataEntry.setValue(DataEntry.DataRowType.UNTIL, newValueObject);
 						// Adjust button name:
-						JButton button = (JButton)biMapDurationCompToUntilComp.get(component);
+						JButton button = (JButton)biMapDateCompToUntilComp.get(component);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
 						refreshDataPanel = true;
 					}
@@ -544,6 +547,9 @@ class DataPanel extends JPanel
 			case SUBTYPE:
 				biMapTypeCompToSubtypeComp.put(biMapTypeCompToSubtypeComp.getKey(oldComponent), newComponent);
 				break;
+			case DATE:
+				biMapDateCompToUntilComp.put(newComponent, biMapDateCompToUntilComp.get(oldComponent));
+				break;
 			case REPEAT:
 				biMapRepeatCompToDurationComp.put(newComponent, biMapRepeatCompToDurationComp.get(oldComponent));
 				break;
@@ -552,6 +558,7 @@ class DataPanel extends JPanel
 				biMapDurationCompToUntilComp.put(newComponent, biMapDurationCompToUntilComp.get(oldComponent));
 				break;
 			case UNTIL:
+				biMapDateCompToUntilComp.put(biMapDateCompToUntilComp.getKey(oldComponent), newComponent);
 				biMapDurationCompToUntilComp.put(biMapDurationCompToUntilComp.getKey(oldComponent), newComponent);
 				break;
 			default:
@@ -650,6 +657,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create data field labels:
+		JButton buttons[] = new JButton[DataEntry.DataRowType.Data.length];
 		var dataEntryCounter = 0;
 		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
 		{
@@ -658,27 +666,17 @@ class DataPanel extends JPanel
 				break;
 			}
 			constraints.gridx = 0;
-			JButton lastButton = null;
 			for (var dataRowType : DataEntry.DataRowType.Data.values)
 			{
-				var currentButton = createDataFieldButton(dataRowType, dataEntry, dataBorder);
-				dataPanel.add(currentButton, constraints);
-				if (dataRowType == DataEntry.DataRowType.SUBTYPE)
-				{
-					biMapTypeCompToSubtypeComp.put(lastButton, currentButton);
-				}
-				else if (dataRowType == DataEntry.DataRowType.DURATION)
-				{
-					biMapRepeatCompToDurationComp.put(lastButton, currentButton);
-				}
-				else if (dataRowType == DataEntry.DataRowType.UNTIL)
-				{
-					biMapDurationCompToUntilComp.put(lastButton, currentButton);
-				}
-				lastButton = currentButton;
+				buttons[dataRowType.toInt()] = createDataFieldButton(dataRowType, dataEntry, dataBorder);
+				dataPanel.add(buttons[dataRowType.toInt()], constraints);
 
 				constraints.gridx++;
 			}
+			biMapTypeCompToSubtypeComp.put(buttons[DataEntry.DataRowType.TYPE.toInt()], buttons[DataEntry.DataRowType.SUBTYPE.toInt()]);
+			biMapDateCompToUntilComp.put(buttons[DataEntry.DataRowType.DATE.toInt()], buttons[DataEntry.DataRowType.UNTIL.toInt()]);
+			biMapRepeatCompToDurationComp.put(buttons[DataEntry.DataRowType.REPEAT.toInt()], buttons[DataEntry.DataRowType.DURATION.toInt()]);
+			biMapDurationCompToUntilComp.put(buttons[DataEntry.DataRowType.DURATION.toInt()], buttons[DataEntry.DataRowType.UNTIL.toInt()]);
 
 			constraints.gridy++;
 			dataEntryCounter++;

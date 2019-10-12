@@ -184,7 +184,6 @@ class InputPanel extends JPanel
 			dataField = new JSpinner(new SpinnerDateModel(Date.dateToCalendar(initDate).getTime(), start, end, Calendar.YEAR));
 			dataField.setEditor(new JSpinner.DateEditor(dataField, "dd.MM.yyyy"));
 		}
-
 		public DateDataField(JLabel label, Date minDate, Date maxDate, Date initDate, ChangeListener changeListener)
 		{
 			this(label, minDate, maxDate, initDate);
@@ -497,7 +496,6 @@ class InputPanel extends JPanel
 	public InputPanel()
 	{
 		super(new GridBagLayout());
-
 		try
 		{
 			GridBagConstraints constraints = new GridBagConstraints();

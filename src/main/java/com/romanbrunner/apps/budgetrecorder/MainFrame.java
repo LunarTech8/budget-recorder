@@ -87,13 +87,13 @@ public class MainFrame  // Singleton class
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Serializer()
-		{
-			this(null);
-		}
 		public Serializer(Class<MainFrame> t)
 		{
 			super(t);
+		}
+		public Serializer()
+		{
+			this(null);
 		}
 
 		@Override
@@ -127,13 +127,13 @@ public class MainFrame  // Singleton class
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Deserializer()
-		{
-			this(null);
-		}
 		public Deserializer(Class<?> vc)
 		{
 			super(vc);
+		}
+		public Deserializer()
+		{
+			this(null);
 		}
 
 		@Override
@@ -297,7 +297,12 @@ public class MainFrame  // Singleton class
 		}
 		else
 		{
-			return getRootPane(SwingUtilities.windowForComponent(component));
+			var window = SwingUtilities.windowForComponent(component);
+			if (window == null)
+			{
+				return null;  // Can't find parent of type JRootPane or a window for given component
+			}
+			return getRootPane(window);
 		}
 	}
 

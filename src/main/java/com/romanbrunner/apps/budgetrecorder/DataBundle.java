@@ -100,13 +100,13 @@ class DataBundle
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Serializer()
-		{
-			this(null);
-		}
 		public Serializer(Class<DataBundle> t)
 		{
 			super(t);
+		}
+		public Serializer()
+		{
+			this(null);
 		}
 
 		@Override
@@ -144,13 +144,13 @@ class DataBundle
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Deserializer()
-		{
-			this(null);
-		}
 		public Deserializer(Class<?> vc)
 		{
 			super(vc);
+		}
+		public Deserializer()
+		{
+			this(null);
 		}
 
 		private int[] arrayNodeToIntArray(JsonNode node, int arraySize) throws Exception

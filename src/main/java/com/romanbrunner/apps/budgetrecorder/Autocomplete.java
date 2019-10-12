@@ -28,6 +28,51 @@ public class Autocomplete implements DocumentListener
 	private Mode mode = Mode.INSERT;
 	private boolean isActive;
 
+	/** Class for displaying found completion in the text field. */
+	private class CompletionTask implements Runnable
+	{
+		private String completion;
+		private int position;
+
+		CompletionTask(String completion, int position)
+		{
+			this.completion = completion;
+			this.position = position;
+		}
+
+		public void run()
+		{
+			StringBuffer sb = new StringBuffer(textField.getText());
+			sb.insert(position, completion);
+			textField.setText(sb.toString());
+			textField.setCaretPosition(position + completion.length());
+			textField.moveCaretPosition(position);
+			mode = Mode.COMPLETION;
+		}
+	}
+
+	/** Class for inserting chosen completion. */
+	public class CommitAction extends AbstractAction
+	{
+		private static final long serialVersionUID = 5794543109646743416L;
+
+		@Override
+		public void actionPerformed(ActionEvent ev)
+		{
+			if (mode == Mode.COMPLETION)
+			{
+				StringBuffer sb = new StringBuffer(textField.getText());
+				textField.setText(sb.toString());
+				textField.setCaretPosition(textField.getSelectionEnd());
+				mode = Mode.INSERT;
+			}
+			else
+			{
+				textField.replaceSelection("\t");
+			}
+		}
+	}
+
 	public Autocomplete(JTextField textField, List<String> keywords, boolean isActive)
 	{
 		this.textField = textField;
@@ -94,51 +139,6 @@ public class Autocomplete implements DocumentListener
 		{
 			// Nothing found:
 			mode = Mode.INSERT;
-		}
-	}
-
-	/** Class for inserting chosen completion. */
-	public class CommitAction extends AbstractAction
-	{
-		private static final long serialVersionUID = 5794543109646743416L;
-
-		@Override
-		public void actionPerformed(ActionEvent ev)
-		{
-			if (mode == Mode.COMPLETION)
-			{
-				StringBuffer sb = new StringBuffer(textField.getText());
-				textField.setText(sb.toString());
-				textField.setCaretPosition(textField.getSelectionEnd());
-				mode = Mode.INSERT;
-			}
-			else
-			{
-				textField.replaceSelection("\t");
-			}
-		}
-	}
-
-	/** Class for displaying found completion in the text field. */
-	private class CompletionTask implements Runnable
-	{
-		private String completion;
-		private int position;
-
-		CompletionTask(String completion, int position)
-		{
-			this.completion = completion;
-			this.position = position;
-		}
-
-		public void run()
-		{
-			StringBuffer sb = new StringBuffer(textField.getText());
-			sb.insert(position, completion);
-			textField.setText(sb.toString());
-			textField.setCaretPosition(position + completion.length());
-			textField.moveCaretPosition(position);
-			mode = Mode.COMPLETION;
 		}
 	}
 

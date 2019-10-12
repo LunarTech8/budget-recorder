@@ -201,13 +201,13 @@ class DataEntry
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Serializer()
-		{
-			this(null);
-		}
 		public Serializer(Class<DataEntry> t)
 		{
 			super(t);
+		}
+		public Serializer()
+		{
+			this(null);
 		}
 
 		@Override
@@ -257,13 +257,13 @@ class DataEntry
 	{
 		private static final long serialVersionUID = 1L;
 
-		public Deserializer()
-		{
-			this(null);
-		}
 		public Deserializer(Class<?> vc)
 		{
 			super(vc);
+		}
+		public Deserializer()
+		{
+			this(null);
 		}
 
 		private int[] arrayNodeToIntArray(JsonNode node, int arraySize) throws Exception
@@ -423,23 +423,12 @@ class DataEntry
 	}
 	public DataEntry(DataEntry origin, Date date, boolean noRepeat)
 	{
-		money = origin.money;
-		name = origin.name;
-		location = origin.location;
-		type = origin.type;
-		subtype = origin.subtype;
-		this.date = date;
+		this(origin.money, origin.name, origin.location, origin.type, origin.subtype, date, origin.repeat, origin.duration, origin.until);
 		if (noRepeat)
 		{
 			repeat = Interval.NEVER;
 			duration = DEFAULT_VALUE_DURATION;
 			until = DEFAULT_VALUE_UNTIL;
-		}
-		else
-		{
-			repeat = origin.repeat;
-			duration = origin.duration;
-			until = origin.until;
 		}
 	}
 

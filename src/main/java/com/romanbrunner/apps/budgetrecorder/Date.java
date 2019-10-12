@@ -144,19 +144,6 @@ public class Date
 
 	private final int[] values;  // Values should stay fixed after construction. Use new objects if other values are required.
 
-	public Date(int day, int month, int year) throws Exception
-	{
-		values = new int[ARRAY_SIZE];
-		values[0] = day;
-		values[1] = month;
-		values[2] = year;
-
-		var calendar = dateToCalendar(this);
-		if (calendar.get(Calendar.DAY_OF_MONTH) != values[0] || calendar.get(Calendar.MONTH) + 1 != values[1] || calendar.get(Calendar.YEAR) != values[2])
-		{
-			throw new Exception("ERROR: Invalid date (" + this.toString() + " is not a valid date)");
-		}
-	}
 	public Date(int[] values) throws Exception
 	{
 		if (values.length != ARRAY_SIZE)
@@ -171,6 +158,10 @@ public class Date
 		{
 			throw new Exception("ERROR: Invalid date (" + this.toString() + " is not a valid date)");
 		}
+	}
+	public Date(int day, int month, int year) throws Exception
+	{
+		this(new int[] { day, month, year });
 	}
 
 	public static Date calendarToDate(Calendar calendar) throws Exception
