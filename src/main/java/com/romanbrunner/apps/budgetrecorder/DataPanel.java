@@ -1,20 +1,31 @@
 package com.romanbrunner.apps.budgetrecorder;
 
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.text.DateFormat;
-import java.awt.KeyboardFocusManager;
-import java.awt.GridBagConstraints;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.text.DateFormat;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.stream.Stream;
 
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
@@ -28,21 +39,8 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
-import com.romanbrunner.apps.budgetrecorder.DataEntry;
-import com.romanbrunner.apps.budgetrecorder.InputPanel;
 
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 
@@ -225,17 +223,17 @@ class DataPanel extends JPanel
 					case MONEY:
 						dataField = new InputPanel.CurrencyDataField(null, 2, dataEntry.getMoney());
 						break;
-					case NAME:
-						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
-						break;
-					case LOCATION:
-						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
-						break;
 					case TYPE:
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.TYPE_NAMES, dataEntry.getType(), new DataFieldModificationAL(dataEntry, dataRowType));
 						break;
 					case SUBTYPE:
 						dataField = new InputPanel.ComboBoxDataField(null, DataEntry.SUBTYPE_NAMES[dataEntry.getType()], dataEntry.getSubtype());
+						break;
+					case NAME:
+						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getName());
+						break;
+					case LOCATION:
+						dataField = new InputPanel.TextDataField(null, MainFrame.getDataRowValuesAsStrings(dataRowType), dataEntry.getType(), dataEntry.getSubtype(), dataEntry.getLocation());
 						break;
 					case DATE:
 						dataField = new InputPanel.DateDataField(null, null, null, dataEntry.getDate(), new DataFieldModificationCL(dataEntry, dataRowType));
@@ -624,6 +622,7 @@ class DataPanel extends JPanel
 		constraints.gridx = 0;
 		constraints.gridy = 0;
 		// Create header buttons:
+		JButton button;
 		for (var dataRowType : DataEntry.DataRowType.Data.values)
 		{
 			var name = dataRowType.toString();
@@ -640,7 +639,7 @@ class DataPanel extends JPanel
 						break;
 				}
 			}
-			var button = new JButton(text);
+			button = new JButton(text);
 			button.setFocusPainted(false);
 			button.setHorizontalAlignment(SwingConstants.LEFT);
 			button.setToolTipText(HEADER_TOOLTIP.replace("<NAME>", name));
@@ -651,12 +650,19 @@ class DataPanel extends JPanel
 
 			constraints.gridx++;
 		}
+		button = new JButton("[x]:");
+		button.setFocusPainted(false);
+		button.setHorizontalAlignment(SwingConstants.LEFT);
+		button.setToolTipText("Remove buttons");
+		button.setPreferredSize(new Dimension(DATA_FIELD_HEIGHT, HEADER_HEIGHT));
+		button.setBorder(headerBorder);
+		headerPanel.add(button, constraints);
 
 		// Create data panel:
 		var dataPanel = new JPanel(new GridBagLayout());
 		constraints.gridx = 0;
 		constraints.gridy = 0;
-		// Create data field labels:
+		// Create data field buttons:
 		JButton buttons[] = new JButton[DataEntry.DataRowType.Data.length];
 		var dataEntryCounter = 0;
 		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
@@ -677,6 +683,16 @@ class DataPanel extends JPanel
 			biMapDateCompToUntilComp.put(buttons[DataEntry.DataRowType.DATE.toInt()], buttons[DataEntry.DataRowType.UNTIL.toInt()]);
 			biMapRepeatCompToDurationComp.put(buttons[DataEntry.DataRowType.REPEAT.toInt()], buttons[DataEntry.DataRowType.DURATION.toInt()]);
 			biMapDurationCompToUntilComp.put(buttons[DataEntry.DataRowType.DURATION.toInt()], buttons[DataEntry.DataRowType.UNTIL.toInt()]);
+
+			// Create remove button:
+			button = new JButton("[x]");
+			button.setHorizontalAlignment(SwingConstants.LEFT);
+			button.setToolTipText("Remove data entry");
+			button.setPreferredSize(new Dimension(DATA_FIELD_HEIGHT, DATA_FIELD_HEIGHT));
+			button.setBorder(dataBorder);
+			// button.setContentAreaFilled(false);
+			// TODO: add action listener for removal
+			dataPanel.add(button, constraints);
 
 			constraints.gridy++;
 			dataEntryCounter++;

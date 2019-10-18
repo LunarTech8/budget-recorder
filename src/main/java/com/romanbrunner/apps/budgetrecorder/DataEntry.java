@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
 
 
@@ -30,10 +29,10 @@ class DataEntry
 	private static final String POSITIVE_BALANCE_TYPE_NAME = "Income";
 
 	public static final float DEFAULT_VALUE_MONEY = 0.F;
-	public static final String DEFAULT_VALUE_NAME = "";
-	public static final String DEFAULT_VALUE_LOCATION = "";
 	public static final int DEFAULT_VALUE_TYPE = 0;
 	public static final int DEFAULT_VALUE_SUBTYPE = 0;
+	public static final String DEFAULT_VALUE_NAME = "";
+	public static final String DEFAULT_VALUE_LOCATION = "";
 	public static final Date DEFAULT_VALUE_DATE = Date.CURRENT_DATE;
 	public static final Interval DEFAULT_VALUE_REPEAT = Interval.NEVER;
 	public static final boolean DEFAULT_VALUE_DURATION = true;
@@ -64,7 +63,7 @@ class DataEntry
 
 	public enum DataRowType
 	{
-		MONEY("Money", 0), NAME("Name", 1), LOCATION("Location", 2), TYPE("Type", 3), SUBTYPE("Subtype", 4), DATE("Date", 5), REPEAT("Repeat", 6), DURATION("Duration", 7), UNTIL("Until", 8);
+		MONEY("Money", 0), TYPE("Type", 1), SUBTYPE("Subtype", 2), NAME("Name", 3), LOCATION("Location", 4), DATE("Date", 5), REPEAT("Repeat", 6), DURATION("Duration", 7), UNTIL("Until", 8);
 
 		private final String name;
 		private final int index;
@@ -116,10 +115,10 @@ class DataEntry
 	// --------------------
 
 	private float money;
-	private String name;
-	private String location;
 	private int type;
 	private int subtype;
+	private String name;
+	private String location;
 	private Date date;
 	private Interval repeat;
 	private boolean duration;
@@ -131,6 +130,22 @@ class DataEntry
 	public Float getMoney()
     {
         return money;
+	}
+
+	/**
+	 * @return the type
+	 */
+	public int getType()
+	{
+		return type;
+	}
+
+	/**
+	 * @return the subtype
+	 */
+	public int getSubtype()
+	{
+		return subtype;
 	}
 
 	/**
@@ -147,22 +162,6 @@ class DataEntry
 	public String getLocation()
     {
         return location;
-	}
-
-	/**
-	 * @return the type
-	 */
-	public int getType()
-    {
-        return type;
-	}
-
-	/**
-	 * @return the subtype
-	 */
-	public int getSubtype()
-    {
-        return subtype;
 	}
 
 	/**
@@ -220,10 +219,10 @@ class DataEntry
 				// Store data rows:
 				int i = 0;
 				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.money);
-				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.name);
-				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.location);
 				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.type);
 				jsonGenerator.writeNumberField(DataRowType.byIndex(i++).toString(), obj.subtype);
+				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.name);
+				jsonGenerator.writeStringField(DataRowType.byIndex(i++).toString(), obj.location);
 				jsonGenerator.writeArrayFieldStart(DataRowType.byIndex(i++).toString());
 				for (int j = 0; j < Date.ARRAY_SIZE; j++)
 				{
@@ -296,10 +295,10 @@ class DataEntry
 				int i = 0;
 				JsonNode iNode;
 				float money = node.get(DataRowType.byIndex(i++).toString()).floatValue();
-				String name = node.get(DataRowType.byIndex(i++).toString()).textValue();
-				String location = node.get(DataRowType.byIndex(i++).toString()).textValue();
 				int type = node.get(DataRowType.byIndex(i++).toString()).intValue();
 				int subtype = node.get(DataRowType.byIndex(i++).toString()).intValue();
+				String name = node.get(DataRowType.byIndex(i++).toString()).textValue();
+				String location = node.get(DataRowType.byIndex(i++).toString()).textValue();
 				int[] date = arrayNodeToIntArray(node.get(DataRowType.byIndex(i++).toString()), Date.ARRAY_SIZE);
 				int repeat = node.get(DataRowType.byIndex(i++).toString()).intValue();
 				boolean duration = DEFAULT_VALUE_DURATION;
@@ -316,7 +315,7 @@ class DataEntry
 				}
 
 				// Convert extracted values into new data entry:
-				return new DataEntry(money, name, location, type, subtype, new Date(date), Interval.byIndex(repeat), duration, new Date(until));
+				return new DataEntry(money, type, subtype, name, location, new Date(date), Interval.byIndex(repeat), duration, new Date(until));
 			}
 			catch (Exception exception)
 			{
@@ -370,14 +369,14 @@ class DataEntry
 				{
 					case MONEY:
 						return Math.round((entryA.money - entryB.money) * 100F);
-					case NAME:
-						return entryA.name.compareTo(entryB.name);
-					case LOCATION:
-						return entryA.location.compareTo(entryB.location);
 					case TYPE:
 						return entryA.type - entryB.type;
 					case SUBTYPE:
 						return entryA.subtype - entryB.subtype;
+					case NAME:
+						return entryA.name.compareTo(entryB.name);
+					case LOCATION:
+						return entryA.location.compareTo(entryB.location);
 					case DATE:
 						return entryA.date.compareTo(entryB.date);
 					case REPEAT:
@@ -409,13 +408,13 @@ class DataEntry
 		}
 	}
 
-	public DataEntry(float money, String name, String location, int type, int subtype, Date date, Interval repeat, boolean duration, Date until)
+	public DataEntry(float money, int type, int subtype, String name, String location, Date date, Interval repeat, boolean duration, Date until)
 	{
 		this.money = money;
-		this.name = name;
-		this.location = location;
 		this.type = type;
 		this.subtype = subtype;
+		this.name = name;
+		this.location = location;
 		this.date = date;
 		this.repeat = repeat;
 		this.duration = duration;
@@ -423,7 +422,7 @@ class DataEntry
 	}
 	public DataEntry(DataEntry origin, Date date, boolean noRepeat)
 	{
-		this(origin.money, origin.name, origin.location, origin.type, origin.subtype, date, origin.repeat, origin.duration, origin.until);
+		this(origin.money, origin.type, origin.subtype, origin.name, origin.location, date, origin.repeat, origin.duration, origin.until);
 		if (noRepeat)
 		{
 			repeat = Interval.NEVER;
@@ -500,17 +499,17 @@ class DataEntry
 			case MONEY:
 				money = (float)value;
 				break;
-			case NAME:
-				name = (String)value;
-				break;
-			case LOCATION:
-				location = (String)value;
-				break;
 			case TYPE:
 				type = (int)value;
 				break;
 			case SUBTYPE:
 				subtype = (int)value;
+				break;
+			case NAME:
+				name = (String)value;
+				break;
+			case LOCATION:
+				location = (String)value;
 				break;
 			case DATE:
 				date = new Date(Stream.of(((String)value).split("[.]")).mapToInt(Integer::parseInt).toArray());
@@ -535,14 +534,14 @@ class DataEntry
 		{
 			case MONEY:
 				return Float.toString(money);
-			case NAME:
-				return name;
-			case LOCATION:
-				return location;
 			case TYPE:
 				return Integer.toString(type);
 			case SUBTYPE:
 				return Integer.toString(subtype);
+			case NAME:
+				return name;
+			case LOCATION:
+				return location;
 			case DATE:
 				return date.toString();
 			case REPEAT:
@@ -562,14 +561,14 @@ class DataEntry
 		{
 			case MONEY:
 				return String.format("%.2f", money) + " €";
-			case NAME:
-				return name;
-			case LOCATION:
-				return location;
 			case TYPE:
 				return TYPE_NAMES[type];
 			case SUBTYPE:
 				return SUBTYPE_NAMES[type][subtype];
+			case NAME:
+				return name;
+			case LOCATION:
+				return location;
 			case DATE:
 			{
 				return date.getAsText();

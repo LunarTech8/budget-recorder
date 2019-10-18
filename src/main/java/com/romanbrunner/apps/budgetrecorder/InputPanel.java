@@ -1,39 +1,36 @@
 package com.romanbrunner.apps.budgetrecorder;
 
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.GridBagConstraints;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.event.KeyEvent;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.KeyboardFocusManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.stream.Stream;
-import java.text.DateFormat;
-import java.text.NumberFormat;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.SpinnerDateModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.DefaultFormatterFactory;
 import javax.swing.text.NumberFormatter;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
-import javax.swing.KeyStroke;
-import javax.swing.JFormattedTextField;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-
-import com.romanbrunner.apps.budgetrecorder.Date;
 import com.romanbrunner.apps.budgetrecorder.Date.Interval;
-import com.romanbrunner.apps.budgetrecorder.DataEntry;
 
 
 @SuppressWarnings("serial")
@@ -210,7 +207,7 @@ class InputPanel extends JPanel
 			return ((JSpinner.DefaultEditor)dataField.getEditor()).getTextField();
 		}
 
-		public void setMinDate(Date minDate)  // TODO: use wherever needed -> after changing the date value in input panel (data panel doesn't need it), use addChangeListener
+		public void setMinDate(Date minDate)
 		{
 			var spinnerDateModel = ((SpinnerDateModel)dataField.getModel());
 			Comparable<java.util.Date> start = null;
@@ -440,16 +437,16 @@ class InputPanel extends JPanel
 				// Extract entered values, create data entry and add it to the database:
 				int i = 0;
 				var money = (float)dataFields[i++].getValue();
-				var name = (String)dataFields[i++].getValue();
-				var location = (String)dataFields[i++].getValue();
 				var type = (int)dataFields[i++].getValue();
 				var subtype = (int)dataFields[i++].getValue();
+				var name = (String)dataFields[i++].getValue();
+				var location = (String)dataFields[i++].getValue();
 				MainFrame.addDataEntry(new DataEntry(
 					money,
-					name,
-					location,
 					type,
 					subtype,
+					name,
+					location,
 					new Date(Stream.of(((String)dataFields[i++].getValue()).split("[.]")).mapToInt(Integer::parseInt).toArray()),
 					Interval.byIndex((int)dataFields[i++].getValue()),
 					(boolean)dataFields[i++].getValue(),
@@ -523,17 +520,17 @@ class InputPanel extends JPanel
 					case MONEY:
 						dataField = new CurrencyDataField(label, 2, DataEntry.DEFAULT_VALUE_MONEY);
 						break;
-					case NAME:
-						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_NAME);
-						break;
-					case LOCATION:
-						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_LOCATION);
-						break;
 					case TYPE:
 						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, DataEntry.DEFAULT_VALUE_TYPE, new TypeDataFieldAL());
 						break;
 					case SUBTYPE:
 						dataField = new ComboBoxDataField(label, DataEntry.SUBTYPE_NAMES[DataEntry.DEFAULT_VALUE_TYPE], DataEntry.DEFAULT_VALUE_SUBTYPE, new SubtypeDataFieldAL());
+						break;
+					case NAME:
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_NAME);
+						break;
+					case LOCATION:
+						dataField = new TextDataField(label, MainFrame.getDataRowValuesAsStrings(dataRowType), DataEntry.DEFAULT_VALUE_TYPE, DataEntry.DEFAULT_VALUE_SUBTYPE, DataEntry.DEFAULT_VALUE_LOCATION);
 						break;
 					case DATE:
 						dataField = new DateDataField(label, null, null, DataEntry.DEFAULT_VALUE_DATE, new DateDataFieldCL());
