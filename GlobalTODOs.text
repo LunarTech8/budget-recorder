@@ -30,7 +30,6 @@ Work status:
 // Application design:
 // -------------
 
-!!>>- Data panel: Add a remove button for each entry
 !!- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
 !!- Data panel: Add search functionality
 !- In bundled view: Colour positive balances green and negative balances red

@@ -26,6 +26,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
@@ -60,6 +61,10 @@ class DataPanel extends JPanel
 	private static final int BORDER_OUTER_PADDING_SIZE = 1;
 	private static final String HEADER_TEXT = "<NAME>:";
 	private static final String HEADER_TOOLTIP = "Shows the values for <NAME> in the fields below.";
+	private static final String REMOVE_BUTTON_TEXT = "[x]";
+	private static final String REMOVE_BUTTON_TOOLTIP = "Remove data entry.";
+	private static final String REMOVE_CONFIRMATION_TEXT = "Delete data entry?";
+	private static final String REMOVE_CONFIRMATION_TITLE = "Entry deletion confirmation";
 	private static final DataEntry.DataRowSorting DEFAULT_DATA_ROW_SORTING_COMPLETE = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.DOWNWARD);
 	private static final DataBundle.DataRowSorting DEFAULT_DATA_ROW_SORTING_BUNDLED = new DataBundle.DataRowSorting(DataBundle.DataRowType.START, DataBundle.DataRowSorting.Mode.DOWNWARD);
 	private static final Interval DEFAULT_VIEW = Interval.NEVER;
@@ -117,6 +122,11 @@ class DataPanel extends JPanel
 		{
 			try
 			{
+				// Deactivate current active data field if existent:
+				if (activeDataField != null)
+				{
+					deactivateActiveDataField(true);
+				}
 				// Adjust sorting:
 				if (sortingComplete.row == dataRowType)
 				{
@@ -278,6 +288,41 @@ class DataPanel extends JPanel
 					// Refresh data panel:
 					revalidate();
 					repaint();
+				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class RemoveButtonAL implements ActionListener
+	{
+		private DataEntry dataEntry;
+
+		public RemoveButtonAL(DataEntry dataEntry)
+		{
+			this.dataEntry = dataEntry;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				// Deactivate current active data field if existent:
+				if (activeDataField != null)
+				{
+					deactivateActiveDataField(true);
+				}
+				if (JOptionPane.showConfirmDialog(null, REMOVE_CONFIRMATION_TEXT, REMOVE_CONFIRMATION_TITLE, JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+				{
+					// Remove data entry:
+					MainFrame.removeDataEntry(dataEntry);
+					// Write database to json:
+					MainFrame.writeDatabaseFile();
+					// Refresh data panel:
+					refreshPanel();
 				}
 			}
 			catch (Exception exception)
@@ -650,7 +695,7 @@ class DataPanel extends JPanel
 
 			constraints.gridx++;
 		}
-		button = new JButton("[x]:");
+		button = new JButton(REMOVE_BUTTON_TEXT + ":");
 		button.setFocusPainted(false);
 		button.setHorizontalAlignment(SwingConstants.LEFT);
 		button.setToolTipText("Remove buttons");
@@ -685,13 +730,12 @@ class DataPanel extends JPanel
 			biMapDurationCompToUntilComp.put(buttons[DataEntry.DataRowType.DURATION.toInt()], buttons[DataEntry.DataRowType.UNTIL.toInt()]);
 
 			// Create remove button:
-			button = new JButton("[x]");
+			button = new JButton(REMOVE_BUTTON_TEXT);
 			button.setHorizontalAlignment(SwingConstants.LEFT);
-			button.setToolTipText("Remove data entry");
+			button.setToolTipText(REMOVE_BUTTON_TOOLTIP);
 			button.setPreferredSize(new Dimension(DATA_FIELD_HEIGHT, DATA_FIELD_HEIGHT));
 			button.setBorder(dataBorder);
-			// button.setContentAreaFilled(false);
-			// TODO: add action listener for removal
+			button.addActionListener(new RemoveButtonAL(dataEntry));
 			dataPanel.add(button, constraints);
 
 			constraints.gridy++;

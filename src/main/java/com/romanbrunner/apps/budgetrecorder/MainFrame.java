@@ -1,12 +1,9 @@
 package com.romanbrunner.apps.budgetrecorder;
 
-// import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-import java.awt.event.KeyEvent;
-import java.awt.KeyboardFocusManager;
-import java.awt.KeyEventDispatcher;
 import java.awt.Component;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -17,15 +14,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JRootPane;
-import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -33,7 +31,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.JsonNode;
+
+// import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 
 // @SuppressWarnings("serial")
@@ -287,7 +287,11 @@ public class MainFrame  // Singleton class
 
 	private static JRootPane getRootPane(Component component)
 	{
-		if (component instanceof JRootPane)
+		if (component == null)
+		{
+			return null;
+		}
+		else if (component instanceof JRootPane)
 		{
 			return (JRootPane)component;
 		}
@@ -374,6 +378,11 @@ public class MainFrame  // Singleton class
 	public static void addDataEntry(DataEntry e) throws Exception
 	{
 		dataEntries.add(e);
+	}
+
+	public static void removeDataEntry(DataEntry e) throws Exception
+	{
+		dataEntries.remove(e);
 	}
 
 	public static LinkedList<DataEntry> getDataEntries(DataEntry.DataRowSorting sorting) throws Exception
