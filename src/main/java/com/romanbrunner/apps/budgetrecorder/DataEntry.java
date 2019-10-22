@@ -38,8 +38,8 @@ class DataEntry
 	public static final boolean DEFAULT_VALUE_DURATION = true;
 	public static final Date DEFAULT_VALUE_UNTIL = Date.CURRENT_DATE;
 
-	public static final String[] TYPE_NAMES = { "Food/Grooming", "Media", "Hardeware", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
-	public static final String[][] SUBTYPE_NAMES =
+	public static String[] TYPE_NAMES = { "Food/Grooming", "Media", "Hardeware", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
+	public static String[][] SUBTYPE_NAMES =
 	{
 		// Food/Grooming:
 		{ "Supermarket", "Bakery", "Restaurant", "Bar", "Snack stand", "Barber", "Medical", "Fitness" },

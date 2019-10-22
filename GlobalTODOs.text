@@ -30,8 +30,8 @@ Work status:
 // Application design:
 // -------------
 
-!!- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
-!!- Data panel: Add search functionality
+!!>>- Possibility to add own types/subtypes (meaning/string of integer values should be stored in the json)
+!!- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
 !- In bundled view: Colour positive balances green and negative balances red
 !- In bundled view: When clicking on an entry show/expand the bundled entries
 !- Add more/better tooltips wherever possible

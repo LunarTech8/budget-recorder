@@ -13,6 +13,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -261,6 +263,37 @@ public class MainFrame  // Singleton class
 				databaseName = prop.getProperty("testDatabaseName");
 				databasePath = prop.getProperty("testDatabasePath");
 				backupPath = prop.getProperty("testBackupPath");
+				// Extract type and subtype names:
+				var typesText = prop.getProperty("types");
+				Pattern linePattern = Pattern.compile("\\[(.*?)\\]");
+				Pattern wordPattern = Pattern.compile("\"(.*?)\"");
+				Matcher lineMatcher = linePattern.matcher(typesText);
+				List<String> typeNames = new LinkedList<String>();
+				while (lineMatcher.find())  // TODO: finish
+				{
+					String line = lineMatcher.group(1);
+					Matcher wordMatcher = wordPattern.matcher(line);
+					var counter = 0;
+					List<String> subtypeNames = new LinkedList<String>();
+					while (wordMatcher.find())
+					{
+						String word = wordMatcher.group(1);
+						if (counter++ <= 0)
+						{
+							typeNames.add(word);
+						}
+						else
+						{
+							subtypeNames.add(word);
+						}
+					}
+					String[] subtypeNamesArray = subtypeNames.toArray(new String[0]);
+					System.out.println("subtypeNames:");
+					System.out.println(subtypeNames);
+				}
+				String[] typeNamesArray = typeNames.toArray(new String[0]);
+				System.out.println("typeNames:");
+				System.out.println(typeNames);
 			}
 			else
 			{
