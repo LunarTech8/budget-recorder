@@ -38,26 +38,8 @@ class DataEntry
 	public static final boolean DEFAULT_VALUE_DURATION = true;
 	public static final Date DEFAULT_VALUE_UNTIL = Date.CURRENT_DATE;
 
-	public static String[] TYPE_NAMES = { "Food/Grooming", "Media", "Hardeware", "Clothing", "Housing", "Amusement", "Locomotion", "Income" };
-	public static String[][] SUBTYPE_NAMES =
-	{
-		// Food/Grooming:
-		{ "Supermarket", "Bakery", "Restaurant", "Bar", "Snack stand", "Barber", "Medical", "Fitness" },
-		// Media:
-		{ "Book", "Movie", "Video game", "Board game", "Education" },
-		// Hardware:
-		{ "Electronics", "Cleaning", "Tool", "Gardening", "Vehicle", "Generic" },
-		// Clothing:
-		{ "Work", "Sport", "Leisure", "Generic" },
-		// Housing:
-		{ "Rent", "Incidental costs", "Electricity", "Insurance", "Internet" },
-		// Amusement:
-		{ "Event", "Vacation" },
-		// Locomotion:
-		{ "Commute", "Train", "Bus", "Plane", "Car" },
-		// Income:
-		{ "Profession", "Job", "Gift", "Sale", "Generic" },
-	};
+	public static String[] TYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
+	public static String[][] SUBTYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
 	public static final String DURATION_TEXT_ON = "Infinitely";
 	public static final String DURATION_TEXT_OFF = "Limited";
 

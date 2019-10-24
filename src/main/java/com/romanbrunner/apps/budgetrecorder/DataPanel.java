@@ -735,6 +735,7 @@ class DataPanel extends JPanel
 			button.setToolTipText(REMOVE_BUTTON_TOOLTIP);
 			button.setPreferredSize(new Dimension(DATA_FIELD_HEIGHT, DATA_FIELD_HEIGHT));
 			button.setBorder(dataBorder);
+			button.setContentAreaFilled(false);
 			button.addActionListener(new RemoveButtonAL(dataEntry));
 			dataPanel.add(button, constraints);
 

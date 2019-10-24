@@ -257,49 +257,53 @@ public class MainFrame  // Singleton class
 		{
 			var prop = new Properties();
 			prop.load(inputStream);
+			// Extract database and backup paths:
 			testModeActive = prop.getProperty("testModeActive").equals("true");
 			if (testModeActive)
 			{
 				databaseName = prop.getProperty("testDatabaseName");
 				databasePath = prop.getProperty("testDatabasePath");
 				backupPath = prop.getProperty("testBackupPath");
-				// Extract type and subtype names:
-				var typesText = prop.getProperty("types");
-				Pattern linePattern = Pattern.compile("\\[(.*?)\\]");
-				Pattern wordPattern = Pattern.compile("\"(.*?)\"");
-				Matcher lineMatcher = linePattern.matcher(typesText);
-				List<String> typeNames = new LinkedList<String>();
-				while (lineMatcher.find())  // TODO: finish
-				{
-					String line = lineMatcher.group(1);
-					Matcher wordMatcher = wordPattern.matcher(line);
-					var counter = 0;
-					List<String> subtypeNames = new LinkedList<String>();
-					while (wordMatcher.find())
-					{
-						String word = wordMatcher.group(1);
-						if (counter++ <= 0)
-						{
-							typeNames.add(word);
-						}
-						else
-						{
-							subtypeNames.add(word);
-						}
-					}
-					String[] subtypeNamesArray = subtypeNames.toArray(new String[0]);
-					System.out.println("subtypeNames:");
-					System.out.println(subtypeNames);
-				}
-				String[] typeNamesArray = typeNames.toArray(new String[0]);
-				System.out.println("typeNames:");
-				System.out.println(typeNames);
 			}
 			else
 			{
 				databaseName = prop.getProperty("databaseName");
 				databasePath = prop.getProperty("databasePath");
 				backupPath = prop.getProperty("backupPath");
+			}
+			// Extract type and subtype names:
+			var typesText = prop.getProperty("types");
+			var linePattern = Pattern.compile("\\{(.*?)\\}");
+			var wordPattern = Pattern.compile("\"(.*?)\"");
+			var lineMatcher = linePattern.matcher(typesText);
+			var typeNames = new LinkedList<String>();
+			var subtypeNames = new LinkedList<List<String>>();
+			while (lineMatcher.find())
+			{
+				var line = lineMatcher.group(1);
+				var wordMatcher = wordPattern.matcher(line);
+				var list = new LinkedList<String>();
+				var i = 0;
+				while (wordMatcher.find())
+				{
+					var word = wordMatcher.group(1);
+					if (i++ <= 0)
+					{
+						typeNames.add(word);
+					}
+					else
+					{
+						list.add(word);
+					}
+				}
+				subtypeNames.add(list);
+			}
+			// Convert name lists to arrays:
+			DataEntry.TYPE_NAMES = typeNames.toArray(new String[0]);
+			DataEntry.SUBTYPE_NAMES = new String[subtypeNames.size()][];
+			for (int j = 0; j < subtypeNames.size(); j++)
+			{
+				DataEntry.SUBTYPE_NAMES[j] = subtypeNames.get(j).toArray(new String[0]);
 			}
 		}
 		else
