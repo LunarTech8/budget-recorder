@@ -827,14 +827,24 @@ class DataPanel extends JPanel
 			{
 				break;
 			}
+			Color rowColour = Color.BLACK;
+			if (sortedDataBundle.getEntries() <= 0)
+			{
+				rowColour = Color.GRAY;
+			}
 			constraints.gridx = 0;
 			for (var dataRowType : DataBundle.DataRowType.Data.values)
 			{
 				int alignment;
+				Color entryColour = rowColour;
 				switch (dataRowType)
 				{
 					case BALANCE:
 						alignment = JLabel.RIGHT;
+						if (sortedDataBundle.getBalance() < 0F)
+						{
+							entryColour = Color.RED;
+						}
 						break;
 					default:
 						alignment = JLabel.LEFT;
@@ -846,6 +856,7 @@ class DataPanel extends JPanel
 				label.setToolTipText(name + ": " + text);
 				label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
 				label.setBorder(dataBorder);
+				label.setForeground(entryColour);
 				dataPanel.add(label, constraints);
 
 				constraints.gridx++;

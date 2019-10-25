@@ -81,6 +81,22 @@ class DataBundle
 	private Date end;
 
 	/**
+	 * @return the balance
+	 */
+	public float getBalance()
+    {
+		return balance;
+	}
+
+	/**
+	 * @return the entries
+	 */
+	public float getEntries()
+    {
+		return entries;
+	}
+
+	/**
 	 * @return the start
 	 */
 	public Date getStart()
