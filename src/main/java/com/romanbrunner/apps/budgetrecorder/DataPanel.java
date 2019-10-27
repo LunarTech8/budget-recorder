@@ -33,6 +33,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -98,6 +99,7 @@ class DataPanel extends JPanel
 
 	private boolean showEmptyEntries = true;
 	private int displayedEntriesLimit = ENTRIES_LIMIT_DEFAULT;
+	private boolean exitAppWhenClosing = true;
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
 	private Interval view;
@@ -324,6 +326,28 @@ class DataPanel extends JPanel
 					// Refresh data panel:
 					refreshPanel();
 				}
+			}
+			catch (Exception exception)
+			{
+				exception.printStackTrace();
+			}
+		}
+	}
+
+	private class BundleButtonAL implements ActionListener
+	{
+		private DataBundle dataBundle;
+
+		public BundleButtonAL(DataBundle dataBundle)
+		{
+			this.dataBundle = dataBundle;
+		}
+
+		public void actionPerformed(ActionEvent event)
+		{
+			try
+			{
+				MainFrame.createExcerptDataFrame(new DataPanel(dataBundle, sortingComplete, Interval.NEVER));
 			}
 			catch (Exception exception)
 			{
@@ -574,6 +598,14 @@ class DataPanel extends JPanel
 		this.sortingBundled = sortingBundled;
 		this.view = view;
 		recreatePanel();
+	}
+	public DataPanel(DataBundle dataBundle, DataEntry.DataRowSorting sortingComplete, Interval view)
+	{
+		super(new BorderLayout());
+		this.sortingComplete = sortingComplete;
+		this.view = view;
+		exitAppWhenClosing = false;
+		recreatePanel();  // TODO: use dataBundle
 	}
 	public DataPanel()
 	{
@@ -827,7 +859,7 @@ class DataPanel extends JPanel
 			{
 				break;
 			}
-			Color rowColour = Color.BLACK;
+			var rowColour = Color.BLACK;
 			if (sortedDataBundle.getEntries() <= 0)
 			{
 				rowColour = Color.GRAY;
@@ -836,28 +868,31 @@ class DataPanel extends JPanel
 			for (var dataRowType : DataBundle.DataRowType.Data.values)
 			{
 				int alignment;
-				Color entryColour = rowColour;
+				var entryColour = rowColour;
+				var name = dataRowType.toString();
+				var text = sortedDataBundle.getDataRowValueAsText(dataRowType);
 				switch (dataRowType)
 				{
 					case BALANCE:
-						alignment = JLabel.RIGHT;
+						alignment = SwingConstants.RIGHT;
 						if (sortedDataBundle.getBalance() < 0F)
 						{
 							entryColour = Color.RED;
 						}
 						break;
 					default:
-						alignment = JLabel.LEFT;
+						alignment = SwingConstants.LEFT;
 						break;
 				}
-				var name = dataRowType.toString();
-				var text = sortedDataBundle.getDataRowValueAsText(dataRowType);
-				var label = new JLabel(text, alignment);
-				label.setToolTipText(name + ": " + text);
-				label.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
-				label.setBorder(dataBorder);
-				label.setForeground(entryColour);
-				dataPanel.add(label, constraints);
+				var button = new JButton(text);
+				button.setHorizontalAlignment(alignment);
+				button.setToolTipText(name + ": " + text);
+				button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
+				button.setBorder(dataBorder);
+				button.setForeground(entryColour);
+				button.setContentAreaFilled(false);
+				button.addActionListener(new BundleButtonAL(sortedDataBundle));
+				dataPanel.add(button, constraints);
 
 				constraints.gridx++;
 			}
@@ -940,9 +975,16 @@ class DataPanel extends JPanel
 				return true;
 			}
 		}
-		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE)
+		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE && event.getID() == KeyEvent.KEY_RELEASED)
 		{
-			System.exit(0);
+			if (exitAppWhenClosing)
+			{
+				System.exit(0);
+			}
+			else
+			{
+				SwingUtilities.getWindowAncestor(this).dispose();
+			}
 		}
 		else if (event.getKeyCode() == KeyEvent.VK_CONTROL)
 		{

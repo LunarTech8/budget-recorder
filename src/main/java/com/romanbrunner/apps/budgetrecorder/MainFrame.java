@@ -49,6 +49,7 @@ public class MainFrame  // Singleton class
 
 	private static final String INPUT_FRAME_NAME = "Budget Recorder (Input)";
 	private static final String DATA_FRAME_NAME = "Budget Recorder (Data)";
+	private static final String EXCERPT_DATA_FRAME_NAME = "Budget Recorder (Excerpt Data)";
 	private static final String LOGO_FILE_PATH = "/images/Logo.jpg";
 	private static final String CONFIG_PATH = "/config.properties";
 
@@ -65,8 +66,10 @@ public class MainFrame  // Singleton class
 	private static List<DataEntry> dataEntries = new LinkedList<DataEntry>();
 	private static InputPanel inputPanel;
 	private static DataPanel dataPanel;
+	private static DataPanel excerptDataPanel;
 	private static JFrame inputFrame;
 	private static JFrame dataFrame;
+	private static JFrame excerptDataFrame;
 	private static String databaseName;
 	private static String databasePath;
 	private static String backupPath;
@@ -191,62 +194,42 @@ public class MainFrame  // Singleton class
 		}
 	}
 
-	private static void createInputFrame() throws Exception
+	private static JRootPane getRootPane(Component component)
 	{
-		// Create the frame:
-		inputFrame = new JFrame(INPUT_FRAME_NAME);
-		inputFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		// Set the frame appearance:
-		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
-		if (imgURL != null)
+		if (component == null)
 		{
-			inputFrame.setIconImage(new ImageIcon(imgURL).getImage());
+			return null;
+		}
+		else if (component instanceof JRootPane)
+		{
+			return (JRootPane)component;
+		}
+		else if (component.getParent() != null)
+		{
+			return getRootPane(component.getParent());
 		}
 		else
 		{
-			throw new Exception("ERROR: Logo file not found");
+			var window = SwingUtilities.windowForComponent(component);
+			if (window == null)
+			{
+				return null;  // Can't find parent of type JRootPane or a window for given component
+			}
+			return getRootPane(window);
 		}
-		inputPanel = new InputPanel();
-		inputFrame.setContentPane(inputPanel);
-
-		// Set the frame size and position:
-		inputFrame.pack();
-		inputFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
-
-		// Get panel into focus:
-		inputFrame.getRootPane().requestFocusInWindow();
-
-		// Display the frame:
-		inputFrame.setVisible(true);
 	}
 
-	private static void createDataFrame() throws Exception
+	private static void setLogoForFrame(JFrame frame) throws Exception
 	{
-		// Create the frame:
-		dataFrame = new JFrame(DATA_FRAME_NAME);
-		dataFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		// Set the frame appearance:
 		var imgURL = MainFrame.class.getResource(LOGO_FILE_PATH);
 		if (imgURL != null)
 		{
-			dataFrame.setIconImage(new ImageIcon(imgURL).getImage());
+			frame.setIconImage(new ImageIcon(imgURL).getImage());
 		}
 		else
 		{
 			throw new Exception("ERROR: Logo file not found");
 		}
-		dataPanel = new DataPanel();
-		dataFrame.setJMenuBar(dataPanel.createMenuBar());
-		dataFrame.setContentPane(dataPanel);
-
-		// Set the frame size and position:
-		dataFrame.pack();
-		dataFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
-
-		// Display the frame:
-		dataFrame.setVisible(true);
 	}
 
 	private static void readConfigFile() throws Exception
@@ -321,29 +304,71 @@ public class MainFrame  // Singleton class
 		mapper.readValue(databaseFile, MainFrame.class);
 	}
 
-	private static JRootPane getRootPane(Component component)
+	private static void createInputFrame() throws Exception
 	{
-		if (component == null)
+		// Create the frame:
+		inputFrame = new JFrame(INPUT_FRAME_NAME);
+		inputFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Set the frame appearance:
+		setLogoForFrame(inputFrame);
+		inputPanel = new InputPanel();
+		inputFrame.setContentPane(inputPanel);
+
+		// Set the frame size and position:
+		inputFrame.pack();
+		inputFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
+
+		// Get panel into focus:
+		inputFrame.getRootPane().requestFocusInWindow();
+
+		// Display the frame:
+		inputFrame.setVisible(true);
+	}
+
+	private static void createDataFrame() throws Exception
+	{
+		// Create the frame:
+		dataFrame = new JFrame(DATA_FRAME_NAME);
+		dataFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		// Set the frame appearance:
+		setLogoForFrame(dataFrame);
+		dataPanel = new DataPanel();
+		dataFrame.setJMenuBar(dataPanel.createMenuBar());
+		dataFrame.setContentPane(dataPanel);
+
+		// Set the frame size and position:
+		dataFrame.pack();
+		dataFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
+
+		// Display the frame:
+		dataFrame.setVisible(true);
+	}
+
+	public static void createExcerptDataFrame(DataPanel dataPanel) throws Exception
+	{
+		// Close old frame if existent:
+		if (excerptDataFrame != null)
 		{
-			return null;
+			excerptDataFrame.dispose();
 		}
-		else if (component instanceof JRootPane)
-		{
-			return (JRootPane)component;
-		}
-		else if (component.getParent() != null)
-		{
-			return getRootPane(component.getParent());
-		}
-		else
-		{
-			var window = SwingUtilities.windowForComponent(component);
-			if (window == null)
-			{
-				return null;  // Can't find parent of type JRootPane or a window for given component
-			}
-			return getRootPane(window);
-		}
+
+		// Create the frame:
+		excerptDataFrame = new JFrame(EXCERPT_DATA_FRAME_NAME);
+		excerptDataFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		// Set the frame appearance:
+		setLogoForFrame(excerptDataFrame);
+		excerptDataPanel = dataPanel;
+		excerptDataFrame.setContentPane(excerptDataPanel);
+
+		// Set the frame size and position:
+		excerptDataFrame.pack();
+		excerptDataFrame.setLocationRelativeTo(null);  // Set frame position to center of screen
+
+		// Display the frame:
+		excerptDataFrame.setVisible(true);
 	}
 
 	public static void main(String[] args)
@@ -364,6 +389,7 @@ public class MainFrame  // Singleton class
 						// Create frames:
 						createDataFrame();
 						createInputFrame();
+						excerptDataFrame = null;
 
 						// Key manangement:
 						KeyboardFocusManager kfm = KeyboardFocusManager.getCurrentKeyboardFocusManager();
@@ -382,6 +408,10 @@ public class MainFrame  // Singleton class
 										else if (focusedRootPane == inputFrame.getRootPane())
 										{
 											return inputPanel.reactOnKeyStroke(kfm, event);
+										}
+										else if (excerptDataFrame != null && focusedRootPane == excerptDataFrame.getRootPane())
+										{
+											return excerptDataPanel.reactOnKeyStroke(kfm, event);
 										}
 									}
 									catch (Exception exception)

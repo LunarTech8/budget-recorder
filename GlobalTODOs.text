@@ -30,7 +30,7 @@ Work status:
 // Application design:
 // -------------
 
-!>- In bundled view: When clicking on entries of an entry show/expand the bundled entries or display the entries in a separate instance of DataPanel that uses createCompletePanel
+!>>- In bundled view: When clicking on entries of an entry display the entries in a separate instance of DataPanel that uses createCompletePanel
 !- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
 !- Add more/better tooltips wherever possible
 

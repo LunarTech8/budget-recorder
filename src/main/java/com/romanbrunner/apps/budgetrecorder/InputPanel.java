@@ -575,7 +575,7 @@ class InputPanel extends JPanel
 
 	public boolean reactOnKeyStroke(KeyboardFocusManager kfm, KeyEvent event) throws Exception
 	{
-		if (event.getID() == KeyEvent.KEY_PRESSED && event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0)
+		if (event.getKeyCode() == KeyEvent.VK_ENTER && event.getModifiersEx() == 0 && event.getID() == KeyEvent.KEY_PRESSED)
 		{
 			JComponent focusedComponent = (JComponent)kfm.getFocusOwner();
 			// Reaction in data fields:
@@ -611,7 +611,7 @@ class InputPanel extends JPanel
 			addButton.doClick();
 			return true;
 		}
-		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE)
+		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE && event.getID() == KeyEvent.KEY_RELEASED)
 		{
 			System.exit(0);
 		}
