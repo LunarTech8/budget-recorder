@@ -99,13 +99,13 @@ class DataPanel extends JPanel
 
 	private boolean showEmptyEntries = true;
 	private int displayedEntriesLimit = ENTRIES_LIMIT_DEFAULT;
-	private boolean exitAppWhenClosing = true;
 	private DataEntry.DataRowSorting sortingComplete;
 	private DataBundle.DataRowSorting sortingBundled;
 	private Interval view;
 	private GridBagConstraints constraints;
 	private JScrollPane scroller;
 	private DataFieldButtonAL activeDataField = null;
+	private DataBundle excerptDataBundle = null;
 	private DualHashBidiMap<JComponent, JComponent> biMapTypeCompToSubtypeComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapDateCompToUntilComp = new DualHashBidiMap<JComponent, JComponent>();
 	private DualHashBidiMap<JComponent, JComponent> biMapRepeatCompToDurationComp = new DualHashBidiMap<JComponent, JComponent>();
@@ -287,7 +287,7 @@ class DataPanel extends JPanel
 					// Adjust global variables:
 					adjustComponentMap(dataRowType, button, component);
 					activeDataField = this;
-					// Refresh data panel:
+					// Refresh panel:
 					revalidate();
 					repaint();
 				}
@@ -323,8 +323,13 @@ class DataPanel extends JPanel
 					MainFrame.removeDataEntry(dataEntry);
 					// Write database to json:
 					MainFrame.writeDatabaseFile();
-					// Refresh data panel:
+					// Refresh panel:
 					refreshPanel();
+					// Refresh main data frame with bundled view if existent:
+					if (excerptDataBundle != null)
+					{
+						MainFrame.refreshDataPanel();
+					}
 				}
 			}
 			catch (Exception exception)
@@ -372,7 +377,7 @@ class DataPanel extends JPanel
 			try
 			{
 				boolean changesRequired = false;
-				boolean refreshDataPanel = false;
+				boolean refreshPanel = false;
 				JComponent component = null;
 				Object newValueObject = null;
 
@@ -418,7 +423,7 @@ class DataPanel extends JPanel
 						// Adjust button name:
 						JButton button = (JButton)biMapTypeCompToSubtypeComp.get(component);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.SUBTYPE));
-						refreshDataPanel = true;
+						refreshPanel = true;
 					}
 					else if (dataRowType == DataEntry.DataRowType.REPEAT)
 					{
@@ -429,7 +434,7 @@ class DataPanel extends JPanel
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.DURATION));
 						button = (JButton)biMapDurationCompToUntilComp.get(button);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
-						refreshDataPanel = true;
+						refreshPanel = true;
 					}
 					else if (dataRowType == DataEntry.DataRowType.DURATION)
 					{
@@ -438,12 +443,12 @@ class DataPanel extends JPanel
 						// Adjust button name:
 						JButton button = (JButton)biMapDurationCompToUntilComp.get(component);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
-						refreshDataPanel = true;
+						refreshPanel = true;
 					}
 				}
 
-				// Refresh data panel if required:
-				if (refreshDataPanel)
+				// Refresh panel if required:
+				if (refreshPanel)
 				{
 					revalidate();
 					repaint();
@@ -472,7 +477,7 @@ class DataPanel extends JPanel
 			try
 			{
 				boolean changesRequired = false;
-				boolean refreshDataPanel = false;
+				boolean refreshPanel = false;
 				JComponent component = null;
 				Object newValueObject = null;
 
@@ -498,12 +503,12 @@ class DataPanel extends JPanel
 						// Adjust button name:
 						JButton button = (JButton)biMapDateCompToUntilComp.get(component);
 						button.setText(dataEntry.getDataRowValueAsText(DataEntry.DataRowType.UNTIL));
-						refreshDataPanel = true;
+						refreshPanel = true;
 					}
 				}
 
-				// Refresh data panel if required:
-				if (refreshDataPanel)
+				// Refresh panel if required:
+				if (refreshPanel)
 				{
 					revalidate();
 					repaint();
@@ -599,13 +604,13 @@ class DataPanel extends JPanel
 		this.view = view;
 		recreatePanel();
 	}
-	public DataPanel(DataBundle dataBundle, DataEntry.DataRowSorting sortingComplete, Interval view)
+	public DataPanel(DataBundle excerptDataBundle, DataEntry.DataRowSorting sortingComplete, Interval view)
 	{
 		super(new BorderLayout());
 		this.sortingComplete = sortingComplete;
 		this.view = view;
-		exitAppWhenClosing = false;
-		recreatePanel();  // TODO: use dataBundle
+		this.excerptDataBundle = excerptDataBundle;
+		recreatePanel();
 	}
 	public DataPanel()
 	{
@@ -687,9 +692,14 @@ class DataPanel extends JPanel
 		// Adjust global variables:
 		adjustComponentMap(activeDataField.dataRowType, component, button);
 		activeDataField = null;
-		// Refresh data panel:
+		// Refresh panel:
 		revalidate();
 		repaint();
+		// Refresh main data frame with bundled view if existent:
+		if (excerptDataBundle != null)
+		{
+			MainFrame.refreshDataPanel();
+		}
 	}
 
 	private void createCompletePanel(GridBagConstraints constraints, CompoundBorder dataBorder, CompoundBorder headerBorder) throws Exception
@@ -742,7 +752,17 @@ class DataPanel extends JPanel
 		// Create data field buttons:
 		JButton buttons[] = new JButton[DataEntry.DataRowType.Data.length];
 		var dataEntryCounter = 0;
-		for (var dataEntry : MainFrame.getDataEntries(sortingComplete))
+		LinkedList<DataEntry> dataEntries;
+		if (excerptDataBundle != null)
+		{
+			dataEntries = MainFrame.getDataEntries(excerptDataBundle.getStart(), excerptDataBundle.getEnd());
+		}
+		else
+		{
+			dataEntries = MainFrame.getDataEntries();
+		}
+		Collections.sort(dataEntries, new DataEntry.DataComparator(sortingComplete));
+		for (var dataEntry : dataEntries)
 		{
 			if (dataEntryCounter >= displayedEntriesLimit)
 			{
@@ -823,17 +843,19 @@ class DataPanel extends JPanel
 		var dataPanel = new JPanel(new GridBagLayout());
 		constraints.gridx = 0;
 		constraints.gridy = 0;
-		// Unpack repeate entries:
-		var sorting = new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD);
-		var dataEntries = MainFrame.getDataEntries(sorting);
-		var end = dataEntries.getLast().getDate();
+		// Get sorted unpacked entries:
+		var comparator = new DataEntry.DataComparator(new DataEntry.DataRowSorting(DataEntry.DataRowType.DATE, DataEntry.DataRowSorting.Mode.UPWARD));
+		var dataEntries = MainFrame.getDataEntries();
+		Collections.sort(dataEntries, comparator);
+		var end = Interval.getIntervalEnd(dataEntries.getLast().getDate(), view);
+		System.out.println(end.toString());
 		var unpackedAddList = new LinkedList<DataEntry>();
 		for (var dataEntry : dataEntries)
 		{
 			dataEntry.unpackToList(unpackedAddList, end);
 		}
 		dataEntries.addAll(unpackedAddList);
-		Collections.sort(dataEntries, new DataEntry.DataComparator(sorting));
+		Collections.sort(dataEntries, comparator);
 		// Bundle entries based on view settings:
 		var dataBundles = new LinkedList<DataBundle>();
 		DataBundle dataBundle = dataEntries.pop().createNewDataBundle(view);
@@ -891,7 +913,10 @@ class DataPanel extends JPanel
 				button.setBorder(dataBorder);
 				button.setForeground(entryColour);
 				button.setContentAreaFilled(false);
-				button.addActionListener(new BundleButtonAL(sortedDataBundle));
+				if (sortedDataBundle.hasEntries())
+				{
+					button.addActionListener(new BundleButtonAL(sortedDataBundle));
+				}
 				dataPanel.add(button, constraints);
 
 				constraints.gridx++;
@@ -977,13 +1002,13 @@ class DataPanel extends JPanel
 		}
 		else if (event.getKeyCode() == KeyEvent.VK_ESCAPE && event.getID() == KeyEvent.KEY_RELEASED)
 		{
-			if (exitAppWhenClosing)
+			if (excerptDataBundle != null)
 			{
-				System.exit(0);
+				SwingUtilities.getWindowAncestor(this).dispose();
 			}
 			else
 			{
-				SwingUtilities.getWindowAncestor(this).dispose();
+				System.exit(0);
 			}
 		}
 		else if (event.getKeyCode() == KeyEvent.VK_CONTROL)

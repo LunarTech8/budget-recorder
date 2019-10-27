@@ -450,27 +450,45 @@ class DataEntry
 		}
 	}
 
-	public boolean unpackToList(LinkedList<DataEntry> list, Date end) throws Exception
+	public boolean isRepeatedIntoTimeframe(Date start, Date end) throws Exception
 	{
 		if (repeat != Interval.NEVER)
 		{
-			Date date = Interval.getIntervalNextStart(this.date, repeat);  // Don't add entry itself again
+			Date currentDate = Interval.getIntervalNextDate(date, repeat);  // Skip entry itself
 			// Regard duration:
 			if (duration == false && until.compareTo(end) < 0)
 			{
 				end = until;
 			}
-			// Create and add repeating entries:
-			while (date.compareTo(end) <= 0)
+			// Check for repeating entries in timeframe:
+			while (currentDate.compareTo(end) <= 0)
 			{
-				list.add(new DataEntry(this, date, true));
-				date = Interval.getIntervalNextStart(date, repeat);
+				if (currentDate.compareTo(start) >= 0)
+				{
+					return true;
+				}
+				currentDate = Interval.getIntervalNextDate(currentDate, repeat);
 			}
-			return true;
 		}
-		else
+		return false;
+	}
+
+	public void unpackToList(LinkedList<DataEntry> list, Date end) throws Exception
+	{
+		if (repeat != Interval.NEVER)
 		{
-			return false;
+			Date currentDate = Interval.getIntervalNextDate(date, repeat);  // Don't add entry itself again
+			// Regard duration:
+			if (duration == false && until.compareTo(end) < 0)
+			{
+				end = until;
+			}
+			// Create and add repeating entries in timeframe:
+			while (currentDate.compareTo(end) <= 0)
+			{
+				list.add(new DataEntry(this, currentDate, true));
+				currentDate = Interval.getIntervalNextDate(currentDate, repeat);
+			}
 		}
 	}
 

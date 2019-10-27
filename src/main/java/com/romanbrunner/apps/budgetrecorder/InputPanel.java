@@ -456,6 +456,7 @@ class InputPanel extends JPanel
 				MainFrame.writeDatabaseFile();
 				// Refresh data panel:
 				MainFrame.refreshDataPanel();
+				MainFrame.disposeExcerptDataFrame();
 				// Give visual confimation:
 				for (var component : getComponents())
 				{

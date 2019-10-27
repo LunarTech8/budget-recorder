@@ -8,7 +8,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.DateFormat;
-import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -451,11 +450,21 @@ public class MainFrame  // Singleton class
 		dataEntries.remove(e);
 	}
 
-	public static LinkedList<DataEntry> getDataEntries(DataEntry.DataRowSorting sorting) throws Exception
+	public static LinkedList<DataEntry> getDataEntries() throws Exception
 	{
-		var sortedList = new LinkedList<>(dataEntries);
-        Collections.sort(sortedList, new DataEntry.DataComparator(sorting));
-		return sortedList;
+		return new LinkedList<>(dataEntries);
+	}
+	public static LinkedList<DataEntry> getDataEntries(com.romanbrunner.apps.budgetrecorder.Date start, com.romanbrunner.apps.budgetrecorder.Date end) throws Exception
+	{
+		var filteredDataEntries = new LinkedList<DataEntry>();
+		for (var dataEntry : dataEntries)
+		{
+			if (dataEntry.getDate().isInTimeframe(start, end) || dataEntry.isRepeatedIntoTimeframe(start, end))
+			{
+				filteredDataEntries.add(dataEntry);
+			}
+		}
+		return filteredDataEntries;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -502,6 +511,14 @@ public class MainFrame  // Singleton class
 	public static void refreshDataPanel()
 	{
 		dataPanel.refreshPanel();
+	}
+
+	public static void disposeExcerptDataFrame()
+	{
+		if (excerptDataFrame != null)
+		{
+			excerptDataFrame.dispose();
+		}
 	}
 
 }

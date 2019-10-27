@@ -73,7 +73,7 @@ public class Date
 			return names;
 		}
 
-		private static Calendar getIntervalNextStartCalendar(Calendar calendar, Interval interval)
+		private static Calendar getIntervalNextDateCalendar(Calendar calendar, Interval interval)
 		{
 			switch (interval)
 			{
@@ -94,6 +94,7 @@ public class Date
 			return calendar;
 		}
 
+		// Returns the start date from the timeframe of given interval and date:
 		public static Date getIntervalStart(Date date, Interval interval) throws Exception
 		{
 			Calendar calendar = Date.dateToCalendar(date);
@@ -114,16 +115,18 @@ public class Date
 			return Date.calendarToDate(calendar);
 		}
 
+		// Returns the end date from the timeframe of given interval and date:
 		public static Date getIntervalEnd(Date date, Interval interval) throws Exception
 		{
-			Calendar calendar = getIntervalNextStartCalendar(Date.dateToCalendar(date), interval);
+			Calendar calendar = getIntervalNextDateCalendar(Date.dateToCalendar(getIntervalStart(date, interval)), interval);
 			calendar.add(Calendar.DAY_OF_YEAR, -1);
 			return Date.calendarToDate(calendar);
 		}
 
-		public static Date getIntervalNextStart(Date date, Interval interval) throws Exception
+		// Returns the next date with given interval after given date:
+		public static Date getIntervalNextDate(Date date, Interval interval) throws Exception
 		{
-			return Date.calendarToDate(getIntervalNextStartCalendar(Date.dateToCalendar(date), interval));
+			return Date.calendarToDate(getIntervalNextDateCalendar(Date.dateToCalendar(date), interval));
 		}
 
 		@Override
