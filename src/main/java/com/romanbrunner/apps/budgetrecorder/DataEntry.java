@@ -3,7 +3,6 @@ package com.romanbrunner.apps.budgetrecorder;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -26,8 +25,6 @@ class DataEntry
 	// Data code
 	// --------------------
 
-	private static final String POSITIVE_BALANCE_TYPE_NAME = "Income";
-
 	public static final float DEFAULT_VALUE_MONEY = 0.F;
 	public static final int DEFAULT_VALUE_TYPE = 0;
 	public static final int DEFAULT_VALUE_SUBTYPE = 0;
@@ -40,6 +37,7 @@ class DataEntry
 
 	public static String[] TYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
 	public static String[][] SUBTYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
+	public static Boolean[] IS_POSITIVE_BALANCE_TYPE;  // Extracted of config.properties in MainFrame.readConfigFile
 	public static final String DURATION_TEXT_ON = "Infinitely";
 	public static final String DURATION_TEXT_OFF = "Limited";
 
@@ -415,7 +413,7 @@ class DataEntry
 
 	private float moneyToBalance(float money, int type)
 	{
-		if (Objects.equals(TYPE_NAMES[type], POSITIVE_BALANCE_TYPE_NAME))
+		if (IS_POSITIVE_BALANCE_TYPE[type])
 		{
 			return money;
 		}

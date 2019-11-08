@@ -259,24 +259,19 @@ public class MainFrame  // Singleton class
 			var lineMatcher = linePattern.matcher(typesText);
 			var typeNames = new LinkedList<String>();
 			var subtypeNames = new LinkedList<List<String>>();
+			var isPositiveBalanceTypes = new LinkedList<Boolean>();
 			while (lineMatcher.find())
 			{
 				var line = lineMatcher.group(1);
 				var wordMatcher = wordPattern.matcher(line);
 				var list = new LinkedList<String>();
-				var i = 0;
 				while (wordMatcher.find())
 				{
 					var word = wordMatcher.group(1);
-					if (i++ <= 0)
-					{
-						typeNames.add(word);
-					}
-					else
-					{
-						list.add(word);
-					}
+					list.add(word);
 				}
+				typeNames.add(list.pollFirst());
+				isPositiveBalanceTypes.add(Boolean.valueOf(list.pollLast()));
 				subtypeNames.add(list);
 			}
 			// Convert name lists to arrays:
@@ -286,6 +281,7 @@ public class MainFrame  // Singleton class
 			{
 				DataEntry.SUBTYPE_NAMES[j] = subtypeNames.get(j).toArray(new String[0]);
 			}
+			DataEntry.IS_POSITIVE_BALANCE_TYPE = isPositiveBalanceTypes.toArray(new Boolean[0]);
 		}
 		else
 		{

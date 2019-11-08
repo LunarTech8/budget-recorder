@@ -848,7 +848,6 @@ class DataPanel extends JPanel
 		var dataEntries = MainFrame.getDataEntries();
 		Collections.sort(dataEntries, comparator);
 		var end = Interval.getIntervalEnd(dataEntries.getLast().getDate(), view);
-		System.out.println(end.toString());
 		var unpackedAddList = new LinkedList<DataEntry>();
 		for (var dataEntry : dataEntries)
 		{
