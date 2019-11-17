@@ -21,17 +21,18 @@ Work status:
 // -------------
 
 !- Make autocompletion ignore capitalisation
-!- Maybe add specific tooltips for the different types and subtypes if possible
 !- Maybe recreate a debug & unit test class/system like the one used in the AgeOfWarcraft project
 !- Maybe use a better/custom json schema
+!- Maybe encrypt json files
 
 
 // -------------
 // Application design:
 // -------------
 
+!!- Implement better sorting for subtype (type dependant)
+!!- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
 !- In complete view: Positive balance entries should be highlighted
-!- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
 !- Add more/better tooltips wherever possible
 
 
