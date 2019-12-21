@@ -30,10 +30,13 @@ Work status:
 // Application design:
 // -------------
 
+!!- Add a switchable plus/minus button before the money field, and set the default value according to the selected type
+!!- Display all positive money values green and all negative values red
+!!- Put "Generic" subtype on first place
 !!- Implement better sorting for subtype (type dependant)
 !!- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
-!- In complete view: Positive balance entries should be highlighted
 !- Add more/better tooltips wherever possible
+!- For name and location show a drop down list with the current autocompletion possiblities sorted by amount of usage
 
 
 // -------------
