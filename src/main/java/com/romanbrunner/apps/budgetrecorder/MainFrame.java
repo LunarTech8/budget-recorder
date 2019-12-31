@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -110,6 +109,22 @@ public class MainFrame  // Singleton class
 				jsonGenerator.writeNumberField("versionMajor", VERSION_MAJOR);
 				jsonGenerator.writeNumberField("versionMinor", VERSION_MINOR);
 				jsonGenerator.writeNumberField("versionPatch", VERSION_PATCH);
+				// Store type and subtype names:
+				jsonGenerator.writeArrayFieldStart("types");
+				for (int i = 0; i < DataEntry.TYPE_NAMES.length; i++)
+				{
+					jsonGenerator.writeStartObject();
+					jsonGenerator.writeStringField("typeName", DataEntry.TYPE_NAMES[i]);
+					jsonGenerator.writeArrayFieldStart("subtypeNames");
+					for (int j = 0; j < DataEntry.SUBTYPE_NAMES[i].length; j++)
+					{
+						jsonGenerator.writeString(DataEntry.SUBTYPE_NAMES[i][j]);
+					}
+					jsonGenerator.writeEndArray();
+					jsonGenerator.writeBooleanField("isPositiveBalanceType", DataEntry.IS_POSITIVE_BALANCE_TYPE[i]);
+					jsonGenerator.writeEndObject();
+				}
+				jsonGenerator.writeEndArray();
 				// Store data entries:
 				jsonGenerator.writeArrayFieldStart("dataEntries");
 				for (var dataEntry : dataEntries)
@@ -168,6 +183,31 @@ public class MainFrame  // Singleton class
 					{
 						System.out.println("WARNING: Target database json does not have matching patch version (" + versionPatch + " instead of " + VERSION_PATCH + ")");
 					}
+					// Extract type and subtype names:
+					var typeNames = new LinkedList<String>();
+					var subtypeNames = new LinkedList<List<String>>();
+					var isPositiveBalanceTypes = new LinkedList<Boolean>();
+					var typesNode = node.get("types");
+					for (var typeNode : typesNode)
+					{
+						typeNames.add(typeNode.get("typeName").asText());
+						var list = new LinkedList<String>();
+						var iterator = typeNode.get("subtypeNames").elements();
+						while (iterator.hasNext())
+						{
+							list.add(iterator.next().asText());
+						}
+						subtypeNames.add(list);
+						isPositiveBalanceTypes.add(typeNode.get("isPositiveBalanceType").booleanValue());
+					}
+					// Convert name lists to arrays:
+					DataEntry.TYPE_NAMES = typeNames.toArray(new String[0]);
+					DataEntry.SUBTYPE_NAMES = new String[subtypeNames.size()][];
+					for (int j = 0; j < subtypeNames.size(); j++)
+					{
+						DataEntry.SUBTYPE_NAMES[j] = subtypeNames.get(j).toArray(new String[0]);
+					}
+					DataEntry.IS_POSITIVE_BALANCE_TYPE = isPositiveBalanceTypes.toArray(new Boolean[0]);
 					// Extract and create data entries:
 					var dataEntriesNode = node.get("dataEntries");
 					for (var dataEntryNode : dataEntriesNode)
@@ -252,36 +292,6 @@ public class MainFrame  // Singleton class
 				databasePath = prop.getProperty("databasePath");
 				backupPath = prop.getProperty("backupPath");
 			}
-			// Extract type and subtype names:
-			var typesText = prop.getProperty("types");
-			var linePattern = Pattern.compile("\\{(.*?)\\}");
-			var wordPattern = Pattern.compile("\"(.*?)\"");
-			var lineMatcher = linePattern.matcher(typesText);
-			var typeNames = new LinkedList<String>();
-			var subtypeNames = new LinkedList<List<String>>();
-			var isPositiveBalanceTypes = new LinkedList<Boolean>();
-			while (lineMatcher.find())
-			{
-				var line = lineMatcher.group(1);
-				var wordMatcher = wordPattern.matcher(line);
-				var list = new LinkedList<String>();
-				while (wordMatcher.find())
-				{
-					var word = wordMatcher.group(1);
-					list.add(word);
-				}
-				typeNames.add(list.pollFirst());
-				isPositiveBalanceTypes.add(Boolean.valueOf(list.pollLast()));
-				subtypeNames.add(list);
-			}
-			// Convert name lists to arrays:
-			DataEntry.TYPE_NAMES = typeNames.toArray(new String[0]);
-			DataEntry.SUBTYPE_NAMES = new String[subtypeNames.size()][];
-			for (int j = 0; j < subtypeNames.size(); j++)
-			{
-				DataEntry.SUBTYPE_NAMES[j] = subtypeNames.get(j).toArray(new String[0]);
-			}
-			DataEntry.IS_POSITIVE_BALANCE_TYPE = isPositiveBalanceTypes.toArray(new Boolean[0]);
 		}
 		else
 		{

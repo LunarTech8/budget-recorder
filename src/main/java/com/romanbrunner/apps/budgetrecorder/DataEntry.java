@@ -35,9 +35,9 @@ class DataEntry
 	public static final boolean DEFAULT_VALUE_DURATION = true;
 	public static final Date DEFAULT_VALUE_UNTIL = Date.CURRENT_DATE;
 
-	public static String[] TYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
-	public static String[][] SUBTYPE_NAMES;  // Extracted of config.properties in MainFrame.readConfigFile
-	public static Boolean[] IS_POSITIVE_BALANCE_TYPE;  // Extracted of config.properties in MainFrame.readConfigFile
+	public static String[] TYPE_NAMES;  // Extracted of database.json in MainFrame.readDatabaseFile
+	public static String[][] SUBTYPE_NAMES;  // Extracted of database.json in MainFrame.readDatabaseFile
+	public static Boolean[] IS_POSITIVE_BALANCE_TYPE;  // Extracted of database.json in MainFrame.readDatabaseFile
 	public static final String DURATION_TEXT_ON = "Infinitely";
 	public static final String DURATION_TEXT_OFF = "Limited";
 
