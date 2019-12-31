@@ -411,22 +411,10 @@ class DataEntry
 		}
 	}
 
-	private float moneyToBalance(float money, int type)
-	{
-		if (IS_POSITIVE_BALANCE_TYPE[type])
-		{
-			return money;
-		}
-		else
-		{
-			return -money;
-		}
-	}
-
 	public DataBundle createNewDataBundle(Interval interval) throws Exception
 	{
 		var start = Interval.getIntervalStart(date, interval);
-		return new DataBundle(moneyToBalance(money, type), 1, start, Interval.getIntervalEnd(start, interval));
+		return new DataBundle(money, 1, start, Interval.getIntervalEnd(start, interval));
 	}
 
 	public DataBundle createNextDataBundle(DataBundle lastDataBundle, Interval interval) throws Exception
@@ -439,7 +427,7 @@ class DataEntry
 	{
 		if (date.isInTimeframe(dataBundle.getStart(), dataBundle.getEnd()))
 		{
-			dataBundle.addEntry(moneyToBalance(money, type));
+			dataBundle.addEntry(money);
 			return true;
 		}
 		else

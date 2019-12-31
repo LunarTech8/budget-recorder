@@ -86,32 +86,101 @@ class InputPanel extends JPanel
 
 	public static class CurrencyDataField extends DataField
 	{
+		private JPanel panel;
+		private JButton balanceTypeButton;
 		private JFormattedTextField dataField;
+		private boolean isPositiveBalanceType;
+
+		private class BalanceTypeButtonAL implements ActionListener
+		{
+			public void actionPerformed(ActionEvent event)
+			{
+				// Change balance type and adjust button:
+				isPositiveBalanceType = !isPositiveBalanceType;
+				adjustBalanceTypeButtonText();
+			}
+		}
 
 		public CurrencyDataField(JLabel label, int fractionDigits, float initValue)
 		{
 			super(label);
+			panel = new JPanel(new GridBagLayout());
+			GridBagConstraints constraints = new GridBagConstraints();
+			constraints.fill = GridBagConstraints.BOTH;
+			constraints.weighty = 0.5;
+			constraints.gridy = 0;
+			// Create balance type button:
+			constraints.weightx = 0.1;
+			constraints.gridx = 0;
+			isPositiveBalanceType = true;
+			if (initValue < 0F)
+			{
+				initValue = -initValue;
+				isPositiveBalanceType = false;
+			}
+			balanceTypeButton = new JButton();
+			balanceTypeButton.addActionListener(new BalanceTypeButtonAL());
+			adjustBalanceTypeButtonText();
+			panel.add(balanceTypeButton, constraints);
+			// Create currency value field:
+			constraints.weightx = 0.9;
+			constraints.gridx = 1;
 			var displayFormat = NumberFormat.getCurrencyInstance();
 			displayFormat.setMinimumFractionDigits(fractionDigits);
 			var displayFormatter = new NumberFormatter(displayFormat);
 			dataField = new JFormattedTextField(new DefaultFormatterFactory(displayFormatter, displayFormatter, new NumberFormatter(NumberFormat.getNumberInstance())));
 			dataField.setValue(initValue);
+			panel.add(dataField, constraints);
+		}
+		public CurrencyDataField(JLabel label, int fractionDigits, float initValue, boolean isPositiveBalanceType)
+		{
+			this(label, fractionDigits, initValue);
+			this.isPositiveBalanceType = isPositiveBalanceType;
+			adjustBalanceTypeButtonText();
+		}
+
+		private void adjustBalanceTypeButtonText()
+		{
+			if (isPositiveBalanceType)
+			{
+				balanceTypeButton.setText("+");
+			}
+			else
+			{
+				balanceTypeButton.setText("-");
+			}
 		}
 
 		public JComponent getJComponent()
 		{
-			return dataField;
+			return panel;
 		}
 
 		public Object getValue()
 		{
 			Number number = (Number)dataField.getValue();
-			return number.floatValue();
+			var value = number.floatValue();
+			if (isPositiveBalanceType == false)
+			{
+				value = -value;
+			}
+			return value;
 		}
 
 		public String getValueAsText()
 		{
-			return dataField.getText().toString();
+			var text = dataField.getText().toString();
+			if (isPositiveBalanceType == false)
+			{
+				text = "-" + text;
+			}
+			return text;
+		}
+
+		public void setBalanceType(boolean isPositiveBalanceType)
+		{
+			this.isPositiveBalanceType = isPositiveBalanceType;
+			adjustBalanceTypeButtonText();
 		}
 	}
 
@@ -328,7 +397,11 @@ class InputPanel extends JPanel
 				// Change items in subtype combo-box with currently selected subset of names as options:
 				var typeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.TYPE.toInt()];
 				var subtypeComboBox = (ComboBoxDataField)dataFields[DataEntry.DataRowType.SUBTYPE.toInt()];
-				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeComboBox.getSelectedIndex()]);
+				var typeIndex = typeComboBox.getSelectedIndex();
+				subtypeComboBox.changeItems(DataEntry.SUBTYPE_NAMES[typeIndex]);
+				// Adjust balance type for money field based on currently selected type:
+				var moneyCurrency = (CurrencyDataField)dataFields[DataEntry.DataRowType.MONEY.toInt()];
+				moneyCurrency.setBalanceType(DataEntry.IS_POSITIVE_BALANCE_TYPE[typeIndex]);
 			}
 			catch (Exception exception)
 			{
@@ -519,7 +592,7 @@ class InputPanel extends JPanel
 				switch (dataRowType)
 				{
 					case MONEY:
-						dataField = new CurrencyDataField(label, 2, DataEntry.DEFAULT_VALUE_MONEY);
+						dataField = new CurrencyDataField(label, 2, DataEntry.DEFAULT_VALUE_MONEY, DataEntry.IS_POSITIVE_BALANCE_TYPE[DataEntry.DEFAULT_VALUE_TYPE]);
 						break;
 					case TYPE:
 						dataField = new ComboBoxDataField(label, DataEntry.TYPE_NAMES, DataEntry.DEFAULT_VALUE_TYPE, new TypeDataFieldAL());
