@@ -30,8 +30,6 @@ Work status:
 // Application design:
 // -------------
 
-!!- Display all positive money values green and all negative values red
-!!- Put "Generic" subtype on first place
 !!- Implement better sorting for subtype (type dependant)
 !!- Data panel: Add search functionality -> Maybe right click on header replaces it with text input window where you can filter out the shown entries
 !- Add more/better tooltips wherever possible

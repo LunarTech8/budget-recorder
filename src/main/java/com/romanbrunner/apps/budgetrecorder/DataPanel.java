@@ -649,10 +649,20 @@ class DataPanel extends JPanel
 	private JButton createDataFieldButton(DataEntry.DataRowType dataRowType, DataEntry dataEntry, Border dataBorder) throws Exception
 	{
 		int alignment;
+		Color entryColour = InputPanel.COLOUR_TEXT_NORMAL;
 		switch (dataRowType)
 		{
 			case MONEY:
-				alignment = SwingConstants.RIGHT;
+			alignment = SwingConstants.RIGHT;
+				var money = dataEntry.getMoney();
+				if (money < 0F)
+				{
+					entryColour = InputPanel.COLOUR_CURRENCY_NEGATIVE;
+				}
+				else if (money > 0F)
+				{
+					entryColour = InputPanel.COLOUR_CURRENCY_POSITIVE;
+				}
 				break;
 			default:
 				alignment = SwingConstants.LEFT;
@@ -665,6 +675,7 @@ class DataPanel extends JPanel
 		button.setToolTipText(name + ": " + text);
 		button.setPreferredSize(new Dimension(DATA_FIELD_WIDTH, DATA_FIELD_HEIGHT));
 		button.setBorder(dataBorder);
+		button.setForeground(entryColour);
 		button.setContentAreaFilled(false);
 		button.addActionListener(new DataFieldButtonAL(dataRowType, button, dataEntry));
 		return button;
@@ -880,10 +891,10 @@ class DataPanel extends JPanel
 			{
 				break;
 			}
-			var rowColour = Color.BLACK;
+			var rowColour = InputPanel.COLOUR_TEXT_NORMAL;
 			if (sortedDataBundle.getEntries() <= 0)
 			{
-				rowColour = Color.GRAY;
+				rowColour = InputPanel.COLOUR_CURRENCY_EMPTY;
 			}
 			constraints.gridx = 0;
 			for (var dataRowType : DataBundle.DataRowType.Data.values)
@@ -896,9 +907,14 @@ class DataPanel extends JPanel
 				{
 					case BALANCE:
 						alignment = SwingConstants.RIGHT;
-						if (sortedDataBundle.getBalance() < 0F)
+						var balance = sortedDataBundle.getBalance();
+						if (balance < 0F)
 						{
-							entryColour = Color.RED;
+							entryColour = InputPanel.COLOUR_CURRENCY_NEGATIVE;
+						}
+						else if (balance > 0F)
+						{
+							entryColour = InputPanel.COLOUR_CURRENCY_POSITIVE;
 						}
 						break;
 					default:
@@ -986,6 +1002,10 @@ class DataPanel extends JPanel
 				if (activeDataField.dataField instanceof InputPanel.TextDataField)
 				{
 					event.consume();  // Stop tab spaces in text fields that are caused by enter key commands
+				}
+				else if (activeDataField.dataField instanceof InputPanel.CurrencyDataField)
+				{
+					kfm.redispatchEvent(((InputPanel.CurrencyDataField)activeDataField.dataField).getTextField(), event);
 				}
 				else if (activeDataField.dataField instanceof InputPanel.DateDataField)
 				{

@@ -51,6 +51,12 @@ class InputPanel extends JPanel
 	private static final String DATA_ROW_TOOLTIP = "Define the value for <NAME> in the field to the right.";
 	private static final String DATA_FIELD_TOOLTIP = "Define the value for <NAME> here.";
 
+	public static final Color COLOUR_CURRENCY_POSITIVE = Color.getHSBColor(0.333F, 0.8F, 0.4F);
+	public static final Color COLOUR_CURRENCY_NEGATIVE = Color.RED;
+	public static final Color COLOUR_CURRENCY_EMPTY = Color.GRAY;
+	public static final Color COLOUR_TEXT_NORMAL = Color.BLACK;
+	public static final Color COLOUR_TEXT_CONFIRMED = Color.GREEN;
+
 
 	// --------------------
 	// Functional code
@@ -144,10 +150,12 @@ class InputPanel extends JPanel
 			if (isPositiveBalanceType)
 			{
 				balanceTypeButton.setText("+");
+				balanceTypeButton.setForeground(COLOUR_CURRENCY_POSITIVE);
 			}
 			else
 			{
 				balanceTypeButton.setText("-");
+				balanceTypeButton.setForeground(COLOUR_CURRENCY_NEGATIVE);
 			}
 		}
 
@@ -175,6 +183,11 @@ class InputPanel extends JPanel
 				text = "-" + text;
 			}
 			return text;
+		}
+
+		public JComponent getTextField()
+		{
+			return dataField;
 		}
 
 		public void setBalanceType(boolean isPositiveBalanceType)
@@ -530,12 +543,12 @@ class InputPanel extends JPanel
 				// Refresh data panel:
 				MainFrame.refreshDataPanel();
 				MainFrame.disposeExcerptDataFrame();
-				// Give visual confimation:
+				// Give visual confirmation:
 				for (var component : getComponents())
 				{
 					if (component instanceof JLabel)
 					{
-						component.setForeground(Color.GREEN);
+						component.setForeground(COLOUR_TEXT_CONFIRMED);
 					}
 				}
 				var task = new java.util.TimerTask()
@@ -547,7 +560,7 @@ class InputPanel extends JPanel
 						{
 							if (component instanceof JLabel)
 							{
-								component.setForeground(Color.BLACK);
+								component.setForeground(COLOUR_TEXT_NORMAL);
 							}
 						}
 					}
